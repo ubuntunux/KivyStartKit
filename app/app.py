@@ -22,10 +22,11 @@ from utility.singleton import SingletonInstane
 
 
 class MyApp(App, SingletonInstane):
+    app_name = "KivyStartKit"
+    
     def __init__(self):
         super(MyApp, self).__init__()
         
-        self.app_name = "KivyStartKit"
         Logger.info(f'Run: {self.app_name}')
 
         self.is_first_update = False
