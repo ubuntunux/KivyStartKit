@@ -24,8 +24,11 @@ from utility.singleton import SingletonInstane
 class MyApp(App, SingletonInstane):
     def __init__(self):
         super(MyApp, self).__init__()
-        Logger.info(f'Run: {self.__name__}')
+        
+        self.app_name = "KivyStartKit"
+        Logger.info(f'Run: {self.app_name}')
 
+        self.is_first_update = False
         self.screen_helper = None
         self.screen = None
         
@@ -46,14 +49,14 @@ class MyApp(App, SingletonInstane):
         self.root = Widget()
         self.screen_helper = ScreenHelper(size=Window.size)
         self.root.add_widget(self.screen_helper.screen_manager)
-        self.screen = Screen(name=self.__name__)
+        self.screen = Screen(name=self.app_name)
         self.screen_helper.add_screen(self.screen)
         self.screen_helper.current_screen(self.screen)
 
         layout = BoxLayout(orientation='vertical', size=(1, 1))
         self.screen.add_widget(layout)
-        btn = Button()
-        layout.add_widget(self.output_scroll_view)
+        btn = Button(text=self.app_name)
+        layout.add_widget(btn)
 
         Clock.schedule_interval(self.update, 0)
         return self.root
