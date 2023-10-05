@@ -21,17 +21,35 @@ from utility.kivy_helper import *
 from utility.singleton import SingletonInstane
 
 
-class MyApp(App, SingletonInstane):
-    app_name = "KivyStartKit"
-    
-    def __init__(self):
-        super(MyApp, self).__init__()
-        
-        Logger.info(f'Run: {self.app_name}')
+class BaseApp(App, SingletonInstane):
+    def __init__(self, app_name):
+        self.app_name = app_name
+        self.initialized = False
+        self.root_widget = Widget()
 
-        self.is_first_update = False
+    def initialize(self):
+        pass
+    
+    def destroy(self):
+        pass
+
+    def build(self):
+        pass
+
+    def update(self, dt):
+        pass
+
+
+class RootApp(App, SingletonInstane):
+    def __init__(self, app_name):
+        super(RootApp, self).__init__()
+        
+        Logger.info(f'Run: {app_name}')
+        self.app_name = app_name
+        self.root_widget = None
         self.screen_helper = None
         self.screen = None
+        self.apps = []
         
     def destroy(self):
         pass
@@ -46,27 +64,42 @@ class MyApp(App, SingletonInstane):
         # keyboard_mode: '', 'system', 'dock', 'multi', 'systemanddock', 'systemandmulti'
         Config.set('kivy', 'keyboard_mode', 'system')
         Window.configure_keyboards()
-
-        self.root = Widget()
+        self.root_widget = Widget()
         self.screen_helper = ScreenHelper(size=Window.size)
-        self.root.add_widget(self.screen_helper.screen_manager)
+        self.root_widget.add_widget(self.screen_helper.screen_manager)
         self.screen = Screen(name=self.app_name)
         self.screen_helper.add_screen(self.screen)
         self.screen_helper.current_screen(self.screen)
 
-        layout = BoxLayout(orientation='vertical', size=(1, 1))
-        self.screen.add_widget(layout)
         btn = Button(text=self.app_name)
+        layout = BoxLayout(orientation='vertical', size=(1, 1))
         layout.add_widget(btn)
+        self.screen.add_widget(layout)
+        
+        self.screen2 = Screen(name="zcreenw")
+        self.screen_helper.add_screen(self.screen2)
+
+        btn = Button(text="dndbdbdh")
+        btn.bind(on_press=lambda inst:self.screen_helper.current_screen(self.screen))
+        layout = BoxLayout(orientation='vertical', size=(1, 1))
+        layout.add_widget(btn)
+        self.screen2.add_widget(layout)
+        self.screen_helper.current_screen(self.screen2)
 
         Clock.schedule_interval(self.update, 0)
-        return self.root
-
-    def first_update(self):
-        pass
+        return self.root_widget
+    
+    def regist_app(self, app):
+        if app not in self.apps:
+            self.apps.append(app)
 
     def update(self, dt):
-        if self.is_first_update:
-            self.first_update()
-            self.is_first_update = False
+        for app in self.apps:
+            if False == app.initialized:
+                app.initialize()
+                app.initialized = True
+                app.build()
+                self.root_widget(app.root_widget)
+            app.update(dt)
+        
 

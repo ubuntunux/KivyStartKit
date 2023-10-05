@@ -34,9 +34,9 @@ def run():
 
     # run app
     from kivy.logger import Logger
-    from app.app import MyApp
-    my_app = MyApp.instance()
-    my_app.run()
+    from app.app import RootApp
+    app = RootApp.instance("KivyStartKit")
+    app.run()
     Logger.info("Bye")
     Config.write()
 
