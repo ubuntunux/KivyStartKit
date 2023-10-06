@@ -96,7 +96,7 @@ class Listener:
         )
         self.auto_complete_vertical_layout = BoxLayout(orientation='vertical', size_hint=(1, 1), padding=metrics.dp(10))
         self.auto_complete_layout.add_widget(self.auto_complete_vertical_layout)
-        app.screen.add_widget(self.auto_complete_layout)
+        app.add_widget(self.auto_complete_layout)
         self.refresh_auto_compmete()
         
         # text layout

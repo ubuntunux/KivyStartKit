@@ -4,40 +4,6 @@ from kivy.config import Config
 from kivy.graphics import Color, Rectangle
 from kivy.uix.scatter import Scatter
 from kivy.uix.scatterlayout import ScatterLayout
-from kivy.uix.screenmanager import ScreenManager, Screen, WipeTransition
-
-from utility.singleton import SingletonInstane
-
-
-class ScreenHelper(SingletonInstane):
-    def __init__(self, *args, **kwargs):
-        self.name = "ScreenManager"
-        self.screen_manager = ScreenManager(*args, **kwargs)
-        self.transition = WipeTransition()
-        self.empty_screen = Screen(name="empty screen")
-        self.add_screen(self.empty_screen)
-        self.current_screen(self.empty_screen)
-
-    def prev_screen(self):
-        prev_screen = self.screen_manager.previous()
-        if prev_screen:
-            self.screen_manager.current = prev_screen
-
-    def add_screen(self, screen):
-        if screen.name not in self.screen_manager.screen_names:
-            self.screen_manager.add_widget(screen)
-
-    def current_screen(self, screen):
-        if True or self.screen_manager.current != screen.name and self.screen_manager.has_screen(screen.name):
-            self.screen_manager.current = screen.name
-
-    def remove_screen(self, screen):
-        if screen.name in self.screen_manager.screen_names:
-            self.screen_manager.remove_widget(screen)
-            self.prev_screen()
-
-    def get_current_screen(self):
-        return self.screen_manager.current
 
 
 # listen to size and position changes

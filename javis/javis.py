@@ -15,21 +15,20 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.vkeyboard import VKeyboard
 from kivy.logger import Logger
 
+from app.app import BaseApp
+from utility.kivy_helper import *
+
 from javis.constants import *
 from javis.commands import Commander
 from javis.memory import Memory
 from javis.chairman import ChairMan
 from javis.evaluator import Evaluator
 from javis.listener import Listener
-from utility.kivy_helper import *
-from utility.singleton import SingletonInstane
 
-
-class JavisApp(App, SingletonInstane):
-    def __init__(self):
-        super(JavisApp, self).__init__()
-        Logger.info(f'Run: {JavisApp.__name__}')
-
+class JavisApp(BaseApp):
+    def __init__(self, app_name):
+        super(JavisApp, self).__init__(app_name)
+        
         self.memory = Memory()
         self.chairman = ChairMan(self.memory)
         self.evaluator = Evaluator(self.memory)
@@ -58,6 +57,11 @@ class JavisApp(App, SingletonInstane):
         # evaluator_thread.join(0.1)
         # chairman_thread.join(0.1)
         # initialize config
+        
+    def initialize(self):
+        self.build()
+        self.print_output("Python " + sys.version.strip(), save=False)
+        self.load_output()
 
     def destroy(self):
         self.save_output()
@@ -68,6 +72,7 @@ class JavisApp(App, SingletonInstane):
         Config.write()
 
     def load_output(self):
+        # print history 
         try:
             outputs = []
             if os.path.exists(javis_output_file):
@@ -122,21 +127,8 @@ class JavisApp(App, SingletonInstane):
         self.output_scroll_view.scroll_y = 0
 
     def build(self):
-        # Window.maximize()
-        Window.softinput_mode = 'below_target'
-        # keyboard_mode: '', 'system', 'dock', 'multi', 'systemanddock', 'systemandmulti'
-        Config.set('kivy', 'keyboard_mode', 'system')
-        Window.configure_keyboards()
-
-        self.root = Widget()
-        self.screen_helper = ScreenHelper(size=Window.size)
-        self.root.add_widget(self.screen_helper.screen_manager)
-        self.screen = Screen(name="javis")
-        self.screen_helper.add_screen(self.screen)
-        self.screen_helper.current_screen(self.screen)
-
         layout = BoxLayout(orientation='vertical', size=(1, 1))
-        self.screen.add_widget(layout)
+        self.add_widget(layout)
 
         self.output_scroll_view = ScrollView(size_hint=(1, None))
         self.output_layout = BoxLayout(orientation="vertical", size_hint=(1,None), height=0)
@@ -146,18 +138,7 @@ class JavisApp(App, SingletonInstane):
         # initialize listner
         self.listener_widget = self.listener.initialize(self)
         layout.add_widget(self.listener_widget)
-
-        Clock.schedule_interval(self.update, 0)
-        return self.root
-
-    def first_update(self):
-        # print python version
-        self.print_output("Python " + sys.version.strip(), save=False)
-        # print history 
-        self.load_output()
-
+    
     def update(self, dt):
-        if self.is_first_update:
-            self.first_update()
-            self.is_first_update = False
-
+        pass
+    

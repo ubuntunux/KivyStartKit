@@ -17,32 +17,47 @@ from kivy.uix.vkeyboard import VKeyboard
 from kivy.logger import Logger
 
 from app.constants import *
+from utility.screen_manager import ScreenHelper
 from utility.kivy_helper import *
 from utility.singleton import SingletonInstane
 
 
 class BaseApp(App, SingletonInstane):
     def __init__(self, app_name):
+        Logger.info(f'Run: {app_name}')
+        self.my_app = MyApp.instance()
         self.app_name = app_name
         self.initialized = False
-        self.root_widget = Widget()
+        self.__screen = Screen(name=app_name)
 
     def initialize(self):
         pass
     
     def destroy(self):
         pass
+        
+    def get_screen(self):
+        return self.__screen
+    
+    def get_children(self):
+        return self.__screen.children
+    
+    def clear_widget(self):
+        self.__screen.clear_widget()
+        
+    def add_widget(self, widget):
+        self.__screen.add_widget(widget)
 
-    def build(self):
-        pass
+    def remove_widget(self, widget):
+        self.__screen.remove_widget(widget)
 
     def update(self, dt):
         pass
 
 
-class RootApp(App, SingletonInstane):
+class MyApp(App, SingletonInstane):
     def __init__(self, app_name):
-        super(RootApp, self).__init__()
+        super(MyApp, self).__init__()
         
         Logger.info(f'Run: {app_name}')
         self.app_name = app_name
@@ -72,20 +87,11 @@ class RootApp(App, SingletonInstane):
         self.screen_helper.current_screen(self.screen)
 
         btn = Button(text=self.app_name)
+        btn.bind(on_press=lambda inst:self.screen_helper.cycle_screen())
         layout = BoxLayout(orientation='vertical', size=(1, 1))
         layout.add_widget(btn)
         self.screen.add_widget(layout)
         
-        self.screen2 = Screen(name="zcreenw")
-        self.screen_helper.add_screen(self.screen2)
-
-        btn = Button(text="dndbdbdh")
-        btn.bind(on_press=lambda inst:self.screen_helper.current_screen(self.screen))
-        layout = BoxLayout(orientation='vertical', size=(1, 1))
-        layout.add_widget(btn)
-        self.screen2.add_widget(layout)
-        self.screen_helper.current_screen(self.screen2)
-
         Clock.schedule_interval(self.update, 0)
         return self.root_widget
     
@@ -98,8 +104,8 @@ class RootApp(App, SingletonInstane):
             if False == app.initialized:
                 app.initialize()
                 app.initialized = True
-                app.build()
-                self.root_widget(app.root_widget)
+                self.screen_helper.add_screen(app.get_screen())
+                #self.screen_helper.current_screen(app.get_screen())
             app.update(dt)
         
 
