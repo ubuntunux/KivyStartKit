@@ -83,12 +83,11 @@ class MyApp(App, SingletonInstane):
         self.screen_helper = ScreenHelper(size=Window.size)
         self.root_widget.add_widget(self.screen_helper.screen_manager)
         self.screen = Screen(name=self.app_name)
-        self.screen_helper.add_screen(self.screen)
-        self.screen_helper.current_screen(self.screen)
-
+        self.screen_helper.add_screen(self.screen, True)
+        
         btn = Button(text=self.app_name)
         btn.bind(on_press=lambda inst:self.screen_helper.cycle_screen())
-        layout = BoxLayout(orientation='vertical', size=(1, 1))
+        layout = BoxLayout(orientation='vertical', size_hint=(1, 0.1))
         layout.add_widget(btn)
         self.screen.add_widget(layout)
         
@@ -104,8 +103,7 @@ class MyApp(App, SingletonInstane):
             if False == app.initialized:
                 app.initialize()
                 app.initialized = True
-                self.screen_helper.add_screen(app.get_screen())
-                #self.screen_helper.current_screen(app.get_screen())
+                self.screen_helper.add_screen(app.get_screen(), False)
             app.update(dt)
         
 

@@ -22,7 +22,6 @@ class Commander:
         return keys
         
     def run_command(self, cmd_text):
-        app = javis.JavisApp.instance()
         cmds = cmd_text.strip().split()
         cmd = cmds[0]
         if cmd in self.commands:
@@ -103,7 +102,7 @@ class Commander:
         # memo
         def cmd_memo(*args):
             memo = MemoApp(app)
-            app.screen.add_widget(memo)
+            app.add_widget(memo)
         self.commands["memo"] = cmd_memo
         
         return True
