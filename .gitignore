@@ -1,5 +1,7 @@
 .log
 .kivy
+config.ini
+output.log
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
