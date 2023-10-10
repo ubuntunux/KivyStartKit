@@ -68,6 +68,7 @@ class MyApp(App, SingletonInstane):
         self.screen_helper = None
         self.screen = None
         self.apps = []
+        self.registed_apps = []
         
     def destroy(self):
         pass
@@ -89,7 +90,7 @@ class MyApp(App, SingletonInstane):
         self.screen_helper.add_screen(self.screen, True)
         
         # app list view
-        self.app_btn_size = [500, 100]
+        self.app_btn_size = [Window.size[0] * 0.3, Window.size[1] * 0.05]
         self.app_layout = BoxLayout(orientation='horizontal', size_hint=(None, None), size=(0, self.app_btn_size[1]))
         self.app_scroll_view = ScrollView(
             pos_hint=(None, None), 
@@ -105,16 +106,19 @@ class MyApp(App, SingletonInstane):
         return self.root_widget
     
     def regist_app(self, app):
-        if app not in self.apps:
-            self.apps.append(app)
+        if app not in self.registed_apps and app not in self.apps:
+            self.registed_apps.append(app)
 
     def update(self, dt):
-        for app in self.apps:
+        # initialize new apps
+        is_empty_apps = 0 == len(self.apps)
+        for (i, app) in enumerate(self.registed_apps):
             if False == app.initialized:
                 app.initialize()
                 app.initialized = True
                 # add app screen
-                self.screen_helper.add_screen(app.get_screen(), True)
+                display_screen = not is_empty_apps or i == 0
+                self.screen_helper.add_screen(app.get_screen(), display_screen)
                 # add to app list
                 app_btn = Button(text=app.app_name, size_hint=(None, None), size=self.app_btn_size)
                 app_btn.app_screen = app.get_screen()
@@ -123,8 +127,13 @@ class MyApp(App, SingletonInstane):
                 app_btn.bind(on_press=active_screen)
                 self.app_layout.add_widget(app_btn)
                 self.app_layout.width = self.app_btn_size[0] * len(self.app_layout.children)
-                self.app_scroll_view.scroll_x = 1.0
-                
+                if not is_empty_apps and Window.size[0] < self.app_layout.width:
+                    self.app_scroll_view.scroll_x = 1.0
+                self.apps.append(app)
+        self.registed_apps.clear()
+        
+        # update apps
+        for app in self.apps:
             app.update(dt)
         
 
