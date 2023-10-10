@@ -2,7 +2,6 @@ from glob import glob
 import os
 
 from app.constants import *
-from javis.javis import JavisApp
 
 def run():
     try:
@@ -37,8 +36,12 @@ def run():
     from kivy.logger import Logger
     from app.app import MyApp
     app = MyApp.instance("KivyStartKit")
-    javis_app = JavisApp("Javis")
-    app.regist_app(javis_app)
+    
+    # regist apps
+    from javis.javis import JavisApp
+    app.regist_app(JavisApp.instance("Javis"))
+    
+    # run application
     app.run()
     Logger.info("Bye")
     Config.write()

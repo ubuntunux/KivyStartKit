@@ -17,6 +17,7 @@ from kivy.logger import Logger
 
 from app.app import BaseApp
 from utility.kivy_helper import *
+from utility.singleton import SingletonInstane
 
 from javis.constants import *
 from javis.commands import Commander
@@ -25,7 +26,7 @@ from javis.chairman import ChairMan
 from javis.evaluator import Evaluator
 from javis.listener import Listener
 
-class JavisApp(BaseApp):
+class JavisApp(BaseApp, SingletonInstane):
     def __init__(self, app_name):
         super(JavisApp, self).__init__(app_name)
         

@@ -22,7 +22,7 @@ from utility.kivy_helper import *
 from utility.singleton import SingletonInstane
 
 
-class BaseApp(App, SingletonInstane):
+class BaseApp(App):
     def __init__(self, app_name):
         Logger.info(f'Run: {app_name}')
         self.my_app = MyApp.instance()
@@ -31,7 +31,10 @@ class BaseApp(App, SingletonInstane):
         self.__screen = Screen(name=app_name)
 
     def initialize(self):
-        pass
+        layout = BoxLayout(orientation='vertical', size=(1, 1))
+        btn = Button(text="BaseApp", size_hint=(1,1))
+        layout.add_widget(btn)
+        self.add_widget(layout)
     
     def destroy(self):
         pass
@@ -85,11 +88,18 @@ class MyApp(App, SingletonInstane):
         self.screen = Screen(name=self.app_name)
         self.screen_helper.add_screen(self.screen, True)
         
-        btn = Button(text=self.app_name)
-        btn.bind(on_press=lambda inst:self.screen_helper.cycle_screen())
-        layout = BoxLayout(orientation='vertical', size_hint=(1, 0.1))
-        layout.add_widget(btn)
-        self.screen.add_widget(layout)
+        # app list view
+        self.app_btn_size = [500, 100]
+        self.app_layout = BoxLayout(orientation='horizontal', size_hint=(None, None), size=(0, self.app_btn_size[1]))
+        self.app_scroll_view = ScrollView(
+            pos_hint=(None, None), 
+            pos=(0, Window.size[1] - self.app_btn_size[1]), 
+            size_hint=(None, None), 
+            width=Window.size[0], 
+            height=self.app_btn_size[1]
+        )
+        self.app_scroll_view.add_widget(self.app_layout)
+        self.root_widget.add_widget(self.app_scroll_view)  
         
         Clock.schedule_interval(self.update, 0)
         return self.root_widget
@@ -103,7 +113,18 @@ class MyApp(App, SingletonInstane):
             if False == app.initialized:
                 app.initialize()
                 app.initialized = True
-                self.screen_helper.add_screen(app.get_screen(), False)
+                # add app screen
+                self.screen_helper.add_screen(app.get_screen(), True)
+                # add to app list
+                app_btn = Button(text=app.app_name, size_hint=(None, None), size=self.app_btn_size)
+                app_btn.app_screen = app.get_screen()
+                def active_screen(inst):
+                    self.screen_helper.current_screen(inst.app_screen)
+                app_btn.bind(on_press=active_screen)
+                self.app_layout.add_widget(app_btn)
+                self.app_layout.width = self.app_btn_size[0] * len(self.app_layout.children)
+                self.app_scroll_view.scroll_x = 1.0
+                
             app.update(dt)
         
 
