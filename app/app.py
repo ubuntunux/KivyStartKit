@@ -2,24 +2,41 @@ import os
 import sys
 import traceback
 
+import kivy
+from kivy import platform
 from kivy.app import App
+from kivy.base import EventLoop
 from kivy.core.window import Window
 from kivy.config import Config
 from kivy.clock import Clock
 from kivy.metrics import Metrics
 from kivy.uix.button import Button
-from kivy.uix.widget import Widget
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.label import Label
+from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import Screen
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.textinput import TextInput
 from kivy.uix.vkeyboard import VKeyboard
+from kivy.uix.widget import Widget
 from kivy.logger import Logger
 
 from app.constants import *
 from utility.screen_manager import ScreenHelper
 from utility.kivy_helper import *
 from utility.singleton import SingletonInstane
+
+autoclass = None
+android = None
+if platform == 'android':
+    try:
+        import android
+        from jnius import autoclass
+        AndroidString = autoclass('java.lang.String')
+        PythonActivity = autoclass('org.renpy.android.PythonActivity')
+        VER = autoclass('android.os.Build$VERSION')
+    except:
+        print(traceback.format_exc())
 
 
 class BaseApp(App):
@@ -70,10 +87,14 @@ class MyApp(App, SingletonInstane):
         self.apps = []
         self.registed_apps = []
         
+        self.on_touch_prev = None
+        self.is_popup = False
+        self.popup_layout = None
+        
     def destroy(self):
         pass
 
-    def on_stop(self):
+    def on_stop(self, instance=None):
         self.destroy()
         Config.write()
 
@@ -100,11 +121,65 @@ class MyApp(App, SingletonInstane):
             height=self.app_btn_size[1]
         )
         self.app_scroll_view.add_widget(self.app_layout)
-        self.root_widget.add_widget(self.app_scroll_view)  
+        self.root_widget.add_widget(self.app_scroll_view)
         
-        Clock.schedule_interval(self.update, 0)
+        # post process
+        self.bind(on_start=self.do_on_start)
         return self.root_widget
-    
+        
+    def hook_keyboard(self, window, key, *largs):
+        # key - back
+        if key == 27:
+            if self.is_popup and self.popup_layout:
+                self.popup_layout.dismiss()
+                self.is_popup = False
+            elif self.on_touch_prev is not None:
+                self.on_touch_prev()
+            return True
+                
+    def do_on_start(self, ev):
+        self.on_touch_prev = self.popup_exit
+        EventLoop.window.bind(on_keyboard=self.hook_keyboard)
+        Clock.schedule_interval(self.update, 0)
+
+    def get_touch_prev(self):
+        return self.on_touch_prev
+
+    def set_touch_prev(self, func):
+        self.on_touch_prev = func if func else self.popup_exit
+
+    def popup_exit(self):
+        self.popup("Exit?", "", self.stop, None)
+
+    def popup(self, title, message, lambda_yes, lambda_no):
+        if self.is_popup:
+            return
+        self.is_popup = True
+        content = BoxLayout(orientation="vertical", size_hint=(1, 1))
+        self.popup_layout = Popup(title=title, content=content, auto_dismiss=False, size_hint=(0.9, 0.2))
+        content.add_widget(Label(text=message))
+        btn_layout = BoxLayout(orientation="horizontal", size_hint=(1, 1), spacing=kivy.metrics.dp(5))
+        btn_yes = Button(text='Yes')
+        btn_no = Button(text='No')
+        btn_layout.add_widget(btn_no)
+        btn_layout.add_widget(btn_yes)
+
+        content.add_widget(btn_layout)
+        result = True
+
+        def close_popup(instance, is_yes):
+            if is_yes and lambda_yes:
+                lambda_yes()
+            elif lambda_no:
+                lambda_no()
+            self.popup_layout.dismiss()
+            self.is_popup = False
+
+        btn_yes.bind(on_press=lambda inst: close_popup(inst, True))
+        btn_no.bind(on_press=lambda inst: close_popup(inst, False))
+        self.popup_layout.open()
+        return
+        
     def regist_app(self, app):
         if app not in self.registed_apps and app not in self.apps:
             self.registed_apps.append(app)

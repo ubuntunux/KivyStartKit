@@ -6,6 +6,17 @@ from kivy.uix.scatter import Scatter
 from kivy.uix.scatterlayout import ScatterLayout
 
 
+def get_center_pos(pos, size):
+    return (pos[0] + size[0] / 2.0, center_pos[1] + size[1] / 2.0)
+
+
+def get_pos(center_pos, size):
+    return (center_pos[0] - size[0] / 2.0, center_pos[1] - size[1] / 2.0)
+
+
+def size_by_hint(size, ratio_x, ratio_y):
+    return (size[0] * ratio_x, size[1] * ratio_y)
+
 # listen to size and position changes
 def update_rect(is_relative, rect, instance, value):
     if not is_relative:
