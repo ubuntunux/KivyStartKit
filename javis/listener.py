@@ -235,12 +235,13 @@ class Listener:
         self.top_layout.add_widget(btn_clear)
 
         # quit
+        '''
         def on_press_quit(inst):
             app.stop()
         btn_quit = Button(size_hint=(0.5, 1), text="Quit", background_color=dark_gray)
         self.top_layout.add_widget(btn_quit)
         btn_quit.bind(on_press=on_press_quit)
-
+        '''
         return self.root_layout
 
     def destroy(self):

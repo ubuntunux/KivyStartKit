@@ -32,10 +32,10 @@ def run():
         for log_file in logs[:remove_count]:
             os.remove(log_file)
 
-    # run app
+    # create main app
     from kivy.logger import Logger
-    from app.app import MyApp
-    app = MyApp.instance("KivyStartKit")
+    from app.app import MainApp
+    app = MainApp.instance("KivyStartKit")
     
     # regist apps
     from javis.javis import JavisApp

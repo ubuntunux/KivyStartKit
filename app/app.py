@@ -22,6 +22,7 @@ from kivy.uix.widget import Widget
 from kivy.logger import Logger
 
 from app.constants import *
+from toast import toast
 from utility.screen_manager import ScreenHelper
 from utility.kivy_helper import *
 from utility.singleton import SingletonInstane
@@ -42,10 +43,11 @@ if platform == 'android':
 class BaseApp(App):
     def __init__(self, app_name):
         Logger.info(f'Run: {app_name}')
-        self.my_app = MyApp.instance()
+        self.main_app = MainApp.instance()
         self.app_name = app_name
         self.initialized = False
         self.__screen = Screen(name=app_name)
+        self.__back_event = None
 
     def initialize(self):
         layout = BoxLayout(orientation='vertical', size=(1, 1))
@@ -53,8 +55,17 @@ class BaseApp(App):
         layout.add_widget(btn)
         self.add_widget(layout)
     
-    def destroy(self):
-        pass
+    def stop(self):
+        self.main_app.unregist_app(self)
+    
+    def has_back_event(self):
+        return self.__back_event is not None
+    
+    def run_back_event(self):
+        return self.__back_event()
+            
+    def set_back_event(self, func):
+        self.__back_event = func
         
     def get_screen(self):
         return self.__screen
@@ -75,9 +86,9 @@ class BaseApp(App):
         pass
 
 
-class MyApp(App, SingletonInstane):
+class MainApp(App, SingletonInstane):
     def __init__(self, app_name):
-        super(MyApp, self).__init__()
+        super(MainApp, self).__init__()
         
         Logger.info(f'Run: {app_name}')
         self.app_name = app_name
@@ -86,13 +97,13 @@ class MyApp(App, SingletonInstane):
         self.screen = None
         self.apps = []
         self.registed_apps = []
+        self.unregist_apps = []
         
-        self.on_touch_prev = None
         self.is_popup = False
         self.popup_layout = None
         
     def destroy(self):
-        pass
+        self.clear_apps()
 
     def on_stop(self, instance=None):
         self.destroy()
@@ -126,30 +137,29 @@ class MyApp(App, SingletonInstane):
         # post process
         self.bind(on_start=self.do_on_start)
         return self.root_widget
-        
+    
+    def do_on_start(self, ev):
+        EventLoop.window.bind(on_keyboard=self.hook_keyboard)
+        Clock.schedule_interval(self.update, 0)
+    
     def hook_keyboard(self, window, key, *largs):
         # key - back
         if key == 27:
-            if self.is_popup and self.popup_layout:
-                self.popup_layout.dismiss()
-                self.is_popup = False
-            elif self.on_touch_prev is not None:
-                self.on_touch_prev()
+            self.back_event()
             return True
                 
-    def do_on_start(self, ev):
-        self.on_touch_prev = self.popup_exit
-        EventLoop.window.bind(on_keyboard=self.hook_keyboard)
-        Clock.schedule_interval(self.update, 0)
-
-    def get_touch_prev(self):
-        return self.on_touch_prev
-
-    def set_touch_prev(self, func):
-        self.on_touch_prev = func if func else self.popup_exit
-
-    def popup_exit(self):
-        self.popup("Exit?", "", self.stop, None)
+    def back_event(self):
+        current_app = self.get_current_app()
+        if current_app is not None and current_app.has_back_event():
+            current_app.run_back_event()
+        elif self.is_popup and self.popup_layout:
+            self.popup_layout.dismiss()
+            self.is_popup = False
+        elif 1 == len(self.apps):
+            # show exit popup
+            self.popup("Exit?", "", self.stop, None)
+        else:
+            self.unregist_app(current_app)
 
     def popup(self, title, message, lambda_yes, lambda_no):
         if self.is_popup:
@@ -180,9 +190,24 @@ class MyApp(App, SingletonInstane):
         self.popup_layout.open()
         return
         
+    def get_current_app(self):
+        current_screen_name = self.screen_helper.get_current_screen_name()
+        for app in self.apps:
+            if current_screen_name == app.get_screen().name:
+                return app
+        return None
+    
+    def clear_apps(self):
+        for app in self.apps:
+            self.unregist_app(app)
+    
     def regist_app(self, app):
         if app not in self.registed_apps and app not in self.apps:
             self.registed_apps.append(app)
+            
+    def unregist_app(self, app):
+        if app not in self.unregist_apps and app in self.apps:
+            self.unregist_apps.append(app)
 
     def update(self, dt):
         # initialize new apps
@@ -204,11 +229,22 @@ class MyApp(App, SingletonInstane):
                 self.app_layout.width = self.app_btn_size[0] * len(self.app_layout.children)
                 if not is_empty_apps and Window.size[0] < self.app_layout.width:
                     self.app_scroll_view.scroll_x = 1.0
+                toast(app.app_name)
                 self.apps.append(app)
         self.registed_apps.clear()
         
         # update apps
         for app in self.apps:
             app.update(dt)
+        
+        # unregist app
+        if 0 < len(self.unregist_apps):
+            for app in self.unregist_apps:
+                app.on_stop()
+                self.apps.remove(app)
+            self.unregist_apps.clear()
+            # terminate application
+            if 0 == len(self.apps):
+                self.stop()
         
 

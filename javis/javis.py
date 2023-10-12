@@ -62,14 +62,12 @@ class JavisApp(BaseApp, SingletonInstane):
     def initialize(self):
         self.build()
         self.print_output("Python " + sys.version.strip(), save=False)
-        self.load_output()
-
-    def destroy(self):
-        self.save_output()
+        self.print_output(os.path.abspath("."), save=False)
+        self.load_output()  
 
     def on_stop(self):
         self.listener.destroy()
-        self.destroy()
+        self.save_output()
         Config.write()
 
     def load_output(self):
