@@ -11,7 +11,7 @@ class Commander:
     def __init__(self, app):
         self.app = app
         self.commands = {}
-        self.regist_command(app)
+        self.register_command(app)
 
     def get_commands(self):
         keys = list(self.commands.keys())
@@ -26,7 +26,7 @@ class Commander:
             return True
         return False
 
-    def regist_command(self, app):
+    def register_command(self, app):
         # perceptron
         def cmd_perceptron(args):
             if 5 == len(args):

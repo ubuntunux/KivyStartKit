@@ -39,8 +39,8 @@ def run():
     
     # register apps
     from javis.javis import JavisApp
-    app.regist_app(JavisApp.instance("Javis"))
-    app.regist_app(JavisApp("Javis2"))
+    app.register_app(JavisApp.instance("Javis"))
+    app.register_app(JavisApp("Javis2"))
     
     # run application
     app.run()

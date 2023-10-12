@@ -50,7 +50,7 @@ class BaseApp(App):
         self.add_widget(layout)
 
     def stop(self):
-        self.main_app.unregist_app(self)
+        self.main_app.unregister_app(self)
 
     def has_back_event(self):
         return self.__back_event is not None
@@ -90,7 +90,7 @@ class MainApp(App, SingletonInstane):
         self.screen = None
         self.apps = []
         self.registed_apps = []
-        self.unregist_apps = []
+        self.unregister_apps = []
         self.app_scroll_view = None
         self.app_layout = None
         self.app_btn_size = None
@@ -154,7 +154,7 @@ class MainApp(App, SingletonInstane):
             # show exit popup
             self.popup("Exit?", "", self.stop, None)
         else:
-            self.unregist_app(current_app)
+            self.unregister_app(current_app)
 
     def popup(self, title, message, lambda_yes, lambda_no):
         if self.is_popup:
@@ -194,21 +194,21 @@ class MainApp(App, SingletonInstane):
 
     def clear_apps(self):
         for app in self.apps:
-            self.unregist_app(app)
+            self.unregister_app(app)
 
-    def regist_app(self, app):
+    def register_app(self, app):
         if app not in self.registed_apps and app not in self.apps:
             self.registed_apps.append(app)
 
-    def unregist_app(self, app):
-        if app not in self.unregist_apps and app in self.apps:
-            self.unregist_apps.append(app)
+    def unregister_app(self, app):
+        if app not in self.unregister_apps and app in self.apps:
+            self.unregister_apps.append(app)
 
     def update(self, dt):
         # initialize new apps
         is_empty_apps = 0 == len(self.apps)
         for (i, app) in enumerate(self.registed_apps):
-            if False == app.initialized:
+            if not app.initialized:
                 app.initialize()
                 app.initialized = True
                 # add app screen
@@ -234,12 +234,14 @@ class MainApp(App, SingletonInstane):
         for app in self.apps:
             app.update(dt)
 
-        # unregist app
-        if 0 < len(self.unregist_apps):
-            for app in self.unregist_apps:
+        # unregister app
+        if 0 < len(self.unregister_apps):
+            for app in self.unregister_apps:
                 app.on_stop()
+                self.screen_helper.remove_screen(app.get_screen())
+                self.screen_helper.current_screen(self.screen_helper)
                 self.apps.remove(app)
-            self.unregist_apps.clear()
+            self.unregister_apps.clear()
             # terminate application
             if 0 == len(self.apps):
                 self.stop()
