@@ -1,9 +1,8 @@
-from kivy.uix.label import Label
 from kivy.clock import Clock
-from kivy.lang import Builder
 from kivy.core.window import Window
+from kivy.lang import Builder
 from kivy.properties import NumericProperty
-
+from kivy.uix.label import Label
 
 TOAST_KV = '''
 <_Toast@Label>:
@@ -38,10 +37,11 @@ class _Toast(Label):
     _transparency = NumericProperty(1.0)
 
     def __init__(self, text, *args, **kwargs):
+        super(_Toast, self).__init__(text=text, *args, **kwargs)
+        self.size = None
         self._duration = None
         self._rampdown = None
         self._bound = False
-        super(_Toast, self).__init__(text=text, *args, **kwargs)
 
     def show(self, length_long, *largs):
         duration = 5000 if length_long else 1000

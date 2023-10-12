@@ -1,6 +1,6 @@
-from jnius import autoclass, PythonJavaClass, java_method, cast
 from android import activity
 from android.runnable import run_on_ui_thread
+from jnius import autoclass, cast
 
 Toast = autoclass('android.widget.Toast')
 activity = autoclass("org.kivy.android.PythonActivity").mActivity

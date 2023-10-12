@@ -1,7 +1,7 @@
 from glob import glob
-import os
 
 from app.constants import *
+
 
 def run():
     try:
@@ -37,9 +37,10 @@ def run():
     from app.app import MainApp
     app = MainApp.instance("KivyStartKit")
     
-    # regist apps
+    # register apps
     from javis.javis import JavisApp
     app.regist_app(JavisApp.instance("Javis"))
+    app.regist_app(JavisApp("Javis2"))
     
     # run application
     app.run()

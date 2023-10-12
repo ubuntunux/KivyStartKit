@@ -1,8 +1,8 @@
-from kivy.uix.label import Label
 from kivy.clock import Clock
-from kivy.lang import Builder
 from kivy.core.window import Window
+from kivy.lang import Builder
 from kivy.properties import NumericProperty
+from kivy.uix.label import Label
 
 TOAST_KV='''
 <_Toast@Label>:
@@ -40,8 +40,10 @@ class _Toast(Label):
         :class:`~kivy.uix.modalview` isn't necessary because a toast really
         does need to go on top of everything.
         '''
-        self._bound = False
         super(_Toast, self).__init__(text=text, *args, **kwargs)
+        self._duration = None
+        self._rampdown = None
+        self._bound = False
     
     def show(self, length_long, *largs):
         duration = 5000 if length_long else 1000
@@ -60,11 +62,11 @@ class _Toast(Label):
         if not self._bound:
             Window.bind(on_resize=self._align)
             self._bound = True
-        self._align(None, Window.size)
+        self._align(None, Window.size[0], Window.size[1])
             
-    def _align(self, win, size):
-        self.x = (size[0] - self.width) / 2.0
-        self.y = size[1] * 0.1
+    def _align(self, win, width, height):
+        self.x = (width - self.width) / 2.0
+        self.y = height * 0.1
 
     def _in_out(self, dt):
         print(dt)

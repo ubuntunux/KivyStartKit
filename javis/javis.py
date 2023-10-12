@@ -1,30 +1,21 @@
-import os
 import sys
 import traceback
 
-from kivy.app import App
-from kivy.core.window import Window
 from kivy.config import Config
-from kivy.clock import Clock
-from kivy.metrics import Metrics
-from kivy.uix.widget import Widget
+from kivy.core.window import Window
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.screenmanager import Screen
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.textinput import TextInput
-from kivy.uix.vkeyboard import VKeyboard
-from kivy.logger import Logger
 
 from app.app import BaseApp
-from utility.kivy_helper import *
-from utility.singleton import SingletonInstane
-
-from javis.constants import *
-from javis.commands import Commander
-from javis.memory import Memory
 from javis.chairman import ChairMan
+from javis.commands import Commander
+from javis.constants import *
 from javis.evaluator import Evaluator
 from javis.listener import Listener
+from javis.memory import Memory
+from utility.singleton import SingletonInstane
+
 
 class JavisApp(BaseApp, SingletonInstane):
     def __init__(self, app_name):

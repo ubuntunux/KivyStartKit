@@ -1,4 +1,4 @@
-from kivy.uix.screenmanager import ScreenManager, Screen, WipeTransition
+from kivy.uix.screenmanager import ScreenManager, WipeTransition
 
 from utility.singleton import SingletonInstane
 

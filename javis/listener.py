@@ -1,30 +1,19 @@
-import os
+import sys
+import traceback
 from functools import partial
 from io import StringIO
-import sys
-from threading import Thread
-import time
-import traceback
 
 from kivy import metrics
-from kivy.core.window import Window
 from kivy.config import Config
-from kivy.graphics import Color, Rectangle
-from kivy.logger import Logger
+from kivy.core.window import Window
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
-from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.image import Image
-from kivy.uix.label import Label
-from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.scatterlayout import ScatterLayout
 from kivy.uix.textinput import TextInput
-from kivy.uix.widget import Widget
-from kivy.uix.codeinput import CodeInput
-from kivy.extras.highlight import KivyLexer
 
 from javis.constants import *
-from utility.kivy_helper import create_rect, create_dynamic_rect
+from utility.kivy_helper import create_dynamic_rect
 
 
 class Listener:
