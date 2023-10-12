@@ -1,4 +1,5 @@
 import traceback
+from functools import partial
 
 import kivy
 from kivy import platform
@@ -52,6 +53,9 @@ class BaseApp(App):
     def stop(self):
         self.main_app.unregister_app(self)
 
+    def get_name(self):
+        return self.app_name
+        
     def has_back_event(self):
         return self.__back_event is not None
 
@@ -88,15 +92,19 @@ class MainApp(App, SingletonInstane):
         self.root_widget = None
         self.screen_helper = None
         self.screen = None
-        self.apps = []
+        self.apps = {}
         self.registed_apps = []
         self.unregister_apps = []
+        self.active_app_buttons = {}
         self.app_scroll_view = None
         self.app_layout = None
         self.app_btn_size = None
         self.is_popup = False
         self.popup_layout = None
-
+        
+    def get_name(self):
+        return self.app_name
+        
     def destroy(self):
         self.clear_apps()
 
@@ -113,7 +121,7 @@ class MainApp(App, SingletonInstane):
         self.root_widget = Widget()
         self.screen_helper = ScreenHelper(size=Window.size)
         self.root_widget.add_widget(self.screen_helper.screen_manager)
-        self.screen = Screen(name=self.app_name)
+        self.screen = Screen(name=self.get_name())
         self.screen_helper.add_screen(self.screen, True)
 
         # app list view
@@ -187,21 +195,18 @@ class MainApp(App, SingletonInstane):
 
     def get_current_app(self):
         current_screen_name = self.screen_helper.get_current_screen_name()
-        for app in self.apps:
-            if current_screen_name == app.get_screen().name:
-                return app
-        return None
+        return self.apps.get(current_screen_name)
 
     def clear_apps(self):
-        for app in self.apps:
+        for app in self.apps.values():
             self.unregister_app(app)
 
     def register_app(self, app):
-        if app not in self.registed_apps and app not in self.apps:
+        if app not in self.registed_apps and app.get_name() not in self.apps:
             self.registed_apps.append(app)
 
     def unregister_app(self, app):
-        if app not in self.unregister_apps and app in self.apps:
+        if app not in self.unregister_apps and app.get_name() in self.apps:
             self.unregister_apps.append(app)
 
     def update(self, dt):
@@ -214,24 +219,24 @@ class MainApp(App, SingletonInstane):
                 # add app screen
                 display_screen = not is_empty_apps or i == 0
                 self.screen_helper.add_screen(app.get_screen(), display_screen)
-                # add to app list
-                app_btn = Button(text=app.app_name, size_hint=(None, None), size=self.app_btn_size)
-                app_btn.app_screen = app.get_screen()
-
-                def active_screen(inst):
-                    self.screen_helper.current_screen(inst.app_screen)
-
-                app_btn.bind(on_press=active_screen)
+                # add to active app list
+                app_btn = Button(text=app.get_name(), size_hint=(None, None), size=self.app_btn_size)                
+                def active_screen(screen, inst):
+                    self.screen_helper.current_screen(screen)
+                app_btn.bind(on_press=partial(active_screen, app.get_screen()))
                 self.app_layout.add_widget(app_btn)
+                
                 self.app_layout.width = self.app_btn_size[0] * len(self.app_layout.children)
                 if not is_empty_apps and Window.size[0] < self.app_layout.width:
                     self.app_scroll_view.scroll_x = 1.0
-                toast(app.app_name)
-                self.apps.append(app)
+                
+                self.active_app_buttons[app.get_name()] = app_btn
+                self.apps[app.get_name()] = app
+                toast(app.get_name())
         self.registed_apps.clear()
 
         # update apps
-        for app in self.apps:
+        for app in self.apps.values():
             app.update(dt)
 
         # unregister app
@@ -239,8 +244,9 @@ class MainApp(App, SingletonInstane):
             for app in self.unregister_apps:
                 app.on_stop()
                 self.screen_helper.remove_screen(app.get_screen())
-                self.screen_helper.current_screen(self.screen_helper)
-                self.apps.remove(app)
+                btn = self.active_app_buttons.pop(app.get_name())
+                btn.parent.remove_widget(btn)
+                self.apps.pop(app.get_name())
             self.unregister_apps.clear()
             # terminate application
             if 0 == len(self.apps):
