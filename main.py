@@ -41,6 +41,7 @@ def run():
     from javis.javis import JavisApp
     app.register_app(JavisApp.instance("Javis"))
     app.register_app(JavisApp("Javis2"))
+    app.register_app(JavisApp("Javis3"))
     
     # run application
     app.run()

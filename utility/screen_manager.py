@@ -23,11 +23,11 @@ class ScreenHelper(SingletonInstane):
             self.screen_map[screen.name] = screen
             if set_current_screen:
                 self.current_screen(screen)
-
+            
     def current_screen(self, screen):
         if screen is not None and self.screen_manager.current != screen.name and self.screen_manager.has_screen(screen.name):
-            self.screen_manager.current = screen.name    
-    
+            self.screen_manager.current = screen.name  
+            
     def cycle_screen(self):
         current = self.get_current_screen_name()
         screen_names = self.get_screen_names()

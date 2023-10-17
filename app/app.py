@@ -95,6 +95,9 @@ class MainApp(App, SingletonInstane):
         self.apps = {}
         self.registed_apps = []
         self.unregister_apps = []
+        self.app_history = []
+        self.current_app = None
+        
         self.active_app_buttons = {}
         self.app_scroll_view = None
         self.app_layout = None
@@ -192,11 +195,10 @@ class MainApp(App, SingletonInstane):
         btn_no.bind(on_press=lambda inst: close_popup(inst, False))
         self.popup_layout.open()
         return
-
+        
     def get_current_app(self):
-        current_screen_name = self.screen_helper.get_current_screen_name()
-        return self.apps.get(current_screen_name)
-
+        return self.app_history[-1] if 0 < len(self.app_history) else None
+        
     def clear_apps(self):
         for app in self.apps.values():
             self.unregister_app(app)
@@ -209,41 +211,34 @@ class MainApp(App, SingletonInstane):
         if app not in self.unregister_apps and app.get_name() in self.apps:
             self.unregister_apps.append(app)
 
-    def update(self, dt):
-        # initialize new apps
-        is_empty_apps = 0 == len(self.apps)
-        for (i, app) in enumerate(self.registed_apps):
-            if not app.initialized:
-                app.initialize()
-                app.initialized = True
-                # add app screen
-                display_screen = not is_empty_apps or i == 0
-                self.screen_helper.add_screen(app.get_screen(), display_screen)
-                # add to active app list
-                app_btn = Button(text=app.get_name(), size_hint=(None, None), size=self.app_btn_size)                
-                def active_screen(screen, inst):
-                    self.screen_helper.current_screen(screen)
-                app_btn.bind(on_press=partial(active_screen, app.get_screen()))
-                self.app_layout.add_widget(app_btn)
-                
-                self.app_layout.width = self.app_btn_size[0] * len(self.app_layout.children)
-                if not is_empty_apps and Window.size[0] < self.app_layout.width:
-                    self.app_scroll_view.scroll_x = 1.0
-                
-                self.active_app_buttons[app.get_name()] = app_btn
-                self.apps[app.get_name()] = app
-                toast(app.get_name())
-        self.registed_apps.clear()
-
-        # update apps
-        for app in self.apps.values():
-            app.update(dt)
-
-        # unregister app
+    def initialize_registed_apps(self, num_apps):
+        if 0 < len(self.registed_apps):
+            was_empty_apps = 0 == num_apps
+            for (i, app) in enumerate(self.registed_apps):
+                if not app.initialized:
+                    app.initialize()
+                    app.initialized = True
+                    # add to active app list
+                    app_btn = Button(text=app.get_name(), size_hint=(None, None), size=self.app_btn_size)                
+                    def active_app(app, inst):
+                        self.active_app(app, True)
+                    app_btn.bind(on_press=partial(active_app, app))
+                    self.app_layout.add_widget(app_btn)                
+                    self.app_layout.width = self.app_btn_size[0] * len(self.app_layout.children)
+                    if not was_empty_apps and Window.size[0] < self.app_layout.width:
+                        self.app_scroll_view.scroll_x = 1.0                
+                    self.active_app_buttons[app.get_name()] = app_btn
+                    self.apps[app.get_name()] = app
+                    self.active_app(app, False)
+            # active app
+            if was_empty_apps:
+                self.active_app(self.registed_apps[0], True)             
+            self.registed_apps.clear()
+            
+    def destroy_unregisted_apps(self):
         if 0 < len(self.unregister_apps):
             for app in self.unregister_apps:
-                app.on_stop()
-                self.screen_helper.remove_screen(app.get_screen())
+                self.deactive_app(app)     
                 btn = self.active_app_buttons.pop(app.get_name())
                 btn.parent.remove_widget(btn)
                 self.apps.pop(app.get_name())
@@ -251,3 +246,52 @@ class MainApp(App, SingletonInstane):
             # terminate application
             if 0 == len(self.apps):
                 self.stop()
+
+    def active_app(self, app, display_app=True):
+        Logger.info(f'>>> active_app: {app.app_name}')
+        apps = ",".join(a.app_name for a in self.app_history)
+        Logger.info(f'history: {apps}')
+        num_apps = self.app_history.count(app)
+        if 0 == num_apps or app != self.current_app:
+            if 0 == num_apps:
+                self.screen_helper.add_screen(app.get_screen(), False)
+            if display_app:
+                self.current_app = app
+                self.screen_helper.current_screen(app.get_screen())
+                toast(app.get_name())
+            self.app_history.append(app)
+            apps = ",".join(a.app_name for a in self.app_history)
+            Logger.info(f'history: {apps}')
+            
+    def deactive_app(self, app):
+        Logger.info(f'>>> deactive_app: {app.app_name}')
+        apps = ",".join(a.app_name for a in self.app_history)
+        Logger.info(f'history: {apps}')
+        num_apps = self.app_history.count(app)
+        if 0 < num_apps:
+            self.current_app = None 
+            self.screen_helper.remove_screen(app.get_screen())
+            app.on_stop()
+            for i in range(num_apps):
+                self.app_history.remove(app)
+            apps = ",".join(a.app_name for a in self.app_history)
+            Logger.info(f'history: {apps}')
+            if 0 < len(self.app_history):
+                self.active_app(self.app_history[-1])
+
+    def update(self, dt):
+        prev_num_apps = len(self.apps)
+        self.initialize_registed_apps(prev_num_apps)
+        
+        # update apps
+        for app in self.apps.values():
+            app.update(dt)
+
+        self.destroy_unregisted_apps()
+        
+        # update app button layout visible
+        lastest_num_apps = len(self.apps)
+        if prev_num_apps != lastest_num_apps:
+            disabled = lastest_num_apps < 2
+            self.app_layout.disabled = disabled
+            self.app_layout.opacity = 0 if disabled else 1
