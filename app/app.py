@@ -101,7 +101,7 @@ class MainApp(App, SingletonInstane):
         self.active_app_buttons = {}
         self.app_scroll_view = None
         self.app_layout = None
-        self.app_btn_size = None
+        self.app_button_width = 100.0
         self.is_popup = False
         self.popup_layout = None
         
@@ -128,17 +128,19 @@ class MainApp(App, SingletonInstane):
         self.screen_helper.add_screen(self.screen, True)
 
         # app list view
-        self.app_btn_size = [Window.size[0] * 0.3, Window.size[1] * 0.05]
-        self.app_layout = BoxLayout(orientation='horizontal', size_hint=(None, None), size=(0, self.app_btn_size[1]))
-        self.app_scroll_view = ScrollView(
-            pos_hint=(None, None),
-            pos=(0, Window.size[1] - self.app_btn_size[1]),
-            size_hint=(None, None),
-            width=Window.size[0],
-            height=self.app_btn_size[1]
-        )
+        self.app_button_width = Window.size[0] * 0.3
+        self.app_layout = BoxLayout(orientation='horizontal', size_hint=(None, 1.0))
+        self.app_scroll_view = ScrollView(size_hint=(1, 1))
         self.app_scroll_view.add_widget(self.app_layout)
-        self.root_widget.add_widget(self.app_scroll_view)
+        layout_height = Window.size[1] * 0.07
+        self.menu_layout = BoxLayout(
+            orientation='horizontal',
+            pos=(0, Window.size[1] - layout_height),
+            size=(Window.size[0], layout_height)
+        )
+        self.menu_btn = Button()
+        self.menu_layout.add_widget(self.app_scroll_view)
+        self.root_widget.add_widget(self.menu_layout)
 
         # post process
         self.bind(on_start=self.do_on_start)
@@ -195,7 +197,11 @@ class MainApp(App, SingletonInstane):
         btn_no.bind(on_press=lambda inst: close_popup(inst, False))
         self.popup_layout.open()
         return
-        
+     
+    def show_app_list(self, show):
+        self.app_layout.disabled = not show
+        self.app_layout.opacity = 1 if show else 0
+    
     def get_current_app(self):
         return self.app_history[-1] if 0 < len(self.app_history) else None
         
@@ -219,12 +225,12 @@ class MainApp(App, SingletonInstane):
                     app.initialize()
                     app.initialized = True
                     # add to active app list
-                    app_btn = Button(text=app.get_name(), size_hint=(None, None), size=self.app_btn_size)                
+                    app_btn = Button(text=app.get_name(), size_hint=(None, 1.0), width=self.app_button_width)                
                     def active_app(app, inst):
                         self.active_app(app, True)
                     app_btn.bind(on_press=partial(active_app, app))
                     self.app_layout.add_widget(app_btn)                
-                    self.app_layout.width = self.app_btn_size[0] * len(self.app_layout.children)
+                    self.app_layout.width = app_btn.width * len(self.app_layout.children)
                     if not was_empty_apps and Window.size[0] < self.app_layout.width:
                         self.app_scroll_view.scroll_x = 1.0                
                     self.active_app_buttons[app.get_name()] = app_btn
@@ -248,9 +254,6 @@ class MainApp(App, SingletonInstane):
                 self.stop()
 
     def active_app(self, app, display_app=True):
-        Logger.info(f'>>> active_app: {app.app_name}')
-        apps = ",".join(a.app_name for a in self.app_history)
-        Logger.info(f'history: {apps}')
         num_apps = self.app_history.count(app)
         if 0 == num_apps or app != self.current_app:
             if 0 == num_apps:
@@ -260,13 +263,8 @@ class MainApp(App, SingletonInstane):
                 self.screen_helper.current_screen(app.get_screen())
                 toast(app.get_name())
             self.app_history.append(app)
-            apps = ",".join(a.app_name for a in self.app_history)
-            Logger.info(f'history: {apps}')
             
     def deactive_app(self, app):
-        Logger.info(f'>>> deactive_app: {app.app_name}')
-        apps = ",".join(a.app_name for a in self.app_history)
-        Logger.info(f'history: {apps}')
         num_apps = self.app_history.count(app)
         if 0 < num_apps:
             self.current_app = None 
@@ -274,8 +272,6 @@ class MainApp(App, SingletonInstane):
             app.on_stop()
             for i in range(num_apps):
                 self.app_history.remove(app)
-            apps = ",".join(a.app_name for a in self.app_history)
-            Logger.info(f'history: {apps}')
             if 0 < len(self.app_history):
                 self.active_app(self.app_history[-1])
 
@@ -288,10 +284,3 @@ class MainApp(App, SingletonInstane):
             app.update(dt)
 
         self.destroy_unregisted_apps()
-        
-        # update app button layout visible
-        lastest_num_apps = len(self.apps)
-        if prev_num_apps != lastest_num_apps:
-            disabled = lastest_num_apps < 2
-            self.app_layout.disabled = disabled
-            self.app_layout.opacity = 0 if disabled else 1

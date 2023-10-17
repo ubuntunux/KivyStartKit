@@ -199,7 +199,7 @@ class Listener:
 
         keyboard = Window.request_keyboard(keyboard_closed, self.text_input)
         keyboard.bind(on_key_down=on_key_down)
-        self.text_input.focus = True
+        #self.text_input.focus = True
 
         # logo
         logo_image = Image(source=logo_file, allow_stretch=True, keep_ratio=True, size_hint_x=None)

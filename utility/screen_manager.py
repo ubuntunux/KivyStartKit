@@ -26,7 +26,7 @@ class ScreenHelper(SingletonInstane):
             
     def current_screen(self, screen):
         if screen is not None and self.screen_manager.current != screen.name and self.screen_manager.has_screen(screen.name):
-            self.screen_manager.current = screen.name  
+            self.screen_manager.current = screen.name
             
     def cycle_screen(self):
         current = self.get_current_screen_name()
