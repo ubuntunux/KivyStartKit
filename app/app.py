@@ -18,6 +18,7 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.widget import Widget
 
 from toast import toast
+from utility.kivy_helper import *
 from utility.screen_manager import ScreenHelper
 from utility.singleton import SingletonInstane
 
@@ -121,26 +122,29 @@ class MainApp(App, SingletonInstane):
         # keyboard_mode: '', 'system', 'dock', 'multi', 'systemanddock', 'systemandmulti'
         Config.set('kivy', 'keyboard_mode', 'system')
         Window.configure_keyboards()
-        self.root_widget = Widget()
-        self.screen_helper = ScreenHelper(size=Window.size)
-        self.root_widget.add_widget(self.screen_helper.screen_manager)
-        self.screen = Screen(name=self.get_name())
-        self.screen_helper.add_screen(self.screen, True)
-
+        self.root_widget = BoxLayout(orientation='vertical', size=Window.size)
+        
         # app list view
-        self.app_button_width = Window.size[0] * 0.3
+        self.app_button_width = 300
         self.app_layout = BoxLayout(orientation='horizontal', size_hint=(None, 1.0))
         self.app_scroll_view = ScrollView(size_hint=(1, 1))
         self.app_scroll_view.add_widget(self.app_layout)
-        layout_height = Window.size[1] * 0.07
+        menu_size_hint_y = get_size_hint_y(Window.size, 100.0)
         self.menu_layout = BoxLayout(
             orientation='horizontal',
-            pos=(0, Window.size[1] - layout_height),
-            size=(Window.size[0], layout_height)
+            pos=get_size(Window.size, 0, (1.0 - menu_size_hint_y)),
+            size_hint=(1.0, menu_size_hint_y)
         )
-        self.menu_btn = Button()
+        self.menu_btn = Button(text="menu", size_hint=(None, 1.0), width=self.app_button_width)
+        self.menu_layout.add_widget(self.menu_btn)
         self.menu_layout.add_widget(self.app_scroll_view)
         self.root_widget.add_widget(self.menu_layout)
+        
+        # screen manager
+        self.screen = Screen(name=self.get_name())
+        self.screen_helper = ScreenHelper(size_hint=(1, (1.0 - menu_size_hint_y)))
+        self.screen_helper.add_screen(self.screen, True)
+        self.root_widget.add_widget(self.screen_helper.screen_manager)
 
         # post process
         self.bind(on_start=self.do_on_start)
