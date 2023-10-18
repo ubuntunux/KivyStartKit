@@ -130,21 +130,17 @@ class MainApp(App, SingletonInstane):
         self.app_scroll_view = ScrollView(size_hint=(1, 1))
         self.app_scroll_view.add_widget(self.app_layout)
         menu_size_hint_y = get_size_hint_y(Window.size, 100.0)
-        self.menu_layout = BoxLayout(
-            orientation='horizontal',
-            pos=get_size(Window.size, 0, (1.0 - menu_size_hint_y)),
-            size_hint=(1.0, menu_size_hint_y)
-        )
+        self.menu_layout = BoxLayout(orientation='horizontal', size_hint=(1.0, menu_size_hint_y))
         self.menu_btn = Button(text="menu", size_hint=(None, 1.0), width=self.app_button_width)
         self.menu_layout.add_widget(self.menu_btn)
         self.menu_layout.add_widget(self.app_scroll_view)
-        self.root_widget.add_widget(self.menu_layout)
         
         # screen manager
         self.screen = Screen(name=self.get_name())
         self.screen_helper = ScreenHelper(size_hint=(1, (1.0 - menu_size_hint_y)))
         self.screen_helper.add_screen(self.screen, True)
         self.root_widget.add_widget(self.screen_helper.screen_manager)
+        self.root_widget.add_widget(self.menu_layout)
 
         # post process
         self.bind(on_start=self.do_on_start)
