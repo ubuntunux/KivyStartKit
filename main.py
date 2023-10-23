@@ -40,8 +40,9 @@ def run():
     # register apps
     from javis.javis import JavisApp
     app.register_app(JavisApp.instance("Javis"))
-    app.register_app(JavisApp("Javis2"))
-    app.register_app(JavisApp("Javis3"))
+    
+    from KivyRPG.main import KivyRPGApp
+    app.register_app(KivyRPGApp.instance("KivyRPGApp"))
     
     # run application
     app.run()
