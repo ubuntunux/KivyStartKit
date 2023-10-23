@@ -1,4 +1,4 @@
-class SingletonInstane:
+class SingletonInstance:
     __instance = None
 
     @classmethod

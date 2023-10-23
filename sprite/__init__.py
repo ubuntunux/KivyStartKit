@@ -1,1 +1,1 @@
-from Sprite import *
+from sprite import *

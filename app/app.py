@@ -20,7 +20,7 @@ from kivy.uix.widget import Widget
 from toast import toast
 from utility.kivy_helper import *
 from utility.screen_manager import ScreenHelper
-from utility.singleton import SingletonInstane
+from utility.singleton import SingletonInstance
 
 autoclass = None
 android = None
@@ -85,7 +85,7 @@ class BaseApp(App):
         pass
 
 
-class MainApp(App, SingletonInstane):
+class MainApp(App, SingletonInstance):
     def __init__(self, app_name):
         super(MainApp, self).__init__()
         Logger.info(f'Run: {app_name}')

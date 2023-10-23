@@ -1,9 +1,9 @@
 from kivy.uix.screenmanager import ScreenManager, WipeTransition
 
-from utility.singleton import SingletonInstane
+from utility.singleton import SingletonInstance
 
 
-class ScreenHelper(SingletonInstane):
+class ScreenHelper(SingletonInstance):
     def __init__(self, *args, **kwargs):
         self.name = "ScreenManager"
         self.screen_manager = ScreenManager(*args, **kwargs)

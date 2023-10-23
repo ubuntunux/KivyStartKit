@@ -14,10 +14,10 @@ from javis.constants import *
 from javis.evaluator import Evaluator
 from javis.listener import Listener
 from javis.memory import Memory
-from utility.singleton import SingletonInstane
+from utility.singleton import SingletonInstance
 
 
-class JavisApp(BaseApp, SingletonInstane):
+class JavisApp(BaseApp, SingletonInstance):
     def __init__(self, app_name):
         super(JavisApp, self).__init__(app_name)
         

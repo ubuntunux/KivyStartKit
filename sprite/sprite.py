@@ -1,51 +1,41 @@
-import Utility as Util
-from Utility import *
 import math
-from kivy.graphics import Scale, Rotate, PushMatrix, PopMatrix, Translate, \
-                          UpdateNormalMatrix
 
-#---------------------#
-# Global instance
-#---------------------#
-def setGlobalInstance():
-  global gSpriteMgr
-  gSpriteMgr = SpriteMgr.instance()
-  
-#---------------------#
-# CLASS : SpriteMgr
-#---------------------#
-class SpriteMgr(Widget, Singleton, object):
+from kivy.graphics import Scale, Rotate, PushMatrix, PopMatrix, Translate, UpdateNormalMatrix
+from kivy.uix.widget import Widget
+
+from utility.singleton import SingletonInstance
+
+class SpriteManager(Widget, SingletonInstance):
   def __init__(self):
     Widget.__init__(self)
-    self.spriteList = []
-    Util.MyRoot.instance().regist(self)
+    self.sprites = []
   
   def reset(self):
-    for sprite in self.spriteList:
+    for sprite in self.sprites:
       if sprite.parent:
         sprite.parent.remove_widget(sprite)
-    self.spriteList = [] 
+    self.sprites = [] 
     
   def regist(self, sprite):
-    if sprite not in self.spriteList:
-      self.spriteList.append(sprite)     
+    if sprite not in self.sprites:
+      self.sprites.append(sprite)     
   
   def remove(self, sprite):
-    if sprite in self.spriteList:
+    if sprite in self.sprites:
       if sprite.parent:
         sprite.parent.remove_widget(sprite)
-      self.spriteList.pop(sprite)
+      self.sprites.pop(sprite)
       
   def update(self, dt):
-    for sprite in self.spriteList:
+    for sprite in self.sprites:
       if sprite.parent:
         sprite.update(dt)
 
 #---------------------#
 # CLASS : Sprite
 #---------------------#
-class Sprite(Widget, object):
-  def __init__(self, pos=cXY, size=(100.0, 100.0), **kargs):
+class Sprite(Widget):
+  def __init__(self, pos=(0,0), size=(100.0, 100.0), **kargs):
     Widget.__init__(self, pos=pos, size=size)
     self.box = None
     self.oldPos = None
@@ -113,7 +103,7 @@ class Sprite(Widget, object):
     self.realSize = mul(self.size, self.scaling)
     self.radius = math.sqrt((self.realSize[0] * 0.5) ** 2 + (self.realSize[1] * 0.5) ** 2)
     # regist
-    gSpriteMgr.regist(self)
+    gSpriteManager.regist(self)
     
   def on_touch_down(self, touch):
     if not touch.grab_current and not self.isTouched:
