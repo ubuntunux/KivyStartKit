@@ -38,6 +38,9 @@ def run():
     app = MainApp.instance("KivyStartKit")
     
     # register apps
+    # from example.main import ExampleApp
+    # app.register_app(ExampleApp.instance())
+    
     from javis.javis import JavisApp
     app.register_app(JavisApp.instance("Javis"))
     

@@ -46,10 +46,14 @@ class BaseApp(App):
         self.__back_event = None
 
     def initialize(self):
-        layout = BoxLayout(orientation='vertical', size=(1, 1))
-        btn = Button(text="BaseApp", size_hint=(1, 1))
-        layout.add_widget(btn)
-        self.add_widget(layout)
+        btn = Button(text=self.app_name, size_hint=(1, 1))
+        self.add_widget(btn)
+        
+    def on_stop():
+        raise Exception("must implement!")
+    
+    def update(self, dt):
+        raise Exception("must implement!")
 
     def stop(self):
         self.main_app.unregister_app(self)
@@ -80,9 +84,6 @@ class BaseApp(App):
 
     def remove_widget(self, widget):
         self.__screen.remove_widget(widget)
-
-    def update(self, dt):
-        pass
 
 
 class MainApp(App, SingletonInstance):
