@@ -1,3 +1,4 @@
+import math
 from functools import partial
 
 from kivy.config import Config
@@ -5,6 +6,42 @@ from kivy.graphics import Color, Rectangle
 from kivy.uix.scatter import Scatter
 from kivy.uix.scatterlayout import ScatterLayout
 
+
+def add(A, B):
+  if type(B) != tuple and type(B) != list:
+    return [i+B for i in A]
+  else:
+    return [A[i]+B[i] for i in range(len(A))]
+
+def sub(A, B):
+  if type(B) != tuple and type(B) != list:
+    return [i-B for i in A]
+  else:
+    return [A[i]-B[i] for i in range(len(A))]
+
+def mul(A, B):
+  if type(B) != tuple and type(B) != list:
+    return [i*B for i in A]
+  else:
+    return [A[i]*B[i] for i in range(len(A))]
+
+def div(A, B):
+  if type(B) != tuple and type(B) != list:
+    return [i/B for i in A]
+  else:
+    return [A[i]/B[i] for i in range(len(A))]
+
+def dot(A, B):
+ return sum(mul(A, B))
+ 
+def distance(A, B = None):
+  temp = sub(A, B) if B else A
+  return math.sqrt(sum([i*i for i in temp]))
+  
+def normalize(A, dist = None):
+  if dist == None:
+    dist = distance(A)
+  return div(A, dist) if dist > 0.0 else mul(A, 0.0)
 
 def get_center_pos(pos, size):
     return (pos[0] + size[0] / 2.0, center_pos[1] + size[1] / 2.0)

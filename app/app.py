@@ -17,7 +17,7 @@ from kivy.uix.screenmanager import Screen
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.widget import Widget
 
-from toast import toast
+from utility.toast import toast
 from utility.kivy_helper import *
 from utility.screen_manager import ScreenHelper
 from utility.singleton import SingletonInstance
