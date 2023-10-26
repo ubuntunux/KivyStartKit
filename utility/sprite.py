@@ -2,6 +2,8 @@ import math
 
 from kivy.core.window import Window
 from kivy.graphics import Color, Rectangle, Scale, Rotate, PushMatrix, PopMatrix, Translate, UpdateNormalMatrix
+from kivy.logger import Logger
+from kivy.uix.image import Image
 from kivy.uix.widget import Widget
 
 from utility.kivy_helper import *
@@ -13,9 +15,10 @@ class Sprite(Widget):
     Widget.__init__(self)
     # properties
     self.touchable = True
-    self.throwable = True
+    self.throwable = False
     self.color = Color(1,1,1,1)
     self.source = None
+    self.texture_region = None
     self.collision = False
     self.collision_space = (0.0, 0.0, Window.size[0], Window.size[1])
     self.elastin = 0.3
@@ -29,6 +32,7 @@ class Sprite(Widget):
     self.offset = (0.0, 0.0)
     # variables
     self.radius = 0
+    self.image = None
     self.texture = None
     self.box = None
     self.old_pos = None
@@ -43,6 +47,7 @@ class Sprite(Widget):
     self.update_rotation = True
     self.update_translate = True
     self.attach_offsets = {}
+    self.delta_time = 0.0
     
     # set argment
     for key in kargs:
@@ -55,9 +60,14 @@ class Sprite(Widget):
     # clamp
     self.elastin = max(min(self.elastin, 1.0), 0.0)
     
+    # texture region
     if self.source != None:
-      self.texture = self.source.texture
-              
+      self.image = Image(source=self.source)
+      if self.image.texture is not None and self.texture_region is not None:
+          self.texture = self.image.texture.get_region(*self.texture_region)
+      else:
+          self.texture = self.image.texture       
+    
     with self.canvas:
       self.color = self.color
       self.box = Rectangle(texture=self.texture, pos=(0,0), size=self.size)
@@ -100,12 +110,12 @@ class Sprite(Widget):
       self.is_touched = False 
       self.set_pos(*add(touch.pos, self.touch_offset))
       if touch.time_update > 0 and self.throwable:
-        self.set_velocity(*add(self.velocity, div((touch.dx, touch.dy), Util.fFrameTime)))
+        self.set_velocity(*add(self.velocity, div((touch.dx, touch.dy), self.delta_time)))
       self.set_update_translate(True)
       touch.ungrab(self)
       
-  def set_update_translate(self, bUpdate):
-    self.update_translate = bUpdate
+  def set_update_translate(self, update):
+    self.update_translate = update
     
   @property
   def center(self):
@@ -179,18 +189,19 @@ class Sprite(Widget):
     for child in self.attach_offsets:
       child.set_pos(*add(self.get_pos(), self.attach_offsets[child]))
 
-  def update(self, fFrameTime):
+  def update(self, dt):
+    self.delta_time = dt
     if self.update_translate and not self.is_attached:
       # apply gravity
       if self.gravity != 0:
-        self.velocity[1] -= self.gravity * fFrameTime
+        self.velocity[1] -= self.gravity * dt
       
       # adjust velocity, move
       self.old_pos = (self.box_pos.x, self.box_pos.y)
       if self.velocity[0] != 0:
-        self.box_pos.x += self.velocity[0] * fFrameTime
+        self.box_pos.x += self.velocity[0] * dt
       if self.velocity[1] != 0:
-        self.box_pos.y += self.velocity[1] * fFrameTime
+        self.box_pos.y += self.velocity[1] * dt
       
       if self.collision:
         if self.box_pos.x < self.collision_space[0]:
@@ -202,7 +213,7 @@ class Sprite(Widget):
         if self.box_pos.y < self.collision_space[1]:
           self.box_pos.y = self.collision_space[1] * 2.0 - self.box_pos.y
           self.velocity[1] = -self.velocity[1] * self.elastin
-          if self.elastin == 0.0 or self.velocity[1] > 0.0 and self.velocity[1] <= abs(self.gravity * fFrameTime):
+          if self.elastin == 0.0 or self.velocity[1] > 0.0 and self.velocity[1] <= abs(self.gravity * dt):
             self.velocity[1] = 0.0
             self.box_pos.y = self.collision_space[1]
         elif self.box_pos.y > self.collision_space[3] - self.real_size[1]:
@@ -219,4 +230,4 @@ class Sprite(Widget):
           
     if self.update_rotation:
       if self.angular_velocity != 0.0:
-        self.box_rotation.angle += self.angular_velocity * fFrameTime
+        self.box_rotation.angle += self.angular_velocity * dt

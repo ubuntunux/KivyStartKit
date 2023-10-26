@@ -27,9 +27,9 @@ def mul(A, B):
 
 def div(A, B):
   if type(B) != tuple and type(B) != list:
-    return [i/B for i in A]
+    return [i/B if 0 != B else 0.0 for i in A]
   else:
-    return [A[i]/B[i] for i in range(len(A))]
+    return [A[i]/B[i] if 0 != B[i] else 0.0 for i in range(len(A))]
 
 def dot(A, B):
  return sum(mul(A, B))
