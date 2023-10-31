@@ -36,6 +36,7 @@ if platform == 'android':
         print(traceback.format_exc())
 
 
+
 class BaseApp(App):
     def __init__(self, app_name):
         Logger.info(f'Run: {app_name}')
@@ -46,10 +47,9 @@ class BaseApp(App):
         self.__back_event = None
 
     def initialize(self):
-        btn = Button(text=self.app_name, size_hint=(1, 1))
-        self.add_widget(btn)
-        
-    def on_stop():
+        raise Exception("must implement!")
+    
+    def on_stop(self):
         raise Exception("must implement!")
     
     def update(self, dt):
