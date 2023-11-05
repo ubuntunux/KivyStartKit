@@ -45,6 +45,9 @@ class BaseApp(App):
         self.initialized = False
         self.__screen = Screen(name=app_name)
         self.__back_event = None
+        self.size = MainApp.instance().size
+        self.width = self.size[0]
+        self.height = self.size[1]
 
     def initialize(self):
         raise Exception("must implement!")
@@ -94,6 +97,12 @@ class MainApp(App, SingletonInstance):
         self.root_widget = None
         self.screen_helper = None
         self.screen = None
+        self.menu_size_hint_y = 0.05
+        self.screen_size_hint = (1, (1.0 - self.menu_size_hint_y))
+        self.size = get_size(Window.size, self.screen_size_hint)
+        self.width = self.size[0]
+        self.height = self.size[1]
+        
         self.apps = {}
         self.registed_apps = []
         self.unregister_apps = []
@@ -130,15 +139,14 @@ class MainApp(App, SingletonInstance):
         self.app_layout = BoxLayout(orientation='horizontal', size_hint=(None, 1.0))
         self.app_scroll_view = ScrollView(size_hint=(1, 1))
         self.app_scroll_view.add_widget(self.app_layout)
-        menu_size_hint_y = get_size_hint_y(Window.size, 100.0)
-        self.menu_layout = BoxLayout(orientation='horizontal', size_hint=(1.0, menu_size_hint_y))
+        self.menu_layout = BoxLayout(orientation='horizontal', size_hint=(1.0, self.menu_size_hint_y))
         self.menu_btn = Button(text="menu", size_hint=(None, 1.0), width=self.app_button_width)
         self.menu_layout.add_widget(self.menu_btn)
         self.menu_layout.add_widget(self.app_scroll_view)
         
         # screen manager
         self.screen = Screen(name=self.get_name())
-        self.screen_helper = ScreenHelper(size_hint=(1, (1.0 - menu_size_hint_y)))
+        self.screen_helper = ScreenHelper(size_hint=self.screen_size_hint)
         self.screen_helper.add_screen(self.screen, True)
         self.root_widget.add_widget(self.screen_helper.screen_manager)
         self.root_widget.add_widget(self.menu_layout)

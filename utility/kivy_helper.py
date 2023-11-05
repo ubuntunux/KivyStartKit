@@ -49,8 +49,8 @@ def get_center_pos(pos, size):
 def get_pos(center_pos, size):
     return (center_pos[0] - size[0] / 2.0, center_pos[1] - size[1] / 2.0)
 
-def get_size(size, ratio_x, ratio_y):
-    return (size[0] * ratio_x, size[1] * ratio_y)
+def get_size(size, size_ratio):
+    return (size[0] * size_ratio[0], size[1] * size_ratio[1])
     
 def get_size_x(size, ratio_x):
     return size[0] * ratio_x
@@ -58,8 +58,8 @@ def get_size_x(size, ratio_x):
 def get_size_y(size, ratio_y):
     return size[1] * ratio_y
     
-def get_size_hint(size, width, height):
-    return (width / size[0], height / size[1])
+def get_size_hint(size, numerator_size):
+    return (numerator_size[0] / size[0], numerator_size[1] / size[1])
     
 def get_size_hint_x(size, width):
     return width / size[0]
