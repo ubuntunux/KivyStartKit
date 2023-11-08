@@ -17,7 +17,7 @@ class Resource:
             return self.source
         self.is_loaded = True
         Logger.info(f"Load {self.name}: {self.filepath}")             
-        self.source = self.loader(self.filepath)
+        self.source = self.loader(self.name, self.filepath)
         if self.source is None:
             Logger.warning(f"failed to load {resource_name}: {self.filepath}") 
         return self.source
