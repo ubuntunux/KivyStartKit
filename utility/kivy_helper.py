@@ -1,8 +1,8 @@
 import math
 from functools import partial
-
 from kivy.config import Config
 from kivy.graphics import Color, Rectangle
+from kivy.graphics.transformation import Matrix
 from kivy.uix.scatter import Scatter
 from kivy.uix.scatterlayout import ScatterLayout
 
@@ -66,6 +66,13 @@ def get_size_hint_x(size, width):
     
 def get_size_hint_y(size, height):
     return height / size[1]
+    
+def flip_widget(widget):
+    widget.apply_transform(
+        Matrix().scale(-1, 1.0, 1.0),
+        post_multiply=True,
+        anchor=widget.to_local(*widget.center)
+    )
 
 # listen to size and position changes
 def update_rect(is_relative, rect, instance, value):
