@@ -1,4 +1,5 @@
 import math
+import numbers
 from functools import partial
 from kivy.config import Config
 from kivy.graphics import Color, Rectangle
@@ -15,25 +16,25 @@ def sign(x):
     return 0
     
 def add(A, B):
-  if type(B) != tuple and type(B) != list:
+  if isinstance(B, numbers.Number):
     return [i+B for i in A]
   else:
     return [A[i]+B[i] for i in range(len(A))]
 
 def sub(A, B):
-  if type(B) != tuple and type(B) != list:
+  if isinstance(B, numbers.Number):
     return [i-B for i in A]
   else:
     return [A[i]-B[i] for i in range(len(A))]
 
 def mul(A, B):
-  if type(B) != tuple and type(B) != list:
+  if isinstance(B, numbers.Number):
     return [i*B for i in A]
   else:
     return [A[i]*B[i] for i in range(len(A))]
 
 def div(A, B):
-  if type(B) != tuple and type(B) != list:
+  if isinstance(B, numbers.Number):
     return [i/B if 0 != B else 0.0 for i in A]
   else:
     return [A[i]/B[i] if 0 != B[i] else 0.0 for i in range(len(A))]
@@ -49,7 +50,7 @@ def normalize(A, dist = None):
   if dist == None:
     dist = distance(A)
   return div(A, dist) if dist > 0.0 else mul(A, 0.0)
-
+  
 def get_center_pos(pos, size):
     return (pos[0] + size[0] / 2.0, pos[1] + size[1] / 2.0)
 
@@ -73,13 +74,6 @@ def get_size_hint_x(size, width):
     
 def get_size_hint_y(size, height):
     return height / size[1]
-    
-def get_discrete_pos(pos, size):
-    pos = div(pos, size)
-    return mul((math.floor(pos[0]), math.floor(pos[1])), size)
-
-def get_discrete_center(pos, size):
-    return get_center_pos(get_discrete_pos(pos, size), size)
     
 def flip_widget(widget):
     widget.apply_transform(
