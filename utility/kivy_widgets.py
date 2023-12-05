@@ -19,6 +19,9 @@ class KivyLabel(TextInput):
             kargs["foreground_color"] = (1,1,1,1)
             
         super(KivyLabel, self).__init__(**kargs)
+    
+    def on_touch_down(self, *args):
+        return False
 
 
 class DebugLabel(KivyLabel):
