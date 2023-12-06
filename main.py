@@ -21,6 +21,8 @@ def run():
     Config.set('kivy', 'log_name', '%Y%m%d_%H%M%S_%_.log')
     Config.set('kivy', 'log_dir', LOG_FOLDER)
     Config.set('kivy', 'log_maxfiles', MAX_LOG_NUM)
+    #Config.set('graphics', 'width', '1920')
+    #Config.set('graphics', 'height', '1080')
     Config.write()
 
     # clear old log

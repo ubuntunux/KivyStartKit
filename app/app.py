@@ -127,7 +127,7 @@ class MainApp(App, SingletonInstance):
         Config.write()
 
     def build(self):
-        # Window.maximize()
+        Window.maximize()
         Window.softinput_mode = 'below_target'
         # keyboard_mode: '', 'system', 'dock', 'multi', 'systemanddock', 'systemandmulti'
         Config.set('kivy', 'keyboard_mode', 'system')
