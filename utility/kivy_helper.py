@@ -7,6 +7,17 @@ from kivy.graphics.transformation import Matrix
 from kivy.uix.scatter import Scatter
 from kivy.uix.scatterlayout import ScatterLayout
 from kivy.vector import Vector
+from kivy.core.window import Window
+from kivy.logger import Logger
+
+def get_aspect():
+    return Window.width / Window.height
+
+def get_is_vertical_window():
+    return Window.width < Window.height
+
+def log_info(text):
+    Logger.info(text)
 
 def sign(x):
     if 0 < x:

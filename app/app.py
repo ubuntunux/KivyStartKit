@@ -183,7 +183,8 @@ class MainApp(App, SingletonInstance):
             return
         self.is_popup = True
         content = BoxLayout(orientation="vertical", size_hint=(1, 1))
-        self.popup_layout = Popup(title=title, content=content, auto_dismiss=False, size_hint=(0.9, 0.2))
+        size_hint = (0.9, 0.2) if get_is_vertical_window() else (0.3, 0.3)
+        self.popup_layout = Popup(title=title, content=content, auto_dismiss=False, size_hint=size_hint)
         content.add_widget(Label(text=message))
         btn_layout = BoxLayout(orientation="horizontal", size_hint=(1, 1), spacing=kivy.metrics.dp(5))
         btn_yes = Button(text='Yes')
@@ -206,7 +207,7 @@ class MainApp(App, SingletonInstance):
         btn_no.bind(on_press=lambda inst: close_popup(inst, False))
         self.popup_layout.open()
         return
-     
+    
     def show_app_list(self, show):
         self.app_layout.disabled = not show
         self.app_layout.opacity = 1 if show else 0

@@ -96,7 +96,7 @@ class JavisApp(BaseApp, SingletonInstance):
             font_name=app_font_name,
             font_size="14dp",
             multiline=True,
-            size_hint=(None, None),
+            size_hint=(1, None),
             size=(Window.size[0], 0),
             background_color=(1, 1, 1, 0),
             foreground_color=(1, 1, 1, 1)
