@@ -132,7 +132,7 @@ class MainApp(App, SingletonInstance):
         # keyboard_mode: '', 'system', 'dock', 'multi', 'systemanddock', 'systemandmulti'
         Config.set('kivy', 'keyboard_mode', 'system')
         Window.configure_keyboards()
-        self.root_widget = BoxLayout(orientation='vertical', size=Window.size)
+        self.root_widget = BoxLayout(orientation='vertical', size_hint=(1,1))
         
         # app list view
         self.app_button_width = 300
