@@ -242,7 +242,7 @@ class Particle(Widget):
             self.refresh()
         
         if self.life_time > 0: 
-            lifeRatio = self.elapse_time / self.life_time
+            life_ratio = self.elapse_time / self.life_time
         
         self.update_sequence()
         
@@ -275,12 +275,12 @@ class Particle(Widget):
             self.box_rot.angle += self.angular_velocity * dt
             
         if self.fade:
-            opacity = 1.0 - lifeRatio
+            opacity = 1.0 - life_ratio
             opacity = max(min(opacity,1.0), 0.0)
             self.opacity = pow(opacity, self.fade)
             
-    def stop(self, isStop):
-        self.is_alive = not isStop
+    def stop(self, is_stop):
+        self.is_alive = not is_stop
         
     def destroy(self):
         self.is_alive = False
