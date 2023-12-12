@@ -1,4 +1,5 @@
 import math
+from kivy.core.window import Window
 from kivy.graphics import Scale, Rotate, PushMatrix, PopMatrix, Translate, UpdateNormalMatrix
 from kivy.graphics.texture import Texture
 from kivy.uix.scatter import Scatter
@@ -73,6 +74,63 @@ class EffectManager(SingletonInstance):
             emitter.update(dt)
 
 
+class Emitter(Scatter):
+    def __init__(self, effect_manager, parent_layer, particle_info, num, **kargs):
+        Scatter.__init__(self, **kargs)
+        self.particles = []
+        self.effect_manager = effect_manager
+        self.create_particle(particle_info, num)
+        self.parent_layer = parent_layer
+        self.alive_particles = []
+
+    def create_particle(self, info, num):
+        self.info = info
+        for i in range(num):
+            particle = Particle(self)
+            particle.create(**info)
+            self.particles.append(particle)
+    
+    def destroy(self):
+        for particle in self.particles:
+            particle.destroy()
+        self.alive_particles = []
+        self.particles = []
+
+        if self.parent:
+            self.parent.remove_widget(self)
+        
+    def play_particle(self, parent=None, is_world_space=True):
+        self.effect_manager.notify_play_emitter(self)
+        emitter_parent = parent if parent else self.parent_layer
+        if self.parent and self.parent != emitter_parent:
+            self.parent.remove_widget(self)
+            
+        if self.parent is None:
+            emitter_parent.add_widget(self)
+            
+        attach_to = parent if parent else self
+        for particle in self.particles:
+            particle.play(attach_to, is_world_space)
+            
+    def stop_particles(self):
+        for particle in self.alive_particles:
+            particle.stop(True)
+    
+    def notify_play_particle(self, particle):
+        if not particle in self.alive_particles:
+            self.alive_particles.append(particle)
+    
+    def notify_stop_particle(self, particle):
+        if particle in self.alive_particles:
+            self.alive_particles.remove(particle)
+        if self.alive_particles == []:
+            self.effect_manager.notify_stop_emitter(self)
+
+    def update(self, dt):
+        for particle in self.alive_particles:
+            particle.update(dt)
+
+
 class Particle(Widget):
     def __init__(self, emitter):
         Widget.__init__(self)
@@ -91,6 +149,7 @@ class Particle(Widget):
         self.is_world_space = False
         self.box_rot = None
         self.box_pos = None
+        self.area = [0,0,Window.width,Window.height]
         
         # variation
         self.collision = False
@@ -183,24 +242,26 @@ class Particle(Widget):
         self.old_sequence = -1
         if self.parent:
             self.parent.remove_widget(self)
-        self.refresh()
+        self.spawn_particle()
 
-    def refresh(self, is_update_only_translate = False):
+    def spawn_particle(self, is_update_only_translate = False):
         if not is_update_only_translate:
             for key in self.variables:
                 setattr(self, key, self.variables[key].get()) 
             self.velocity = div(self.velocity, self.scaling)
             self.real_size = mul(self.size, self.scaling)
-            self.box_rot.origin = origin = mul(mul(self.size, 0.5), self.scaling)
+            self.box_rot.origin = mul(mul(self.size, 0.5), self.scaling)
             self.box_rot.angle = self.rotate
             self.box_scale.xyz = (self.scaling, self.scaling, self.scaling)
-        # refresh translate
+        # reset translate
         self.box_pos.x = -self.real_size[0] * 0.5 + self.offset[0]
         self.box_pos.y = -self.real_size[1] * 0.5 + self.offset[1]
+        
         if self.attach_to:
             if self.is_world_space:
-                self.box_pos.x += self.attach_to.center[0]
-                self.box_pos.y += self.attach_to.center[1]
+                parent_center = self.attach_to.to_parent(*mul(self.attach_to.size, 0.5))
+                self.box_pos.x += parent_center[0]
+                self.box_pos.y += parent_center[1]
             else:
                 self.box_pos.x += self.attach_to.size[0] * 0.5
                 self.box_pos.y += self.attach_to.size[1] * 0.5
@@ -231,7 +292,7 @@ class Particle(Widget):
                     self.emitter.parent_layer.add_widget(self)
                 else:
                     self.emitter.add_widget(self) 
-                self.refresh(is_update_only_translate = True)
+                self.spawn_particle(is_update_only_translate = True)
             else:
                 return
         
@@ -245,7 +306,7 @@ class Particle(Widget):
             if self.loop_left == 0:
                 self.destroy()
                 return
-            self.refresh()
+            self.spawn_particle()
         
         if self.life_time > 0: 
             life_ratio = self.elapse_time / self.life_time
@@ -259,17 +320,17 @@ class Particle(Widget):
         if self.collision:
             self.box_pos.x += self.velocity[0] * dt
             self.box_pos.y += self.velocity[1] * dt
-            if self.box_pos.x < 0.0:
+            if self.box_pos.x < self.area[0]:
                 self.box_pos.x = -self.box_pos.x
                 self.velocity[0] = -self.velocity[0] * self.elastin
-            elif self.box_pos.x > Util.W - self.size[0]:
-                self.box_pos.x = (Util.W - self.size[0])* 2.0 - self.box_pos.x
+            elif self.box_pos.x > self.area[2] - self.size[0]:
+                self.box_pos.x = (self.area[2] - self.size[0])* 2.0 - self.box_pos.x
                 self.velocity[0] = -self.velocity[0] * self.elastin
-            if self.box_pos.y < 0.0:
+            if self.box_pos.y < self.area[1]:
                 self.box_pos.y = -self.box_pos.y
                 self.velocity[1] = -self.velocity[1] * self.elastin
-            elif self.box_pos.y > Util.H - self.size[1]:
-                self.box_pos.y = (Util.H - self.size[1]) * 2.0 - self.box_pos.y
+            elif self.box_pos.y > self.area[3] - self.size[1]:
+                self.box_pos.y = (self.area[3] - self.size[1]) * 2.0 - self.box_pos.y
                 self.velocity[1] = -self.velocity[1] * self.elastin
         else:
             if self.velocity[0] != 0:
@@ -293,67 +354,3 @@ class Particle(Widget):
         self.emitter.notify_stop_particle(self)
         if self.parent:
             self.parent.remove_widget(self)     
-
-
-class Emitter(Scatter):
-    def __init__(self, effect_manager, parent_layer, particle_info, num, **kargs):
-        Scatter.__init__(self, **kargs)
-        self.particles = []
-        self.effect_manager = effect_manager
-        self.create_particle(particle_info, num)
-        self.parent_layer = parent_layer
-        self.alive_particles = []
-
-    def create_particle(self, info, num):
-        self.info = info
-        for i in range(num):
-            particle = Particle(self)
-            particle.create(**info)
-            self.particles.append(particle)
-    
-    def destroy(self):
-        for particle in self.particles:
-            particle.destroy()
-        self.alive_particles = []
-        self.particles = []
-
-        if self.parent:
-            self.parent.remove_widget(self)
-        
-    def play_particle(self):
-        self.effect_manager.notify_play_emitter(self)
-        if self.parent and self.parent != self.parent_layer:
-            self.parent.remove_widget(self)
-            self.parent_layer.add_widget(self)
-            return
-        elif not self.parent:
-            self.parent_layer.add_widget(self)
-        for particle in self.particles:
-            particle.play(None, False)
-    
-    def play_particle_with(self, parent, is_world_space):
-        self.effect_manager.notify_play_emitter(self)
-        if self.parent and self.parent != parent:
-            self.parent.remove_widget(self)         
-        if not self.parent:
-            parent.add_widget(self)
-        for particle in self.particles:
-            particle.play(parent, is_world_space)
-        
-    def stop_particles(self):
-        for particle in self.alive_particles:
-            particle.stop(True)
-    
-    def notify_play_particle(self, particle):
-        if not particle in self.alive_particles:
-            self.alive_particles.append(particle)
-    
-    def notify_stop_particle(self, particle):
-        if particle in self.alive_particles:
-            self.alive_particles.remove(particle)
-        if self.alive_particles == []:
-            self.effect_manager.notify_stop_emitter(self)
-
-    def update(self, dt):
-        for particle in self.alive_particles:
-            particle.update(dt)
