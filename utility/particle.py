@@ -1,9 +1,12 @@
 import math
 from kivy.graphics import Scale, Rotate, PushMatrix, PopMatrix, Translate, UpdateNormalMatrix
+from kivy.graphics.texture import Texture
 from kivy.uix.scatter import Scatter
+from kivy.uix.widget import Widget
 from kivy.vector import Vector
 from utility.singleton import SingletonInstance
 from utility.kivy_helper import *
+from utility.range_variable import RangeVar
 
 
 class EffectManager(SingletonInstance):
@@ -31,11 +34,11 @@ class EffectManager(SingletonInstance):
     def get_emitter(self, name):
         return self.emitters[name]
         
-    def create_emitter(self, name, info, num):
+    def create_emitter(self, name, info, num, **kargs):
         if not self.parent_layer:
             raise AttributeError("Has no parent, first run set_layer..")
 
-        emitter = Emitter(self, self.parent_layer, info, num)
+        emitter = Emitter(self, self.parent_layer, info, num, **kargs)
         self.emitters[name] = emitter
         return emitter
     
@@ -89,7 +92,7 @@ class Particle(Widget):
         self.box_rot = None
         self.box_pos = None
         
-        #variation
+        # variation
         self.collision = False
         self.loop = 1 # -1 is infinite
         self.loop_left = self.loop
@@ -97,7 +100,6 @@ class Particle(Widget):
         self.sequence = [1,1]
         self.play_speed = 1.0
         self.elastin = 0.8
-
         self.delay = 0.0
         self.life_time = 1.0
         self.gravity = 980.0
@@ -108,15 +110,15 @@ class Particle(Widget):
         self.opacity = 1.0
         self.offset = (0.0, 0.0)
         self.variables = {
-            'delay':Var(self.delay),
-            'life_time':Var(self.life_time),
-            'gravity':Var(self.gravity),
-            'vel':Var(self.velocity),
-            'angular_velocity':Var(self.angular_velocity),
-            'rotate':Var(self.rotate),
-            'scaling':Var(self.scaling),
-            'opacity':Var(self.opacity),
-            'offset':Var(self.offset)
+            'delay':RangeVar(self.delay),
+            'life_time':RangeVar(self.life_time),
+            'gravity':RangeVar(self.gravity),
+            'vel':RangeVar(self.velocity),
+            'angular_velocity':RangeVar(self.angular_velocity),
+            'rotate':RangeVar(self.rotate),
+            'scaling':RangeVar(self.scaling),
+            'opacity':RangeVar(self.opacity),
+            'offset':RangeVar(self.offset)
         }
             
     def create(self, 
@@ -128,7 +130,8 @@ class Particle(Widget):
             loop=1, 
             fade=0.0,
             sequence=[1,1], 
-            play_speed=1.0, 
+            play_speed=1.0,
+            color=(1,1,1,1),
             **kargs):
         self.collision = collision
         self.elastin = max(min(elastin, 1.0), 0.0)
@@ -152,12 +155,15 @@ class Particle(Widget):
                 raise AttributeError(self.__class__.__name__ + " has not attribue " + key)
             self.variables[key] = kargs[key]
             
-        if self.texture:
+        if True:
+            texture_size = self.texture.size if self.texture else self.size
             self.cell_count = self.sequence[0] * self.sequence[1]
-            self.cell_size = div(self.texture.size, self.sequence)
-            curr_texture = self.texture.get_region(0.0, 0.0, *self.cell_size)
+            self.cell_size = div(texture_size, self.sequence)
+            curr_texture = None
+            if self.texture:
+                self.texture.get_region(0.0, 0.0, * self.cell_size)
             with self.canvas:
-                Color(1,1,1,1)
+                Color(*color)
                 self.box = Rectangle(texture=curr_texture, pos=(0,0), size=self.size)
             with self.canvas.before:
                 PushMatrix()
@@ -200,7 +206,7 @@ class Particle(Widget):
                 self.box_pos.y += self.attach_to.size[1] * 0.5
 
     def update_sequence(self):
-        if self.cell_count > 1 and self.play_speed > 0:
+        if self.texture and self.cell_count > 1 and self.play_speed > 0:
             ratio = self.elapse_time / self.life_time
             ratio *= self.play_speed
             ratio %= 1.0
@@ -290,23 +296,20 @@ class Particle(Widget):
 
 
 class Emitter(Scatter):
-    def __init__(self, effect_manager, parent_layer, info, num):
-        Scatter.__init__(self , size=[0,0])
-        self.do_translation = False
-        self.do_rotation = False
-        self.do_scale = False
+    def __init__(self, effect_manager, parent_layer, particle_info, num, **kargs):
+        Scatter.__init__(self, **kargs)
         self.particles = []
         self.effect_manager = effect_manager
-        self.create_particle(info, num)
+        self.create_particle(particle_info, num)
         self.parent_layer = parent_layer
         self.alive_particles = []
 
     def create_particle(self, info, num):
         self.info = info
         for i in range(num):
-            par = Particle(self)
-            par.create(**info)
-            self.particles.append(par)
+            particle = Particle(self)
+            particle.create(**info)
+            self.particles.append(particle)
     
     def destroy(self):
         for particle in self.particles:
