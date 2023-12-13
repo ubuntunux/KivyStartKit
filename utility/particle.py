@@ -59,11 +59,11 @@ class EffectManager(SingletonInstance):
         for i in self.emitters:
             self.emitters[i].stop_particles()
         
-    def notify_play_emitter(self, emitter):
+    def register_emitter(self, emitter):
         if not emitter in self.alive_emitters:
             self.alive_emitters.append(emitter)
     
-    def notify_stop_emitter(self, emitter):
+    def unregister_emitter(self, emitter):
         if emitter in self.alive_emitters:
             self.alive_emitters.remove(emitter)
 
@@ -100,7 +100,7 @@ class Emitter(Scatter):
             self.parent.remove_widget(self)
         
     def play_particle(self, parent=None, is_world_space=True):
-        self.effect_manager.notify_play_emitter(self)
+        self.effect_manager.register_emitter(self)
         emitter_parent = parent if parent else self.parent_layer
         if self.parent and self.parent != emitter_parent:
             self.parent.remove_widget(self)
@@ -124,7 +124,7 @@ class Emitter(Scatter):
         if particle in self.alive_particles:
             self.alive_particles.remove(particle)
         if self.alive_particles == []:
-            self.effect_manager.notify_stop_emitter(self)
+            self.effect_manager.unregister_emitter(self)
 
     def update(self, dt):
         for particle in self.alive_particles:
@@ -149,16 +149,17 @@ class Particle(Widget):
         self.is_world_space = False
         self.box_rot = None
         self.box_pos = None
-        self.area = [0,0,Window.width,Window.height]
         
         # variation
+        self.area = [0,0,Window.width,Window.height]
         self.collision = False
-        self.loop = 1 # -1 is infinite
-        self.loop_left = self.loop
+        self.loop = -1 # -1 is infinite
+        self.num_loop = self.loop
         self.fade = 0.0
         self.sequence = [1,1]
         self.play_speed = 1.0
         self.elastin = 0.8
+        # range variable
         self.delay = 0.0
         self.life_time = 1.0
         self.gravity = 980.0
@@ -172,7 +173,7 @@ class Particle(Widget):
             'delay':RangeVar(self.delay),
             'life_time':RangeVar(self.life_time),
             'gravity':RangeVar(self.gravity),
-            'vel':RangeVar(self.velocity),
+            'velocity':RangeVar(self.velocity),
             'angular_velocity':RangeVar(self.angular_velocity),
             'rotate':RangeVar(self.rotate),
             'scaling':RangeVar(self.scaling),
@@ -209,11 +210,13 @@ class Particle(Widget):
         if self.sequence[0]==1 and self.sequence[1]==1:
             self.play_speed = 0
 
+        # range variables
         for key in kargs:
             if not hasattr(self, key):
                 raise AttributeError(self.__class__.__name__ + " has not attribue " + key)
             self.variables[key] = kargs[key]
             
+        # create rectangle
         if True:
             texture_size = self.texture.size if self.texture else self.size
             self.cell_count = self.sequence[0] * self.sequence[1]
@@ -234,10 +237,16 @@ class Particle(Widget):
 
     def play(self, attach_to, is_world_space):
         self.emitter.notify_play_particle(self)
+        self.area = (
+            0,
+            0,
+            self.emitter.parent_layer.size[0],
+            self.emitter.parent_layer.size[1]
+        )
         self.attach_to = attach_to
         self.is_world_space = is_world_space
         self.is_alive = True
-        self.loop_left = self.loop
+        self.num_loop = self.loop
         self.elapse_time = 0.0
         self.old_sequence = -1
         if self.parent:
@@ -259,7 +268,11 @@ class Particle(Widget):
         
         if self.attach_to:
             if self.is_world_space:
-                parent_center = self.attach_to.to_parent(*mul(self.attach_to.size, 0.5))
+                parent_center = (0,0)
+                if self.emitter != self.attach_to:
+                    parent_center = add(parent_center, self.emitter.center)
+                parent_center = add(parent_center, mul(self.attach_to.size, 0.5))
+                parent_center = self.attach_to.to_parent(*parent_center)
                 self.box_pos.x += parent_center[0]
                 self.box_pos.y += parent_center[1]
             else:
@@ -301,9 +314,9 @@ class Particle(Widget):
         
         if self.elapse_time > self.life_time:
             self.elapse_time -= self.life_time
-            if self.loop_left > 0:
-                self.loop_left -= 1
-            if self.loop_left == 0:
+            if self.num_loop > 0:
+                self.num_loop -= 1
+            if self.num_loop == 0:
                 self.destroy()
                 return
             self.spawn_particle()
