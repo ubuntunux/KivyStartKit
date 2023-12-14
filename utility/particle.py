@@ -101,15 +101,16 @@ class Emitter(Scatter):
         self.particles = []
         self.effect_manager = effect_manager
         self.parent_layer = parent_layer
-        self.attach_to = attach_to or self
+        self.attach_to = attach_to
         self.particle_info = particle_info
         self.alive_particles = []
+        self.attach_offset = Vector(self.pos)
         self.create_particles(particle_info, particle_count)
 
     def create_particles(self, particle_info, particle_count):
         for i in range(particle_count):
             particle = Particle(self)
-            particle.create(attach_to=self.attach_to, **particle_info)
+            particle.create(**particle_info)
             self.particles.append(particle)
     
     def destroy(self):
@@ -123,15 +124,9 @@ class Emitter(Scatter):
         
     def play(self):
         self.effect_manager.register_emitter(self)
-        emitter_parent = self.parent_layer
-        if self.attach_to and self is not self.attach_to:
-            emitter_parent = self.attach_to
-            
-        if self.parent and self.parent != emitter_parent:
-            self.parent.remove_widget(self)
-            
+        
         if self.parent is None:
-            emitter_parent.add_widget(self)
+            self.parent_layer.add_widget(self)
             
         for particle in self.particles:
             particle.play()
@@ -151,6 +146,8 @@ class Emitter(Scatter):
             self.effect_manager.unregister_emitter(self)
 
     def update(self, dt):
+        if self.attach_to:
+            self.pos = add(self.attach_to.pos, self.attach_offset)
         for particle in self.alive_particles:
             particle.update(dt)
 
@@ -169,7 +166,6 @@ class Particle(Widget):
         self.cell_size = [1.0, 1.0]
         self.cell_count = 1
         self.old_sequence = -1
-        self.attach_to = None
         self.is_world_space = False
         self.box_rot = None
         self.box_pos = None
@@ -207,7 +203,6 @@ class Particle(Widget):
             
     def create(self,
             is_world_space=True,
-            attach_to=None,
             elastin=0.8, 
             collision=False, 
             size=[100,100], 
@@ -219,7 +214,6 @@ class Particle(Widget):
             play_speed=1.0,
             color=(1,1,1,1),
             **kargs):
-        self.attach_to = attach_to
         self.is_world_space = is_world_space
         self.collision = collision
         self.elastin = max(min(elastin, 1.0), 0.0)
@@ -290,19 +284,12 @@ class Particle(Widget):
         # reset translate
         self.box_pos.x = -self.real_size[0] * 0.5 + self.offset[0]
         self.box_pos.y = -self.real_size[1] * 0.5 + self.offset[1]
-        
-        if self.attach_to:
-            if self.is_world_space:
-                parent_center = (0,0)
-                if self.emitter != self.attach_to:
-                    parent_center = add(parent_center, self.emitter.center)
-                parent_center = add(parent_center, mul(self.attach_to.size, 0.5))
-                parent_center = self.attach_to.to_parent(*parent_center)
-                self.box_pos.x += parent_center[0]
-                self.box_pos.y += parent_center[1]
-            else:
-                self.box_pos.x += self.attach_to.size[0] * 0.5
-                self.box_pos.y += self.attach_to.size[1] * 0.5
+        if self.is_world_space:
+            self.box_pos.x += self.emitter.center[0]
+            self.box_pos.y += self.emitter.center[1]
+        else:
+            self.box_pos.x += self.emitter.size[0] * 0.5
+            self.box_pos.y += self.emitter.size[1] * 0.5
 
     def update_sequence(self):
         if self.texture and self.cell_count > 1 and self.play_speed > 0:
