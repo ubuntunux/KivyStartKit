@@ -35,17 +35,28 @@ class EffectManager(SingletonInstance):
     def get_emitter(self, name):
         return self.emitters[name]
         
-    def create_emitter(self, name, info, num, **kargs):
+    def create_emitter(
+        self,
+        emitter_name="emitter",
+        parent_layer=None,
+        attach_to=None, 
+        particle_info={},
+        particle_count=10,
+        **kargs
+    ):
         if not self.parent_layer:
             raise AttributeError("Has no parent, first run set_layer..")
 
-        emitter = Emitter(self, self.parent_layer, info, num, **kargs)
-        self.emitters[name] = emitter
-        return emitter
-    
-    def create_emitter_with(self, name, info, num, parent_layer):
-        emitter = Emitter(self, parent_layer, info, num)
-        self.emitters[name] = emitter
+        emitter = Emitter(
+            self,
+            emitter_name,
+            parent_layer=parent_layer or self.parent_layer,
+            attach_to=attach_to,
+            particle_info=particle_info, 
+            particle_count=particle_count, 
+            **kargs
+        )
+        self.emitters[emitter_name] = emitter
         return emitter
         
     def remove_emitter(self, name):
@@ -75,19 +86,30 @@ class EffectManager(SingletonInstance):
 
 
 class Emitter(Scatter):
-    def __init__(self, effect_manager, parent_layer, particle_info, num, **kargs):
+    def __init__(
+        self, 
+        effect_manager,
+        emitter_name,
+        parent_layer=None, 
+        attach_to=None, 
+        particle_count=10, 
+        particle_info={}, 
+        **kargs
+    ):
         Scatter.__init__(self, **kargs)
+        self.emitter_name = emitter_name
         self.particles = []
         self.effect_manager = effect_manager
-        self.create_particle(particle_info, num)
         self.parent_layer = parent_layer
+        self.attach_to = attach_to or self
+        self.particle_info = particle_info
         self.alive_particles = []
+        self.create_particles(particle_info, particle_count)
 
-    def create_particle(self, info, num):
-        self.info = info
-        for i in range(num):
+    def create_particles(self, particle_info, particle_count):
+        for i in range(particle_count):
             particle = Particle(self)
-            particle.create(**info)
+            particle.create(attach_to=self.attach_to, **particle_info)
             self.particles.append(particle)
     
     def destroy(self):
@@ -99,28 +121,30 @@ class Emitter(Scatter):
         if self.parent:
             self.parent.remove_widget(self)
         
-    def play_particle(self, parent=None, is_world_space=True):
+    def play(self):
         self.effect_manager.register_emitter(self)
-        emitter_parent = parent if parent else self.parent_layer
+        emitter_parent = self.parent_layer
+        if self.attach_to and self is not self.attach_to:
+            emitter_parent = self.attach_to
+            
         if self.parent and self.parent != emitter_parent:
             self.parent.remove_widget(self)
             
         if self.parent is None:
             emitter_parent.add_widget(self)
             
-        attach_to = parent if parent else self
         for particle in self.particles:
-            particle.play(attach_to, is_world_space)
+            particle.play()
             
-    def stop_particles(self):
+    def stop(self):
         for particle in self.alive_particles:
             particle.stop(True)
     
-    def notify_play_particle(self, particle):
+    def register_particle(self, particle):
         if not particle in self.alive_particles:
             self.alive_particles.append(particle)
     
-    def notify_stop_particle(self, particle):
+    def unregister_particle(self, particle):
         if particle in self.alive_particles:
             self.alive_particles.remove(particle)
         if self.alive_particles == []:
@@ -181,7 +205,9 @@ class Particle(Widget):
             'offset':RangeVar(self.offset)
         }
             
-    def create(self, 
+    def create(self,
+            is_world_space=True,
+            attach_to=None,
             elastin=0.8, 
             collision=False, 
             size=[100,100], 
@@ -193,6 +219,8 @@ class Particle(Widget):
             play_speed=1.0,
             color=(1,1,1,1),
             **kargs):
+        self.attach_to = attach_to
+        self.is_world_space = is_world_space
         self.collision = collision
         self.elastin = max(min(elastin, 1.0), 0.0)
         self.size = size
@@ -217,34 +245,31 @@ class Particle(Widget):
             self.variables[key] = kargs[key]
             
         # create rectangle
-        if True:
-            texture_size = self.texture.size if self.texture else self.size
-            self.cell_count = self.sequence[0] * self.sequence[1]
-            self.cell_size = div(texture_size, self.sequence)
-            curr_texture = None
-            if self.texture:
-                self.texture.get_region(0.0, 0.0, * self.cell_size)
-            with self.canvas:
-                Color(*color)
-                self.box = Rectangle(texture=curr_texture, pos=(0,0), size=self.size)
-            with self.canvas.before:
-                PushMatrix()
-                self.box_pos = Translate(0,0)
-                self.box_rot = Rotate(angle=0, axis=(0,0,1), origin=mul(mul(self.size, 0.5), self.scaling))
-                self.box_scale = Scale(1,1,1)
-            with self.canvas.after:
-                PopMatrix()
-
-    def play(self, attach_to, is_world_space):
-        self.emitter.notify_play_particle(self)
+        texture_size = self.texture.size if self.texture else self.size
+        self.cell_count = self.sequence[0] * self.sequence[1]
+        self.cell_size = div(texture_size, self.sequence)
+        curr_texture = None
+        if self.texture:
+            self.texture.get_region(0.0, 0.0, * self.cell_size)
+        with self.canvas:
+            Color(*color)
+            self.box = Rectangle(texture=curr_texture, pos=(0,0), size=self.size)
+        with self.canvas.before:
+            PushMatrix()
+            self.box_pos = Translate(0,0)
+            self.box_rot = Rotate(angle=0, axis=(0,0,1), origin=mul(mul(self.size, 0.5), self.scaling))
+            self.box_scale = Scale(1,1,1)
+        with self.canvas.after:
+            PopMatrix()
+    
+    def play(self):
+        self.emitter.register_particle(self)
         self.area = (
             0,
             0,
             self.emitter.parent_layer.size[0],
             self.emitter.parent_layer.size[1]
         )
-        self.attach_to = attach_to
-        self.is_world_space = is_world_space
         self.is_alive = True
         self.num_loop = self.loop
         self.elapse_time = 0.0
@@ -364,6 +389,6 @@ class Particle(Widget):
         
     def destroy(self):
         self.is_alive = False
-        self.emitter.notify_stop_particle(self)
+        self.emitter.unregister_particle(self)
         if self.parent:
             self.parent.remove_widget(self)     
