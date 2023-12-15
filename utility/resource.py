@@ -1,7 +1,9 @@
 import os
 from kivy.logger import Logger
 from kivy.uix.image import Image
+from utility.particle import ParticleData
 from utility.singleton import SingletonInstance
+from utility.range_variable import RangeVar
 
 
 class Resource:
@@ -26,6 +28,8 @@ class Resource:
 class ResourceManager(SingletonInstance):
     def __init__(self):
         super(ResourceManager, self).__init__()
+        self.particle_data = {}
+        self.images = {}
         
     def initialize(self):
         raise Exception('must implement')
@@ -51,4 +55,20 @@ class ResourceManager(SingletonInstance):
             return resource.get_resource()
         Logger.warning(f"not found resource: {resource_name}")
         
+    # image
+    def get_image(self, resource_name):
+        return self.get_resource(self.images, resource_name)
+        
+    def image_loader(self, name, filepath):
+        return Image(source=filepath)
     
+    # particle
+    def get_particle_data(self, resource_name):
+        return self.get_resource(self.particle_data, resource_name)
+        
+    def particle_data_loader(self, name, filepath):
+        if os.path.exists(filepath):
+            with open(filepath) as f:
+                particle_data_info = eval(f.read())
+                src_image = self.get_image(particle_data_info["image_file"])
+                return ParticleData(name, particle_data_info, src_image)

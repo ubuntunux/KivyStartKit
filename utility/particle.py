@@ -2,12 +2,23 @@ import math
 from kivy.core.window import Window
 from kivy.graphics import Scale, Rotate, PushMatrix, PopMatrix, Translate, UpdateNormalMatrix
 from kivy.graphics.texture import Texture
+from kivy.logger import Logger
 from kivy.uix.scatter import Scatter
 from kivy.uix.widget import Widget
 from kivy.vector import Vector
 from utility.singleton import SingletonInstance
 from utility.kivy_helper import *
 from utility.range_variable import RangeVar
+
+
+class ParticleData():
+    def __init__(self, name, particle_data, src_image):
+        self.name = name
+        self.particle_data = particle_data
+        self.particle_data["texture"] = src_image.texture
+    
+    def get_data(self):
+        return self.particle_data
 
 
 class EffectManager(SingletonInstance):
@@ -35,12 +46,39 @@ class EffectManager(SingletonInstance):
     def get_emitter(self, name):
         return self.emitters[name]
         
+    def example_effect(self):
+        particle_data = dict(
+            is_world_space=False,
+            loop=-1,
+            fade=1,
+            color=(1,0.5,0,1),
+            sequence=[4,4],
+            texture=None, # src_image.texture,
+            delay=RangeVar(0.0,1.0), 
+            angular_velocity=RangeVar(360.0), 
+            rotate=RangeVar(0.0, 360), 
+            offset=RangeVar((-20,20), (-20,20)),
+            life_time=RangeVar(0.5,1.5), 
+            velocity=RangeVar([-200.0, 100], [200.0, 200]),
+            gravity=RangeVar(0.0)
+        )
+        self.create_emitter(
+            emitter_name='explosion',
+            attach_to=None,
+            pos=(50,50),
+            size=(100,100),
+            particle_data=particle_data,
+            particle_count=20
+        )
+        effect = self.get_emitter('explosion')
+        effect.play()
+        
     def create_emitter(
         self,
         emitter_name="emitter",
         parent_layer=None,
         attach_to=None, 
-        particle_info={},
+        particle_data={},
         particle_count=10,
         **kargs
     ):
@@ -52,7 +90,7 @@ class EffectManager(SingletonInstance):
             emitter_name,
             parent_layer=parent_layer or self.parent_layer,
             attach_to=attach_to,
-            particle_info=particle_info, 
+            particle_data=particle_data, 
             particle_count=particle_count, 
             **kargs
         )
@@ -93,7 +131,7 @@ class Emitter(Scatter):
         parent_layer=None, 
         attach_to=None, 
         particle_count=10, 
-        particle_info={}, 
+        particle_data={}, 
         **kargs
     ):
         Scatter.__init__(self, **kargs)
@@ -102,15 +140,15 @@ class Emitter(Scatter):
         self.effect_manager = effect_manager
         self.parent_layer = parent_layer
         self.attach_to = attach_to
-        self.particle_info = particle_info
+        self.particle_data = particle_data
         self.alive_particles = []
         self.attach_offset = Vector(self.pos)
-        self.create_particles(particle_info, particle_count)
+        self.create_particles(particle_data, particle_count)
 
-    def create_particles(self, particle_info, particle_count):
+    def create_particles(self, particle_data, particle_count):
         for i in range(particle_count):
             particle = Particle(self)
-            particle.create(**particle_info)
+            particle.create(**particle_data)
             self.particles.append(particle)
     
     def destroy(self):
@@ -160,25 +198,26 @@ class Particle(Widget):
         self.is_alive = False
         self.elapse_time = 0.0
         self.acc_time = 0.0
-        self.texture = None
         self.curr_texture = None
         self.curr_sequence = [0,0]
         self.cell_size = [1.0, 1.0]
         self.cell_count = 1
         self.old_sequence = -1
-        self.is_world_space = False
+        self.area = [0,0,Window.width,Window.height]
         self.box_rot = None
         self.box_pos = None
+        self.num_loop = -1
         
         # variation
-        self.area = [0,0,Window.width,Window.height]
+        self.texture = None
+        self.is_world_space = False
         self.collision = False
         self.loop = -1 # -1 is infinite
-        self.num_loop = self.loop
         self.fade = 0.0
         self.sequence = [1,1]
         self.play_speed = 1.0
         self.elastin = 0.8
+        
         # range variable
         self.delay = 0.0
         self.life_time = 1.0
@@ -206,8 +245,7 @@ class Particle(Widget):
             elastin=0.8, 
             collision=False, 
             size=[100,100], 
-            source=None, 
-            texture=None, 
+            texture=None,
             loop=1, 
             fade=0.0,
             sequence=[1,1], 
@@ -220,23 +258,16 @@ class Particle(Widget):
         self.size = size
         self.loop = loop
         self.fade = fade
+        self.texture = texture
         self.sequence = sequence
-        self.play_speed = play_speed
-        
-        if texture == None:
-            if source != None:
-                self.texture = Image(source=source).texture
-        else:
-            self.texture=texture
-            
+        self.play_speed = play_speed 
         if self.sequence[0]==1 and self.sequence[1]==1:
             self.play_speed = 0
 
         # range variables
-        for key in kargs:
-            if not hasattr(self, key):
-                raise AttributeError(self.__class__.__name__ + " has not attribue " + key)
-            self.variables[key] = kargs[key]
+        for (key, value) in kargs.items():
+            if hasattr(self, key):
+                self.variables[key] = value
             
         # create rectangle
         texture_size = self.texture.size if self.texture else self.size
