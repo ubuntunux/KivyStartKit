@@ -12,10 +12,34 @@ from utility.range_variable import RangeVar
 
 
 class ParticleData():
+    default_data = {
+        "is_world_space":True,
+        "elastin":0.8, 
+        "collision":False, 
+        "size":[100,100], 
+        "image_file":"explosion",
+        "loop":-1, 
+        "fade":1.0,
+        "sequence":[4,4], 
+        "play_speed":1.0,
+        "color":(1,1,0,1),
+        "sequence":[4,4],
+        "delay":RangeVar(0.0,1.0), 
+        "life_time":RangeVar(0.5,1.5), 
+        "gravity":RangeVar(200.0),
+        "velocity":RangeVar([-200.0, 200], [200.0, 300]),
+        "angular_velocity":RangeVar(360.0), 
+        "rotate":RangeVar(0.0, 360), 
+        "scaling":RangeVar(1.0),
+        "opacity":RangeVar(1.0),
+        "offset":RangeVar((-20,20), (-20,20)),
+    }
+    
     def __init__(self, name, particle_data, src_image):
         self.name = name
         self.particle_data = particle_data
-        self.particle_data["texture"] = src_image.texture
+        if src_image:
+            self.particle_data["texture"] = src_image.texture
     
     def get_data(self):
         return self.particle_data
