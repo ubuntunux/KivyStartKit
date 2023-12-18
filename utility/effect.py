@@ -1,3 +1,4 @@
+import copy
 import math
 from kivy.core.window import Window
 from kivy.graphics import Scale, Rotate, PushMatrix, PopMatrix, Translate, UpdateNormalMatrix
@@ -10,9 +11,13 @@ from utility.singleton import SingletonInstance
 from utility.kivy_helper import *
 from utility.range_variable import RangeVar
 
-
-class ParticleData():
-    default_data = {
+    
+class EffectData():
+    default_emitter_data = {
+        "particle_count": 10,
+    }
+    
+    default_particle_data = {
         "is_world_space":True,
         "elastin":0.8, 
         "collision":False, 
@@ -34,14 +39,24 @@ class ParticleData():
         "opacity":RangeVar(1.0),
         "offset":RangeVar((-20,20), (-20,20)),
     }
-    
-    def __init__(self, name, particle_data, src_image):
+
+    def __init__(self, resource_manager, name, effect_data_info):
         self.name = name
-        self.particle_data = particle_data
-        if src_image:
-            self.particle_data["texture"] = src_image.texture
+        self.emitter_data = copy.deepcopy(self.default_emitter_data)
+        self.particle_data = copy.deepcopy(self.default_particle_data)
+        
+        for (key, value) in effect_data_info.get("emitter_data", {}).items():
+            self.emitter_data[key] = value
+            
+        for (key, value) in effect_data_info.get("particle_data", {}).items():
+            self.particle_data[key] = value
+            
+            if "image_file" == key:
+                src_image = resource_manager.get_image(value)
+                if src_image:
+                    self.particle_data["texture"] = src_image.texture
     
-    def get_data(self):
+    def get_particle_data(self):
         return self.particle_data
 
 
@@ -67,43 +82,28 @@ class EffectManager(SingletonInstance):
         self.clear()
         self.emitters = {}
 
-    def get_emitter(self, name):
-        return self.emitters[name]
+    def get_emitter(self, emitter_id):
+        return self.emitters.get(emitter_id, None)
         
     def example_effect(self):
-        particle_data = dict(
-            is_world_space=False,
-            loop=-1,
-            fade=1,
-            color=(1,0.5,0,1),
-            sequence=[4,4],
-            texture=None, # src_image.texture,
-            delay=RangeVar(0.0,1.0), 
-            angular_velocity=RangeVar(360.0), 
-            rotate=RangeVar(0.0, 360), 
-            offset=RangeVar((-20,20), (-20,20)),
-            life_time=RangeVar(0.5,1.5), 
-            velocity=RangeVar([-200.0, 100], [200.0, 200]),
-            gravity=RangeVar(0.0)
-        )
+        effect_data = EffectData("explosion", {})
         self.create_emitter(
             emitter_name='explosion',
             attach_to=None,
             pos=(50,50),
             size=(100,100),
-            particle_data=particle_data,
-            particle_count=20
+            effect_data=effect_data
         )
-        effect = self.get_emitter('explosion')
-        effect.play()
+        emitter = self.get_emitter('explosion')
+        emitter.play()
+        return emitter
         
     def create_emitter(
         self,
-        emitter_name="emitter",
+        emitter_name,
+        effect_data,
         parent_layer=None,
-        attach_to=None, 
-        particle_data={},
-        particle_count=10,
+        attach_to=None,
         **kargs
     ):
         if not self.parent_layer:
@@ -114,16 +114,15 @@ class EffectManager(SingletonInstance):
             emitter_name,
             parent_layer=parent_layer or self.parent_layer,
             attach_to=attach_to,
-            particle_data=particle_data, 
-            particle_count=particle_count, 
+            effect_data=effect_data,
             **kargs
         )
-        self.emitters[emitter_name] = emitter
+        self.emitters[id(emitter)] = emitter
         return emitter
         
-    def remove_emitter(self, name):
-        if name in self.emitters:
-            emitter = self.emitters[name]
+    def remove_emitter(self, emitter):
+        if id(emitter) in self.emitters:
+            emitter = self.emitters[id(emitter)]
             emitter.destroy()
             if emitter in self.alive_emitters:
                 self.alive_emitters.remove(emitter)
@@ -152,10 +151,9 @@ class Emitter(Scatter):
         self, 
         effect_manager,
         emitter_name,
+        effect_data,
         parent_layer=None, 
-        attach_to=None, 
-        particle_count=10, 
-        particle_data={}, 
+        attach_to=None,
         **kargs
     ):
         Scatter.__init__(self, **kargs)
@@ -164,10 +162,12 @@ class Emitter(Scatter):
         self.effect_manager = effect_manager
         self.parent_layer = parent_layer
         self.attach_to = attach_to
-        self.particle_data = particle_data
+        self.emitter_data = effect_data.emitter_data
+        self.particle_data = effect_data.particle_data
         self.alive_particles = []
         self.attach_offset = Vector(self.pos)
-        self.create_particles(particle_data, particle_count)
+        particle_count = self.emitter_data.get("particle_count", 10)
+        self.create_particles(self.particle_data, particle_count)
 
     def create_particles(self, particle_data, particle_count):
         for i in range(particle_count):

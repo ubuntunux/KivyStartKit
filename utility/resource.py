@@ -1,7 +1,7 @@
 import os
 from kivy.logger import Logger
 from kivy.uix.image import Image
-from utility.particle import ParticleData
+from utility.effect import EffectData
 from utility.singleton import SingletonInstance
 from utility.range_variable import RangeVar
 
@@ -28,7 +28,7 @@ class Resource:
 class ResourceManager(SingletonInstance):
     def __init__(self):
         super(ResourceManager, self).__init__()
-        self.particle_data = {}
+        self.effect_data = {}
         self.images = {}
         
     def initialize(self):
@@ -62,13 +62,12 @@ class ResourceManager(SingletonInstance):
     def image_loader(self, name, filepath):
         return Image(source=filepath)
     
-    # particle
-    def get_particle_data(self, resource_name):
-        return self.get_resource(self.particle_data, resource_name)
+    # effect
+    def get_effect_data(self, resource_name):
+        return self.get_resource(self.effect_data, resource_name)
         
-    def particle_data_loader(self, name, filepath):
+    def effect_data_loader(self, name, filepath):
         if os.path.exists(filepath):
             with open(filepath) as f:
-                particle_data_info = eval(f.read())
-                src_image = self.get_image(particle_data_info["image_file"])
-                return ParticleData(name, particle_data_info, src_image)
+                effecf_data_info = eval(f.read())
+                return EffectData(self, name, effecf_data_info)
