@@ -40,7 +40,7 @@ class EffectData():
         "offset":RangeVar((-20,20), (-20,20)),
     }
 
-    def __init__(self, resource_manager, name, effect_data_info):
+    def __init__(self, resource_manager=None, name="", effect_data_info={}):
         self.name = name
         self.emitter_data = copy.deepcopy(self.default_emitter_data)
         self.particle_data = copy.deepcopy(self.default_particle_data)
@@ -51,7 +51,7 @@ class EffectData():
         for (key, value) in effect_data_info.get("particle_data", {}).items():
             self.particle_data[key] = value
             
-            if "image_file" == key:
+            if resource_manager and "image_file" == key:
                 src_image = resource_manager.get_image(value)
                 if src_image:
                     self.particle_data["texture"] = src_image.texture
