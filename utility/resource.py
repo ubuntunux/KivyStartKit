@@ -60,7 +60,9 @@ class ResourceManager(SingletonInstance):
         return self.get_resource(self.images, resource_name)
         
     def image_loader(self, name, filepath):
-        return Image(source=filepath)
+        image = Image(source=filepath)
+        Logger.info(f"{filepath}: {image.texture.size}")
+        return image
     
     # effect
     def get_effect_data(self, resource_name):

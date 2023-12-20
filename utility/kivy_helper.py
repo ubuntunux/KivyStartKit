@@ -10,15 +10,19 @@ from kivy.vector import Vector
 from kivy.core.window import Window
 from kivy.logger import Logger
 
+
+# log
+def log_info(text):
+    Logger.info(text)
+
+# window
 def get_aspect():
     return Window.width / Window.height
 
 def get_is_vertical_window():
     return Window.width < Window.height
 
-def log_info(text):
-    Logger.info(text)
-
+# math
 def sign(x):
     if 0 < x:
         return 1
@@ -85,6 +89,17 @@ def get_size_hint_x(size, width):
     
 def get_size_hint_y(size, height):
     return height / size[1]
+
+
+# widgets
+def get_texture_atlas(texture, texcoord_area=(0,0,1.0,1.0)):
+    region = (
+        int(texture.width * texcoord_area[0]),
+        int(texture.height * texcoord_area[1]),
+        int(math.ceil(texture.width * texcoord_area[2])),
+        int(math.ceil(texture.height * texcoord_area[3])),
+    )
+    return texture.get_region(*region)
     
 def flip_widget(widget):
     widget.apply_transform(
