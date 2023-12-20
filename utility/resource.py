@@ -49,11 +49,12 @@ class ResourceManager(SingletonInstance):
                         resource_loader
                     )
                     
-    def get_resource(self, resource_map, resource_name):
+    def get_resource(self, resource_map, resource_name, default_resource=None):
         if resource_name in resource_map:
             resource = resource_map[resource_name]
             return resource.get_resource()
         Logger.warning(f"not found resource: {resource_name}")
+        return default_resource
         
     # image
     def get_image(self, resource_name):
