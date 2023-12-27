@@ -308,12 +308,11 @@ class Particle(Widget):
         texture_size = self.texture.size if self.texture else self.size
         self.cell_count = self.sequence[0] * self.sequence[1]
         self.cell_size = div(texture_size, self.sequence)
-        curr_texture = None
         if self.texture:
-            self.texture.get_region(0.0, 0.0, * self.cell_size)
+            self.texture.get_region(0.0, 0.0, *self.cell_size)
         with self.canvas:
             Color(*color)
-            self.box = Rectangle(texture=curr_texture, pos=(0,0), size=self.size)
+            self.box = Rectangle(pos=(0,0), size=self.size)
         with self.canvas.before:
             PushMatrix()
             self.box_pos = Translate(0,0)
@@ -321,6 +320,7 @@ class Particle(Widget):
             self.box_scale = Scale(1,1,1)
         with self.canvas.after:
             PopMatrix()
+        self.update_sequence(force_update=True)
     
     def play(self):
         self.emitter.register_particle(self)
@@ -357,8 +357,8 @@ class Particle(Widget):
             self.box_pos.x += self.emitter.size[0] * 0.5
             self.box_pos.y += self.emitter.size[1] * 0.5
 
-    def update_sequence(self):
-        if self.texture and self.cell_count > 1 and self.play_speed > 0:
+    def update_sequence(self, force_update=False):
+        if force_update or self.texture and self.cell_count > 1 and self.play_speed > 0:
             ratio = self.elapse_time / self.life_time
             ratio *= self.play_speed
             ratio %= 1.0
