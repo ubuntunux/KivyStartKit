@@ -7,13 +7,17 @@ from kivy.logger import Logger
 from kivy.uix.scatter import Scatter
 from kivy.uix.widget import Widget
 from kivy.vector import Vector
+from utility.audio import Audio
 from utility.singleton import SingletonInstance
 from utility.kivy_helper import *
 from utility.range_variable import RangeVar
 
+
     
 class EffectData():
     default_emitter_data = {
+        "sound": None,
+        "sound_file": "click",
         "particle_count": 10,
     }
     
@@ -21,8 +25,9 @@ class EffectData():
         "is_world_space":True,
         "elastin":0.8, 
         "collision":False, 
-        "size":[100,100], 
+        "size":[100,100],
         "image_file":"explosion",
+        "texture": None,
         "loop":-1, 
         "fade":1.0,
         "sequence":[4,4], 
@@ -47,14 +52,17 @@ class EffectData():
         
         for (key, value) in effect_data_info.get("emitter_data", {}).items():
             self.emitter_data[key] = value
+            if resource_manager and "sound_file" == key:
+                sound = resource_manager.get_sound(value)
+                if sound:
+                    self.emitter_data["sound"] = sound
             
         for (key, value) in effect_data_info.get("particle_data", {}).items():
             self.particle_data[key] = value
-            
             if resource_manager and "image_file" == key:
                 src_image = resource_manager.get_image(value)
                 if src_image:
-                    self.particle_data["texture"] = src_image.texture
+                    self.particle_data["texture"] = src_image.texture 
     
     def get_particle_data(self):
         return self.particle_data
@@ -87,14 +95,13 @@ class EffectManager(SingletonInstance):
         
     def example_effect(self):
         effect_data = EffectData("explosion", {})
-        self.create_emitter(
+        emitter = self.create_emitter(
             emitter_name='explosion',
             attach_to=None,
             pos=(50,50),
             size=(100,100),
             effect_data=effect_data
         )
-        emitter = self.get_emitter('explosion')
         emitter.play()
         return emitter
         
@@ -158,12 +165,13 @@ class Emitter(Scatter):
     ):
         Scatter.__init__(self, **kargs)
         self.emitter_name = emitter_name
+        self.emitter_data = effect_data.emitter_data
+        self.particle_data = effect_data.particle_data
+        self.audio = Audio(self.emitter_data.get("sound", None))
         self.particles = []
         self.effect_manager = effect_manager
         self.parent_layer = parent_layer
         self.attach_to = attach_to
-        self.emitter_data = effect_data.emitter_data
-        self.particle_data = effect_data.particle_data
         self.alive_particles = []
         self.attach_offset = Vector(self.pos)
         particle_count = self.emitter_data.get("particle_count", 10)
@@ -187,6 +195,9 @@ class Emitter(Scatter):
     def play(self):
         self.effect_manager.register_emitter(self)
         
+        if self.audio:
+            self.audio.play_audio()
+            
         if self.parent is None:
             self.parent_layer.add_widget(self)
             

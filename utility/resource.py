@@ -3,6 +3,7 @@ from kivy.core.audio import SoundLoader
 from kivy.logger import Logger
 from kivy.uix.image import Image
 from utility.effect import EffectData
+from utility.kivy_helper import *
 from utility.singleton import SingletonInstance
 from utility.range_variable import RangeVar
 
@@ -19,7 +20,7 @@ class Resource:
     def get_resource(self):
         if self.is_loaded:
             return self.source
-        Logger.info(f"Load {self.name}: {self.filepath}")             
+        #Logger.info(f"Load {self.name}: {self.filepath}")             
         self.is_loaded = True
         if self.loader:
             self.source = self.loader(self.name, self.filepath)
@@ -61,7 +62,7 @@ class ResourceManager(SingletonInstance):
                     filepath = os.path.join(dirname, filename)
                     resource_name = os.path.relpath(filepath, resource_path)
                     resource_name = os.path.splitext(resource_name)[0]
-                    Logger.info(f"Register {resource_name}: {filepath}")
+                    #Logger.info(f"Register {resource_name}: {filepath}")
                     resource_map[resource_name] = Resource(
                         resource_name,
                         filepath,
@@ -81,11 +82,12 @@ class ResourceManager(SingletonInstance):
         if resource_name in resource_map:
             resource = resource_map[resource_name]
             return resource.get_resource()
-        Logger.warning(f"not found resource: {resource_name}")
+        #Logger.warning(f"not found resource: {resource_name}")
         return default_resource
         
     # sound
     def get_sound(self, resource_name):
+    
         return self.get_resource(self.sounds, resource_name)
         
     def sound_loader(self, name, filepath):
