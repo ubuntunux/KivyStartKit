@@ -220,7 +220,9 @@ class Emitter(Scatter):
 
     def update(self, dt):
         if self.attach_to:
-            self.pos = add(self.attach_to.pos, self.attach_offset)
+            pos = self.attach_to.to_window(*self.attach_to.pos)
+            self.pos = add(self.parent.to_widget(*pos), self.attach_offset)
+        
         for particle in self.alive_particles:
             particle.update(dt)
 
