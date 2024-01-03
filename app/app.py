@@ -166,13 +166,14 @@ class MainApp(App, SingletonInstance):
             return True
 
     def back_event(self):
+        back_button_exit = True
         current_app = self.get_current_app()
         if current_app is not None and current_app.has_back_event():
             current_app.run_back_event()
         elif self.is_popup and self.popup_layout:
             self.popup_layout.dismiss()
             self.is_popup = False
-        elif 1 == len(self.apps):
+        elif back_button_exit or 1 == len(self.apps):
             # show exit popup
             self.popup("Exit?", "", self.stop, None)
         else:
@@ -284,8 +285,16 @@ class MainApp(App, SingletonInstance):
                 self.app_history.remove(app)
             if 0 < len(self.app_history):
                 self.active_app(self.app_history[-1])
-
+                
+    def actitve_previous_app(self):
+        if 1 < len(self.app_history):
+            curr_app = self.app_history.pop()
+            self.active_app(self.app_history[-1])
+            return True
+        return False
+            
     def update(self, dt):
+        dt = max(1/1000, min(dt, 1/10))
         prev_num_apps = len(self.apps)
         self.initialize_registed_apps(prev_num_apps)
         

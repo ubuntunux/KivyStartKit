@@ -20,7 +20,7 @@ class Resource:
     def get_resource(self):
         if self.is_loaded:
             return self.source
-        #Logger.info(f"Load {self.name}: {self.filepath}")             
+        Logger.info(f"Load {self.name}: {self.filepath}")             
         self.is_loaded = True
         if self.loader:
             self.source = self.loader(self.name, self.filepath)
@@ -44,17 +44,54 @@ class ResourceManager(SingletonInstance):
         self.images = {}
         self.effect_data = {}
         
-    def initialize(self, images_path=".", effects_path=".", sounds_path="."):
-        self.register_resources(sounds_path, [".wav", ".mp3"], self.sounds, self.sound_loader, self.sound_unloader)
-        self.register_resources(images_path, [".png", ".jpg"], self.images, self.image_loader, None)
-        self.register_resources(effects_path, [".effect"], self.effect_data, self.effect_data_loader, None)
+    def initialize(
+        self, 
+        images_path=".", 
+        effects_path=".", 
+        sounds_path=".",
+        preload_images=False,
+        preload_effects=False,
+        preload_sounds=False,
+    ):
+        self.register_resources(
+            sounds_path,
+            [".wav", ".mp3"],
+            self.sounds,
+            self.sound_loader,
+            self.sound_unloader,
+            preload_sounds
+        )
+        self.register_resources(
+            images_path,
+            [".png", ".jpg"],
+            self.images,
+            self.image_loader,
+            None,
+            preload_images
+        )
+        self.register_resources(
+            effects_path,
+            [".effect"],
+            self.effect_data,
+            self.effect_data_loader,
+            None,
+            preload_effects
+        )
         
     def destroy(self):
         self.unregister_resources(self.effect_data)
         self.unregister_resources(self.images)
         self.unregister_resources(self.sounds)
         
-    def register_resources(self, resource_path, resource_exts, resource_map, resource_loader, resource_unloader):
+    def register_resources(
+        self, 
+        resource_path, 
+        resource_exts, 
+        resource_map, 
+        resource_loader, 
+        resource_unloader,
+        preload_resource=False
+    ):
         for dirname, dirnames, filenames in os.walk(resource_path):
             for filename in filenames:
                 ext = os.path.splitext(filename)[1].lower()
@@ -63,12 +100,15 @@ class ResourceManager(SingletonInstance):
                     resource_name = os.path.relpath(filepath, resource_path)
                     resource_name = os.path.splitext(resource_name)[0]
                     #Logger.info(f"Register {resource_name}: {filepath}")
-                    resource_map[resource_name] = Resource(
+                    resource = Resource(
                         resource_name,
                         filepath,
                         resource_loader,
                         resource_unloader
                     )
+                    resource_map[resource_name] = resource
+                    if preload_resource:
+                        resource.get_resource()
                     
     def unregister_resources(self, resource_map):
         self.unload_resources(resource_map.values())
@@ -87,7 +127,6 @@ class ResourceManager(SingletonInstance):
         
     # sound
     def get_sound(self, resource_name):
-    
         return self.get_resource(self.sounds, resource_name)
         
     def sound_loader(self, name, filepath):
@@ -105,7 +144,7 @@ class ResourceManager(SingletonInstance):
         
     def image_loader(self, name, filepath):
         image = Image(source=filepath)
-        Logger.info(f"{filepath}: {image.texture.size}")
+        #Logger.info(f"{filepath}: {image.texture.size}")
         return image
     
     # effect
