@@ -101,9 +101,9 @@ def get_texture_atlas(texture, texcoord_area=(0,0,1.0,1.0)):
     )
     return texture.get_region(*region)
     
-def flip_widget(widget):
+def flip_widget(widget, flip_x, flip_y):
     widget.apply_transform(
-        Matrix().scale(-1, 1.0, 1.0),
+        Matrix().scale(-1 if flip_x else 1, -1 if flip_y else 1, 1.0),
         post_multiply=True,
         anchor=widget.to_local(*widget.center)
     )

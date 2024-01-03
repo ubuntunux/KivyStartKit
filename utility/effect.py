@@ -161,9 +161,13 @@ class Emitter(Scatter):
         effect_data,
         parent_layer=None, 
         attach_to=None,
+        flip_x=False,
+        flip_y=False,
         **kargs
     ):
         Scatter.__init__(self, **kargs)
+        flip_widget(self, flip_x, flip_y)
+        
         self.emitter_name = emitter_name
         self.emitter_data = effect_data.emitter_data
         self.particle_data = effect_data.particle_data
@@ -227,9 +231,9 @@ class Emitter(Scatter):
             particle.update(dt)
 
 
-class Particle(Widget):
+class Particle(Scatter):
     def __init__(self, emitter):
-        Widget.__init__(self)
+        Scatter.__init__(self)
         self.emitter = emitter
         self.is_first_time = True
         self.is_alive = False
@@ -352,13 +356,11 @@ class Particle(Widget):
         # reset translate
         self.box_pos.x = -self.real_size[0] * 0.5 + self.offset[0]
         self.box_pos.y = -self.real_size[1] * 0.5 + self.offset[1]
+        self.box_pos.x += self.emitter.size[0] * 0.5
+        self.box_pos.y += self.emitter.size[1] * 0.5
         if self.is_world_space:
-            self.box_pos.x += self.emitter.center[0]
-            self.box_pos.y += self.emitter.center[1]
-        else:
-            self.box_pos.x += self.emitter.size[0] * 0.5
-            self.box_pos.y += self.emitter.size[1] * 0.5
-
+            self.apply_transform(self.emitter.transform)
+        
     def update_sequence(self, force_update=False):
         if force_update or self.texture and self.cell_count > 1 and self.play_speed > 0:
             ratio = self.elapse_time / self.life_time
