@@ -127,13 +127,16 @@ class MainApp(App, SingletonInstance):
         
     @run_on_ui_thread      
     def set_orientation(self, orientation="all"):
-        activity = AndroidPythonActivity.mActivity
-        request_orientation = AndroidActivityInfo.SCREEN_ORIENTATION_SENSOR
-        if "landscape" == orientation:
-            request_orientation = AndroidActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-        elif "portrait" == orientation:
-            request_orientation = AndroidActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-        activity.setRequestedOrientation(request_orientation)
+        if platform == 'android':
+            activity = AndroidPythonActivity.mActivity
+            request_orientation = AndroidActivityInfo.SCREEN_ORIENTATION_SENSOR
+            if "landscape" == orientation:
+                request_orientation = AndroidActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            elif "portrait" == orientation:
+                request_orientation = AndroidActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            activity.setRequestedOrientation(request_orientation)
+        else:
+            pass
     
     def get_name(self):
         return self.app_name
