@@ -24,13 +24,17 @@ from utility.singleton import SingletonInstance
 
 autoclass = None
 android = None
+def run_on_ui_thread(func):
+    return func
+
 if platform == 'android':
     try:
         import android
+        from android.runnable import run_on_ui_thread
         from jnius import autoclass
-
         AndroidString = autoclass('java.lang.String')
-        PythonActivity = autoclass('org.renpy.android.PythonActivity')
+        AndroidActivityInfo = autoclass('android.content.pm.ActivityInfo')
+        AndroidPythonActivity = autoclass('org.renpy.android.PythonActivity')
         VER = autoclass('android.os.Build$VERSION')
     except:
         print(traceback.format_exc())
@@ -38,10 +42,11 @@ if platform == 'android':
 
 
 class BaseApp(App):
-    def __init__(self, app_name):
+    def __init__(self, app_name, orientation="all"):
         Logger.info(f'Run: {app_name}')
         self.main_app = MainApp.instance()
         self.app_name = app_name
+        self.orientation = orientation
         self.initialized = False
         self.__screen = Screen(name=app_name)
         self.__back_event = None
@@ -63,6 +68,9 @@ class BaseApp(App):
 
     def get_name(self):
         return self.app_name
+    
+    def get_orientation(self):
+        return self.orientation
         
     def has_back_event(self):
         return self.__back_event is not None
@@ -93,6 +101,7 @@ class MainApp(App, SingletonInstance):
     def __init__(self, app_name):
         super(MainApp, self).__init__()
         Logger.info(f'Run: {app_name}')
+        self.orientation = "all"
         self.app_name = app_name
         self.root_widget = None
         self.screen_helper = None
@@ -116,6 +125,16 @@ class MainApp(App, SingletonInstance):
         self.is_popup = False
         self.popup_layout = None
         
+    @run_on_ui_thread      
+    def set_orientation(self, orientation="all"):
+        activity = AndroidPythonActivity.mActivity
+        request_orientation = AndroidActivityInfo.SCREEN_ORIENTATION_SENSOR
+        if "landscape" == orientation:
+            request_orientation = AndroidActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        elif "portrait" == orientation:
+            request_orientation = AndroidActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        activity.setRequestedOrientation(request_orientation)
+    
     def get_name(self):
         return self.app_name
         
@@ -272,6 +291,7 @@ class MainApp(App, SingletonInstance):
             if display_app:
                 self.current_app = app
                 self.screen_helper.current_screen(app.get_screen())
+                self.set_orientation(app.get_orientation())
                 toast(app.get_name())
             self.app_history.append(app)
             
