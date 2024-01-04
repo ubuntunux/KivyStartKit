@@ -1,10 +1,10 @@
 [app]
 
 # (str) Title of your application
-title = Javis
+title = KivyStartKit
 
 # (str) Package name
-package.name = javis
+package.name = KivyStartKit
 
 # (str) Package domain (needed for android/ios packaging)
 package.domain = com.ubuntunux
@@ -13,7 +13,7 @@ package.domain = com.ubuntunux
 source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
-source.include_exts = py,png,jpg,kv,atlas,ttf
+source.include_exts = py,png,jpg,kv,atlas,ttf,wav,data,effect
 
 # (list) List of inclusions using pattern matching
 #source.include_patterns = assets/*,images/*.png
@@ -22,13 +22,13 @@ source.include_exts = py,png,jpg,kv,atlas,ttf
 #source.exclude_exts = spec
 
 # (list) List of directory to exclude (let empty to not exclude anything)
-source.exclude_dirs = tests, bin, art
+source.exclude_dirs = tests, bin
 
 # (list) List of exclusions using pattern matching
 #source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
-version = 0.1
+version = 1.0
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]

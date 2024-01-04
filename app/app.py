@@ -34,8 +34,7 @@ if platform == 'android':
         from jnius import autoclass
         AndroidString = autoclass('java.lang.String')
         AndroidActivityInfo = autoclass('android.content.pm.ActivityInfo')
-        AndroidPythonActivity = autoclass('org.renpy.android.PythonActivity')
-        VER = autoclass('android.os.Build$VERSION')
+        AndroidPythonActivity = autoclass('org.kivy.android.PythonActivity')
     except:
         print(traceback.format_exc())
 
