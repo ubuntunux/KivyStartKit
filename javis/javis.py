@@ -19,7 +19,7 @@ from utility.singleton import SingletonInstance
 
 class JavisApp(BaseApp, SingletonInstance):
     def __init__(self, app_name):
-        super(JavisApp, self).__init__(app_name, orientation="portrait")
+        super(JavisApp, self).__init__(app_name, orientation="all")
         
         self.memory = Memory()
         self.chairman = ChairMan(self.memory)
