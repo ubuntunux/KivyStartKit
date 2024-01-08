@@ -37,17 +37,17 @@ def run():
     # create main app
     from kivy.logger import Logger
     from app.app import MainApp
-    app = MainApp.instance("KivyStartKit")
+    app = MainApp.instance("Kivy Start Kit")
     
     # register apps
     # from example.main import ExampleApp
     # app.register_app(ExampleApp.instance())
     
     from javis.javis import JavisApp
-    app.register_app(JavisApp.instance("Javis"))
+    app.register_app(JavisApp)
     
     from KivyRPG.main import KivyRPGApp
-    app.register_app(KivyRPGApp.instance("KivyRPGApp"))
+    app.register_app(KivyRPGApp)
     
     # run application
     app.run()

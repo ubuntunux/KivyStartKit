@@ -13,6 +13,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.gridlayout import GridLayout
+from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import Screen
@@ -24,6 +25,10 @@ from utility.kivy_helper import *
 from utility.screen_manager import ScreenHelper
 from utility.singleton import SingletonInstance
 
+
+bright_blue = [1.5, 1.5, 2.0, 2]
+dark_gray = [0.4, 0.4, 0.4, 2]
+        
 autoclass = None
 android = None
 def run_on_ui_thread(func):
@@ -38,33 +43,48 @@ if platform == 'android':
         AndroidActivityInfo = autoclass('android.content.pm.ActivityInfo')
         AndroidPythonActivity = autoclass('org.kivy.android.PythonActivity')
     except:
-        print(traceback.format_exc())
+        log_info(traceback.format_exc())
 
 
 class BaseApp(App):
-    def __init__(self, app_name, orientation="all"):
-        Logger.info(f'Run: {app_name}')
+    app_name = ""
+    
+    def __init__(self, orientation="all"):
+        Logger.info(f'Run: {self.get_name()}')
         self.main_app = MainApp.instance()
-        self.app_name = app_name
         self.orientation = orientation
-        self.initialized = False
-        self.__screen = Screen(name=app_name)
+        self.__screen = Screen(name=self.get_app_id())
         self.__back_event = None
         self.size = MainApp.instance().size
         self.width = self.size[0]
         self.height = self.size[1]
-
+        self.initialized = False
+        
+    def __initialize(self):
+        self.initialize()
+        self.initialized = True
+        
+    def __on_stop(self):
+        self.on_stop()
+        self.clear_instance()
+    
     def initialize(self):
         raise Exception("must implement!")
-    
+        
     def on_stop(self):
         raise Exception("must implement!")
     
     def update(self, dt):
         raise Exception("must implement!")
 
-    def get_name(self):
-        return self.app_name
+    @classmethod
+    def get_name(cls):
+        if cls.app_name:
+            return cls.app_name
+        return cls.__name__
+    
+    def get_app_id(self):
+        return str(id(self))
     
     def get_orientation(self):
         return self.orientation
@@ -107,7 +127,7 @@ class MainApp(App, SingletonInstance):
         self.width = self.size[0]
         self.height = self.size[1]
         
-        self.registed_apps = []
+        self.registed_classes = []
         self.current_app = None
         self.active_apps = {}
         self.active_app_buttons = {}
@@ -116,6 +136,8 @@ class MainApp(App, SingletonInstance):
         self.app_button_size = (300, 100)
         self.is_popup = False
         self.popup_layout = None
+        
+        self.app_press_time = {}
         
     @run_on_ui_thread      
     def set_orientation(self, orientation="all"):
@@ -133,6 +155,9 @@ class MainApp(App, SingletonInstance):
     def get_name(self):
         return self.app_name
         
+    def get_app_id(self):
+        return str(id(self))
+        
     def destroy(self):
         self.destroy_apps()
 
@@ -149,7 +174,7 @@ class MainApp(App, SingletonInstance):
         
         # app list view
         self.menu_layout = BoxLayout(orientation='horizontal', size_hint=(1.0, None), height=self.app_button_size[1])
-        self.menu_btn = Button(text="menu", size_hint=(None, 1.0), width=self.app_button_size[0])
+        self.menu_btn = Button(text="menu", size_hint=(None, 1.0), width=self.app_button_size[0], background_color=dark_gray)
         self.menu_layout.add_widget(self.menu_btn)
         
         self.app_layout = BoxLayout(orientation='horizontal', size_hint=(None, 1.0))
@@ -157,14 +182,23 @@ class MainApp(App, SingletonInstance):
         self.app_scroll_view.add_widget(self.app_layout)
         self.menu_layout.add_widget(self.app_scroll_view)
         
-        self.screen = Screen(name=self.get_name())
+        self.screen = Screen(name=self.get_app_id())
         # background icons
-        self.registed_app_layout = GridLayout(cols=6)
-        for app in self.registed_apps:
-            btn = Button(text=app.get_name())
-            def active_app(app, inst):
-                self.active_app(app)
-            btn.bind(on_press=partial(active_app, app))
+        self.registed_app_layout = FloatLayout(size_hint=(1,1))
+        for (i, cls) in enumerate(self.registed_classes):
+            padding=10
+            size=200+padding*2
+            btn = Button(
+                text=cls.get_name(),
+                pos=(i * (size + padding * 2) + padding, self.height - (size + padding)),
+                size_hint=(None, None),
+                size=(size, size),
+                background_color=dark_gray,
+                #background_normal="data/icons/icon.png"
+            )
+            def create_app(cls, inst):
+                self.create_app(cls)
+            btn.bind(on_press=partial(create_app, cls))
             self.registed_app_layout.add_widget(btn)
         self.screen.add_widget(self.registed_app_layout)
         
@@ -196,7 +230,7 @@ class MainApp(App, SingletonInstance):
             if current_app.has_back_event():
                 current_app.run_back_event()
             else:
-                self.active_app(None)
+                self.set_current_active_app(None)
         elif self.is_popup and self.popup_layout:
             self.popup_layout.dismiss()
             self.is_popup = False
@@ -240,31 +274,40 @@ class MainApp(App, SingletonInstance):
     def get_current_app(self):
         return self.current_app
         
-    def register_app(self, app):
-        #############
-        log_info(f"!!!!!!!!!!!\n\nregister_app: MUST CHAGE TO RECIEVE CLASS INSTEAD APP INSTANCE {app.get_name()}\n\n!!!!!!!!!!")
-        ###№#########
-        if app not in self.registed_apps:
-            self.registed_apps.append(app)
+    def register_app(self, cls):
+        if cls not in self.registed_classes:
+            self.registed_classes.append(cls)
     
-    def unregister_app(self, app):
-        if app in self.registed_apps:
-            self.registed_apps.remove(app)
+    def unregister_app(self, cls):
+        if cls in self.registed_classes:
+            self.registed_classes.remove(cls)
 
-    def initialize_app(self, app):
+    def create_app(self, cls):
+        app = cls.instance()
         if not app.initialized:
-            app.initialize()
-            app.initialized = True
-            app_btn = Button(text=app.get_name(), size_hint=(None, 1.0), width=self.app_button_size[0])        
-            def deactive_app(app, inst):
+            app._BaseApp__initialize()
+            app_btn = Button(text=app.get_name(), size_hint=(None, 1.0), width=self.app_button_size[0], background_color=dark_gray)        
+            def deactive_app(app, dt):
                 self.deactive_app(app)
-            app_btn.bind(on_press=partial(deactive_app, app))
+            def on_press(app, inst):
+                event = Clock.schedule_once(partial(deactive_app, app), 1)
+                self.app_press_time[app] = event
+            def on_release(app, inst):
+                event = self.app_press_time.pop(app)
+                Clock.unschedule(event)
+                self.set_current_active_app(app)
+            app_btn.bind(
+                on_press=partial(on_press, app),
+                on_release=partial(on_release, app)
+            )
             self.app_layout.add_widget(app_btn)        
             self.app_layout.width = app_btn.width * len(self.app_layout.children)
             if Window.size[0] < self.app_layout.width:
                 self.app_scroll_view.scroll_x = 1.0        
-            self.active_app_buttons[app.get_name()] = app_btn
-            self.active_apps[app.get_name()] = app
+            self.active_app_buttons[app.get_app_id()] = app_btn
+            self.active_apps[app.get_app_id()] = app
+            self.screen_helper.add_screen(app.get_screen(), False)
+        self.set_current_active_app(app)
                 
     def destroy_apps(self):
         keys = list(self.active_apps.keys())
@@ -272,11 +315,11 @@ class MainApp(App, SingletonInstance):
             app = self.active_apps[key]
             self.deactive_app(app)
             
-        while self.registed_apps:
-            app = self.registed_apps[-1]
+        while self.registed_classes:
+            app = self.registed_classes[-1]
             self.unregister_app(app)  
                 
-    def active_app(self, app):
+    def set_current_active_app(self, app):
         if app is self.current_app:
             return
             
@@ -285,9 +328,6 @@ class MainApp(App, SingletonInstance):
             self.set_orientation(self.orientation)
             self.show_app_list(True)
         else:
-            if not app.initialized:
-                self.initialize_app(app)
-                self.screen_helper.add_screen(app.get_screen(), False)
             self.screen_helper.current_screen(app.get_screen())
             self.set_orientation(app.get_orientation())
             toast(app.get_name())
@@ -295,14 +335,14 @@ class MainApp(App, SingletonInstance):
         self.current_app = app
             
     def deactive_app(self, app):
-        btn = self.active_app_buttons.pop(app.get_name())
+        btn = self.active_app_buttons.pop(app.get_app_id())
         btn.parent.remove_widget(btn)
         self.screen_helper.remove_screen(app.get_screen())
         self.screen_helper.current_screen(self.screen)
         if app is self.current_app:
             self.current_app = None 
-        self.active_apps.pop(app.get_name())
-        app.on_stop()
+        self.active_apps.pop(app.get_app_id())
+        app._BaseApp__on_stop()
                 
     def update(self, dt):
         dt = max(1/1000, min(dt, 1/10))

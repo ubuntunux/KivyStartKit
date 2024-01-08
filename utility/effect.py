@@ -314,8 +314,8 @@ class Particle(Scatter):
         texture_size = self.texture.size if self.texture else self.size
         self.cell_count = self.sequence[0] * self.sequence[1]
         self.cell_size = div(texture_size, self.sequence)
-        if self.texture:
-            self.texture.get_region(0.0, 0.0, *self.cell_size)
+        if texture:
+            self.texture = texture.get_region(0.0, 0.0, *self.cell_size)
         with self.canvas:
             Color(*color)
             self.box = Rectangle(pos=(0,0), size=self.size)
