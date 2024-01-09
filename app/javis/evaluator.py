@@ -1,6 +1,6 @@
 import time
 
-from javis.definition import WillingType, MachineState
+from .definition import WillingType, MachineState
 
 
 class Evaluator:

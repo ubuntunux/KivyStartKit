@@ -8,12 +8,12 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.textinput import TextInput
 
 from app.app import BaseApp
-from javis.chairman import ChairMan
-from javis.commands import Commander
-from javis.constants import *
-from javis.evaluator import Evaluator
-from javis.listener import Listener
-from javis.memory import Memory
+from .chairman import ChairMan
+from .commands import Commander
+from .constants import *
+from .evaluator import Evaluator
+from .listener import Listener
+from .memory import Memory
 from utility.singleton import SingletonInstance
 
 

@@ -1,3 +1,4 @@
+import os
 import traceback
 from functools import partial
 
@@ -246,6 +247,7 @@ class MainApp(App, SingletonInstance):
         return horizontal_layout
 
     def do_on_start(self, ev):
+        self.register_apps()
         EventLoop.window.bind(on_keyboard=self.hook_keyboard)
         Clock.schedule_interval(self.update, 0)
     
@@ -308,6 +310,14 @@ class MainApp(App, SingletonInstance):
         
     def get_current_app(self):
         return self.current_app
+        
+    def register_apps(self):
+        from app.javis import app
+        self.register_app(app)
+    
+        from app.KivyRPG import app
+        self.register_app(app)
+    
         
     def register_app(self, cls):
         if cls not in self.registed_classes:

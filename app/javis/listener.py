@@ -12,7 +12,7 @@ from kivy.uix.image import Image
 from kivy.uix.scatterlayout import ScatterLayout
 from kivy.uix.textinput import TextInput
 
-from javis.constants import *
+from .constants import *
 from utility.kivy_helper import create_dynamic_rect
 
 
