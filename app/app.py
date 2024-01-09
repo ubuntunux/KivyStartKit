@@ -16,12 +16,14 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
+from kivy.uix.scatter import Scatter
 from kivy.uix.screenmanager import Screen
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.widget import Widget
 
 from utility.toast import toast
 from utility.kivy_helper import *
+from utility.kivy_widgets import *
 from utility.screen_manager import ScreenHelper
 from utility.singleton import SingletonInstance
 
@@ -74,6 +76,9 @@ class BaseApp(App):
     def on_stop(self):
         raise Exception("must implement!")
     
+    def on_resize(self, window, width, height):
+        raise Exception("must implement!")
+
     def update(self, dt):
         raise Exception("must implement!")
 
@@ -183,40 +188,70 @@ class MainApp(App, SingletonInstance):
         self.menu_layout.add_widget(self.app_scroll_view)
         
         self.screen = Screen(name=self.get_app_id())
-        # background icons
-        self.registed_app_layout = FloatLayout(size_hint=(1,1))
-        for (i, cls) in enumerate(self.registed_classes):
-            padding=10
-            size=200+padding*2
-            btn = Button(
-                text=cls.get_name(),
-                pos=(i * (size + padding * 2) + padding, self.height - (size + padding)),
-                size_hint=(None, None),
-                size=(size, size),
-                background_color=dark_gray,
-                #background_normal="data/icons/icon.png"
-            )
-            def create_app(cls, inst):
-                self.create_app(cls)
-            btn.bind(on_press=partial(create_app, cls))
-            self.registed_app_layout.add_widget(btn)
-        self.screen.add_widget(self.registed_app_layout)
+        app_icons_layout = self.create_app_icons()
+        self.screen.add_widget(app_icons_layout)
         
         # screen manager
         self.screen_helper = ScreenHelper(size_hint=(1,1))
-        self.screen_helper.add_screen(self.screen, True)
-        
+        self.screen_helper.add_screen(self.screen, True) 
         self.root_widget = FloatLayout(size_hint=(1,1))
+        background = Image(source="data/images/ubuntu-wallpaper-mobile.jpg", size_hint=(1,1), fit_mode="fill")
+        self.root_widget.add_widget(background)
         self.root_widget.add_widget(self.screen_helper.screen_manager)
         self.root_widget.add_widget(self.menu_layout)
+
+        Window.bind(on_resize=self.on_resize)
         
         # post process
         self.bind(on_start=self.do_on_start)
         return self.root_widget
+        
+    def create_app_icons(self):
+        # background icons
+        padding=50
+        icon_size=(200, 200)
+        font_height=50
+        layout_height = icon_size[1] + font_height + padding * 2
+        horizontal_layout = BoxLayout(
+            orientation="horizontal",
+            padding=padding,
+            spacing=padding,
+            size_hint=(1,1),
+            pos=(0, Window.height - layout_height)
+        )
+        for cls in self.registed_classes:
+            layout = BoxLayout(
+                orientation="vertical",
+                size_hint=(None, None),
+                size=add(icon_size, (0, font_height))
+            )
+            btn = Button(
+                size_hint=(None, None),
+                size=icon_size,
+                #background_color=dark_gray,
+                background_normal="data/icons/logo_image.png"
+            )
+            label = Label(
+                text=cls.get_name(),
+                halign="center",
+                size_hint=(None,None),
+                size=(icon_size[0], font_height)
+            )
+            layout.add_widget(btn)
+            layout.add_widget(label)
+            def create_app(cls, inst):
+                self.create_app(cls)
+            btn.bind(on_press=partial(create_app, cls))
+            horizontal_layout.add_widget(layout)
+        return horizontal_layout
 
     def do_on_start(self, ev):
         EventLoop.window.bind(on_keyboard=self.hook_keyboard)
         Clock.schedule_interval(self.update, 0)
+    
+    def on_resize(self, window, width, height):
+        for app in self.active_apps.values():
+            app.on_resize(window, width, height)
 
     def hook_keyboard(self, window, key, *largs):
         # key - back

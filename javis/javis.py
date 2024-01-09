@@ -62,7 +62,10 @@ class JavisApp(BaseApp, SingletonInstance):
         self.listener.destroy()
         self.save_output()
         Config.write()
-
+    
+    def on_resize(self, window, width, height):
+        pass
+        
     def load_output(self):
         # print history 
         try:
