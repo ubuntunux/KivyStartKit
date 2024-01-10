@@ -146,6 +146,9 @@ class MainApp(App, SingletonInstance):
         
         self.app_press_time = {}
         
+        # todo - move to on start func and create icons
+        self.register_apps()
+        
     @run_on_ui_thread      
     def set_orientation(self, orientation="all"):
         if platform == 'android':
@@ -171,6 +174,21 @@ class MainApp(App, SingletonInstance):
     def on_stop(self, instance=None):
         self.destroy()
         Config.write()
+        
+    def register_apps(self):
+        from .javis.main import JavisApp
+        self.register_app(JavisApp)
+        
+        from .KivyRPG.main import KivyRPGApp
+        self.register_app(KivyRPGApp)
+        
+    def register_app(self, cls):
+        if cls not in self.registed_classes:
+            self.registed_classes.append(cls)
+    
+    def unregister_app(self, cls):
+        if cls in self.registed_classes:
+            self.registed_classes.remove(cls)
 
     def build(self):
         Window.maximize()
@@ -222,6 +240,7 @@ class MainApp(App, SingletonInstance):
             height=layout_height,
             pos_hint={"top":1}
         )
+        
         for cls in self.registed_classes:
             layout = BoxLayout(
                 orientation="vertical",
@@ -249,7 +268,6 @@ class MainApp(App, SingletonInstance):
         return horizontal_layout
 
     def do_on_start(self, ev):
-        self.register_apps()
         EventLoop.window.bind(on_keyboard=self.hook_keyboard)
         Clock.schedule_interval(self.update, 0)
     
@@ -313,20 +331,6 @@ class MainApp(App, SingletonInstance):
     def get_current_app(self):
         return self.current_app
         
-    def register_apps(self):
-        for module in dir():
-            if "module" == type(module).__name__:   
-                if hasattr(module, "app"):
-                    self.register_app(module.app)
-        
-    def register_app(self, cls):
-        if cls not in self.registed_classes:
-            self.registed_classes.append(cls)
-    
-    def unregister_app(self, cls):
-        if cls in self.registed_classes:
-            self.registed_classes.remove(cls)
-
     def create_app(self, cls):
         app = cls.instance()
         if not app.initialized:

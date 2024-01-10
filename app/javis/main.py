@@ -137,3 +137,6 @@ class JavisApp(BaseApp, SingletonInstance):
     def update(self, dt):
         pass
     
+
+def main():
+    return JavisApp()
