@@ -126,6 +126,7 @@ class MainApp(App, SingletonInstance):
         Logger.info(f'Run: {app_name}')
         self.orientation = "all"
         self.app_name = app_name
+        self.app_directory = "app"
         self.root_widget = None
         self.screen_helper = None
         self.screen = None
@@ -312,6 +313,7 @@ class MainApp(App, SingletonInstance):
         return self.current_app
         
     def register_apps(self):
+        os.listdir(self.app_directory)
         from app.javis import app
         self.register_app(app)
     
