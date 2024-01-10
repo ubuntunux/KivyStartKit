@@ -190,8 +190,8 @@ class MainApp(App, SingletonInstance):
         self.menu_layout.add_widget(self.app_scroll_view)
         
         self.screen = Screen(name=self.get_app_id())
-        app_icons_layout = self.create_app_icons()
-        self.screen.add_widget(app_icons_layout)
+        self.app_icons_layout = self.create_app_icons()
+        self.screen.add_widget(self.app_icons_layout)
         
         # screen manager
         self.screen_helper = ScreenHelper(size_hint=(1,1))
@@ -218,8 +218,9 @@ class MainApp(App, SingletonInstance):
             orientation="horizontal",
             padding=padding,
             spacing=padding,
-            size_hint=(1,1),
-            pos=(0, Window.height - layout_height)
+            size_hint=(1,None),
+            height=layout_height,
+            pos_hint={"top":1}
         )
         for cls in self.registed_classes:
             layout = BoxLayout(
@@ -255,7 +256,7 @@ class MainApp(App, SingletonInstance):
     def on_resize(self, window, width, height):
         for app in self.active_apps.values():
             app.on_resize(window, width, height)
-
+        
     def hook_keyboard(self, window, key, *largs):
         # key - back
         if key == 27:
@@ -313,13 +314,10 @@ class MainApp(App, SingletonInstance):
         return self.current_app
         
     def register_apps(self):
-        os.listdir(self.app_directory)
-        from app.javis import app
-        self.register_app(app)
-    
-        from app.KivyRPG import app
-        self.register_app(app)
-    
+        for module in dir():
+            if "module" == type(module).__name__:   
+                if hasattr(module, "app"):
+                    self.register_app(module.app)
         
     def register_app(self, cls):
         if cls not in self.registed_classes:
