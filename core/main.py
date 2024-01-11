@@ -120,9 +120,8 @@ class MainApp(App, SingletonInstance):
         
     def register_app(self, cls):
         if cls not in self.registed_classes:
-            self.create_app_icon(cls)
-            self.create_app_icon(cls)
-            self.create_app_icon(cls)
+            for i in range(50):
+                self.create_app_icon(cls)
             self.registed_classes.append(cls)
     
     def unregister_app(self, cls):
@@ -150,9 +149,7 @@ class MainApp(App, SingletonInstance):
         self.background_layout = GridLayout(
             cols=1,
             spacing=self.icon_padding,
-            size_hint=(1,None),
-            height=2000,
-            pos_hint={"top":1}
+            size_hint=(1,None)
         )
         self.background_scroll_view = ScrollView(size_hint=(1, 1))
         self.background_scroll_view.add_widget(self.background_layout)
@@ -207,6 +204,11 @@ class MainApp(App, SingletonInstance):
             pos_hint={"top":1}
         )
         self.background_layout.add_widget(horizontal_layout)
+        padding = self.background_layout.padding
+        spacing = self.background_layout.spacing
+        num = len(self.background_layout.children)
+        height = layout_height * num + spacing[1] * (num-1) + padding[1] + self.menu_layout.height
+        self.background_layout.height = height
         return horizontal_layout
             
     def create_app_icon(self, cls):  
