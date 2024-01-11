@@ -123,12 +123,11 @@ class MainApp(App, SingletonInstance):
             def create_app(cls, inst):
                 self.create_app(cls)
             on_press = partial(create_app, cls)
-            for i in range(50):
-                self.create_app_icon(
+            self.create_app_icon(
                 cls.get_name(),
                 on_press,
                 background_normal="data/icons/logo_image.png"
-                )
+            )
             #background_color=dark_gray
             self.registed_classes.append(cls)
     
