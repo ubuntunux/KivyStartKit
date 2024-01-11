@@ -7,7 +7,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.textinput import TextInput
 
-from app.app import BaseApp
+from core.base_app import BaseApp
 from .chairman import ChairMan
 from .commands import Commander
 from .constants import *

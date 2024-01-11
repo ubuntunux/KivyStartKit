@@ -1,5 +1,6 @@
 import os
 import traceback
+from collections import OrderedDict
 from functools import partial
 
 import kivy
@@ -49,77 +50,6 @@ if platform == 'android':
         log_info(traceback.format_exc())
 
 
-class BaseApp(App):
-    app_name = ""
-    
-    def __init__(self, orientation="all"):
-        Logger.info(f'Run: {self.get_name()}')
-        self.main_app = MainApp.instance()
-        self.orientation = orientation
-        self.__screen = Screen(name=self.get_app_id())
-        self.__back_event = None
-        self.size = MainApp.instance().size
-        self.width = self.size[0]
-        self.height = self.size[1]
-        self.initialized = False
-        
-    def __initialize(self):
-        self.initialize()
-        self.initialized = True
-        
-    def __on_stop(self):
-        self.on_stop()
-        self.clear_instance()
-    
-    def initialize(self):
-        raise Exception("must implement!")
-        
-    def on_stop(self):
-        raise Exception("must implement!")
-    
-    def on_resize(self, window, width, height):
-        raise Exception("must implement!")
-
-    def update(self, dt):
-        raise Exception("must implement!")
-
-    @classmethod
-    def get_name(cls):
-        if cls.app_name:
-            return cls.app_name
-        return cls.__name__
-    
-    def get_app_id(self):
-        return str(id(self))
-    
-    def get_orientation(self):
-        return self.orientation
-        
-    def has_back_event(self):
-        return self.__back_event is not None
-
-    def run_back_event(self):
-        return self.__back_event()
-
-    def set_back_event(self, func):
-        self.__back_event = func
-
-    def get_screen(self):
-        return self.__screen
-
-    def get_children(self):
-        return self.__screen.children
-
-    def clear_widget(self):
-        self.__screen.clear_widget()
-
-    def add_widget(self, widget):
-        self.__screen.add_widget(widget)
-
-    def remove_widget(self, widget):
-        self.__screen.remove_widget(widget)
-
-
 class MainApp(App, SingletonInstance):
     def __init__(self, app_name):
         super(MainApp, self).__init__()
@@ -141,13 +71,17 @@ class MainApp(App, SingletonInstance):
         self.app_scroll_view = None
         self.app_layout = None
         self.app_button_size = (300, 100)
+        
+        self.background_layout = None
+        self.icon_size=(200, 200)
+        self.icon_font_height=50
+        self.icon_padding=20
+        self.icons = [] #OrderedDict()
+        
         self.is_popup = False
         self.popup_layout = None
         
         self.app_press_time = {}
-        
-        # todo - move to on start func and create icons
-        self.register_apps()
         
     @run_on_ui_thread      
     def set_orientation(self, orientation="all"):
@@ -176,14 +110,19 @@ class MainApp(App, SingletonInstance):
         Config.write()
         
     def register_apps(self):
-        from .javis.main import JavisApp
+        from apps.javis.main import JavisApp
         self.register_app(JavisApp)
         
-        from .KivyRPG.main import KivyRPGApp
+        from apps.KivyRPG.main import KivyRPGApp
         self.register_app(KivyRPGApp)
+        
+        self.arrange_icons()
         
     def register_app(self, cls):
         if cls not in self.registed_classes:
+            self.create_app_icon(cls)
+            self.create_app_icon(cls)
+            self.create_app_icon(cls)
             self.registed_classes.append(cls)
     
     def unregister_app(self, cls):
@@ -208,8 +147,16 @@ class MainApp(App, SingletonInstance):
         self.menu_layout.add_widget(self.app_scroll_view)
         
         self.screen = Screen(name=self.get_app_id())
-        self.app_icons_layout = self.create_app_icons()
-        self.screen.add_widget(self.app_icons_layout)
+        self.background_layout = GridLayout(
+            cols=1,
+            spacing=self.icon_padding,
+            size_hint=(1,None),
+            height=2000,
+            pos_hint={"top":1}
+        )
+        self.background_scroll_view = ScrollView(size_hint=(1, 1))
+        self.background_scroll_view.add_widget(self.background_layout)
+        self.screen.add_widget(self.background_scroll_view)
         
         # screen manager
         self.screen_helper = ScreenHelper(size_hint=(1,1))
@@ -226,54 +173,77 @@ class MainApp(App, SingletonInstance):
         self.bind(on_start=self.do_on_start)
         return self.root_widget
         
-    def create_app_icons(self):
-        # background icons
-        padding=50
-        icon_size=(200, 200)
-        font_height=50
-        layout_height = icon_size[1] + font_height + padding * 2
+    def clear_icons(self):
+        while self.background_layout.children:
+            horizontal_layout = self.background_layout.children[-1]
+            while horizontal_layout.children:
+                icon = horizontal_layout.children[-1]
+                horizontal_layout.remove_widget(icon)
+            self.background_layout.remove_widget(horizontal_layout)
+    
+    def arrange_icons(self):
+        self.clear_icons()
+        for icon in self.icons:
+            horizontal_layout = self.get_background_horizontal_layout() 
+            horizontal_layout.add_widget(icon)
+        
+    def get_background_horizontal_layout(self):
+        icon_width = self.icon_size[0] + self.icon_padding * 2
+        num_x = max(1, int((Window.width - self.icon_padding * 2) / icon_width))    
+        spacing = max(0, (Window.width - icon_width * num_x) / (num_x - 1)) + self.icon_padding
+        horizontal_layouts = self.background_layout.children   
+        if horizontal_layouts:
+            horizontal_layout = horizontal_layouts[0]
+            if len(horizontal_layout.children) < num_x:
+                return horizontal_layout
+        
+        layout_height = self.icon_size[1] + self.icon_font_height + self.icon_padding
         horizontal_layout = BoxLayout(
             orientation="horizontal",
-            padding=padding,
-            spacing=padding,
+            padding=self.icon_padding,
+            spacing=spacing,
             size_hint=(1,None),
             height=layout_height,
             pos_hint={"top":1}
         )
-        
-        for cls in self.registed_classes:
-            layout = BoxLayout(
-                orientation="vertical",
-                size_hint=(None, None),
-                size=add(icon_size, (0, font_height))
-            )
-            btn = Button(
-                size_hint=(None, None),
-                size=icon_size,
-                #background_color=dark_gray,
-                background_normal="data/icons/logo_image.png"
-            )
-            label = Label(
-                text=cls.get_name(),
-                halign="center",
-                size_hint=(None,None),
-                size=(icon_size[0], font_height)
-            )
-            layout.add_widget(btn)
-            layout.add_widget(label)
-            def create_app(cls, inst):
-                self.create_app(cls)
-            btn.bind(on_press=partial(create_app, cls))
-            horizontal_layout.add_widget(layout)
+        self.background_layout.add_widget(horizontal_layout)
         return horizontal_layout
-
+            
+    def create_app_icon(self, cls):  
+        icon_layout = BoxLayout(
+            orientation="vertical",
+            size_hint=(None, None),
+            size=add(self.icon_size, (0, self.icon_font_height))
+        )
+        icon_btn = Button(
+            size_hint=(None, None),
+            size=self.icon_size,
+            #background_color=dark_gray,
+            background_normal="data/icons/logo_image.png"
+        )
+        def create_app(cls, inst):
+            self.create_app(cls)
+        icon_btn.bind(on_press=partial(create_app, cls))
+        icon_label = Label(
+            text=cls.get_name(),
+            halign="center",
+            size_hint=(None,None),
+            size=(self.icon_size[0], self.icon_font_height)
+        )
+        
+        icon_layout.add_widget(icon_btn)
+        icon_layout.add_widget(icon_label)
+        self.icons.append(icon_layout)
+        
     def do_on_start(self, ev):
+        self.register_apps()
         EventLoop.window.bind(on_keyboard=self.hook_keyboard)
         Clock.schedule_interval(self.update, 0)
     
     def on_resize(self, window, width, height):
         for app in self.active_apps.values():
             app.on_resize(window, width, height)
+        self.arrange_icons()
         
     def hook_keyboard(self, window, key, *largs):
         # key - back

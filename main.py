@@ -1,6 +1,6 @@
 from glob import glob
 
-from app.constants import *
+from core.constants import *
 
 
 def run():
@@ -36,7 +36,7 @@ def run():
 
     # create main app
     from kivy.logger import Logger
-    from app.app import MainApp
+    from core.main import MainApp
     main_app = MainApp.instance("Kivy Start Kit")
  
     # run application
