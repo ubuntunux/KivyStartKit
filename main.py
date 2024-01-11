@@ -36,7 +36,7 @@ def run():
 
     # create main app
     from kivy.logger import Logger
-    from core.main import MainApp
+    from core.main_app import MainApp
     main_app = MainApp.instance("Kivy Start Kit")
  
     # run application

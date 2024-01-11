@@ -32,9 +32,14 @@ from utility.singleton import SingletonInstance
 
 bright_blue = [1.5, 1.5, 2.0, 2]
 dark_gray = [0.4, 0.4, 0.4, 2]
-        
+
+
+# todo - platform class      
 autoclass = None
 android = None
+AndroidString = None
+AndroidActivityInfo = None
+AndroidPythonActivity = None
 def run_on_ui_thread(func):
     return func
 
@@ -108,6 +113,11 @@ class MainApp(App, SingletonInstance):
     def on_stop(self, instance=None):
         self.destroy()
         Config.write()
+        
+    def get_app_directory(self):
+        if platform == 'android':
+            from android.storage import primary_external_storage_path
+            SD_CARD = primary_external_storage_path()
         
     def register_apps(self):
         from apps.javis.main import JavisApp

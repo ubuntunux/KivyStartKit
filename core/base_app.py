@@ -8,7 +8,7 @@ from kivy.app import App
 from kivy.logger import Logger
 from kivy.uix.screenmanager import Screen
 
-from .main import MainApp
+from .main_app import MainApp
 
 
 class BaseApp(App):
