@@ -120,8 +120,16 @@ class MainApp(App, SingletonInstance):
         
     def register_app(self, cls):
         if cls not in self.registed_classes:
+            def create_app(cls, inst):
+                self.create_app(cls)
+            on_press = partial(create_app, cls)
             for i in range(50):
-                self.create_app_icon(cls)
+                self.create_app_icon(
+                cls.get_name(),
+                on_press,
+                background_normal="data/icons/logo_image.png"
+                )
+            #background_color=dark_gray
             self.registed_classes.append(cls)
     
     def unregister_app(self, cls):
@@ -148,6 +156,7 @@ class MainApp(App, SingletonInstance):
         self.screen = Screen(name=self.get_app_id())
         self.background_layout = GridLayout(
             cols=1,
+            padding=self.icon_padding,
             spacing=self.icon_padding,
             size_hint=(1,None)
         )
@@ -211,7 +220,7 @@ class MainApp(App, SingletonInstance):
         self.background_layout.height = height
         return horizontal_layout
             
-    def create_app_icon(self, cls):  
+    def create_app_icon(self, icon_name, on_press, **kargs):  
         icon_layout = BoxLayout(
             orientation="vertical",
             size_hint=(None, None),
@@ -220,14 +229,12 @@ class MainApp(App, SingletonInstance):
         icon_btn = Button(
             size_hint=(None, None),
             size=self.icon_size,
-            #background_color=dark_gray,
-            background_normal="data/icons/logo_image.png"
+            **kargs
         )
-        def create_app(cls, inst):
-            self.create_app(cls)
-        icon_btn.bind(on_press=partial(create_app, cls))
+        
+        icon_btn.bind(on_press=on_press)
         icon_label = Label(
-            text=cls.get_name(),
+            text=icon_name,
             halign="center",
             size_hint=(None,None),
             size=(self.icon_size[0], self.icon_font_height)
