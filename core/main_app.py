@@ -79,8 +79,8 @@ class MainApp(App, SingletonInstance):
         
     def destroy(self):
         self.destroy_apps()
-        Config.set('graphics', 'width', Window.width)
-        Config.set('graphics', 'height', Window.height)
+        #Config.set('graphics', 'width', Window.width)
+        #Config.set('graphics', 'height', Window.height)
         Config.write()
         Logger.info("Bye")
 
@@ -88,9 +88,7 @@ class MainApp(App, SingletonInstance):
         self.destroy()
         
     def get_app_directory(self):
-        if platform == 'android':
-            from android.storage import primary_external_storage_path
-            SD_CARD = primary_external_storage_path()
+        self.platform_api.get_app_directory()
         
     def register_apps(self):
         from apps.javis.main import JavisApp
@@ -119,13 +117,19 @@ class MainApp(App, SingletonInstance):
             self.registed_classes.remove(cls)
 
     def build(self):
+        Window.maximize()
         Window.softinput_mode = 'below_target'
         # keyboard_mode: '', 'system', 'dock', 'multi', 'systemanddock', 'systemandmulti'
         Config.set('kivy', 'keyboard_mode', 'system')
         Window.configure_keyboards()
         
         # app list view
-        self.menu_layout = BoxLayout(orientation='horizontal', size_hint=(1.0, None), height=self.app_button_size[1])
+        self.menu_layout = BoxLayout(
+            orientation='horizontal', 
+            size_hint=(1.0, None), 
+            height=self.app_button_size[1],
+            backgroind_color=dark_gray
+        )
         #self.menu_btn = Button(text="menu", size_hint=(None, 1.0), width=self.app_button_size[0], background_color=dark_gray)
         #self.menu_layout.add_widget(self.menu_btn)
         
