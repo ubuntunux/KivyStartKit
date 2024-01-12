@@ -56,12 +56,12 @@ class MainApp(App, SingletonInstance):
         self.active_app_buttons = {}
         self.app_scroll_view = None
         self.app_layout = None
-        self.app_button_size = (DP(150), DP(50))
+        self.app_button_size = (DP(120), DP(30))
         
         self.background_layout = None
-        self.icon_size = (DP(100), DP(100))
-        self.icon_font_height = DP(25)
-        self.icon_padding = DP(20)
+        self.icon_size = (DP(60), DP(60))
+        self.icon_font_height = DP(15)
+        self.icon_padding = DP(10)
         self.icons = []
         
         self.is_popup = False
@@ -80,8 +80,8 @@ class MainApp(App, SingletonInstance):
         
     def destroy(self):
         self.destroy_apps()
-        #Config.set('graphics', 'width', Window.width)
-        #Config.set('graphics', 'height', Window.height)
+        Config.set('graphics', 'width', Window.width)
+        Config.set('graphics', 'height', Window.height)
         Config.write()
         Logger.info("Bye")
 
@@ -94,6 +94,11 @@ class MainApp(App, SingletonInstance):
     def register_apps(self):
         from apps.javis.main import JavisApp
         self.register_app(JavisApp)
+        
+        import sys
+        sys.path.append("..")
+        from KivyRPG.main import KivyRPGApp
+        self.register_app(KivyRPGApp)
         
         self.arrange_icons()
         
@@ -115,7 +120,7 @@ class MainApp(App, SingletonInstance):
             self.registed_classes.remove(cls)
 
     def build(self):
-        Window.maximize()
+        #Window.maximize()
         Window.softinput_mode = 'below_target'
         # keyboard_mode: '', 'system', 'dock', 'multi', 'systemanddock', 'systemandmulti'
         Config.set('kivy', 'keyboard_mode', 'system')
