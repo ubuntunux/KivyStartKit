@@ -29,36 +29,17 @@ from utility.kivy_widgets import *
 from utility.screen_manager import ScreenHelper
 from utility.singleton import SingletonInstance
 
+from . import platform
 
 bright_blue = [1.5, 1.5, 2.0, 2]
 dark_gray = [0.4, 0.4, 0.4, 2]
-
-
-# todo - platform class      
-autoclass = None
-android = None
-AndroidString = None
-AndroidActivityInfo = None
-AndroidPythonActivity = None
-def run_on_ui_thread(func):
-    return func
-
-if platform == 'android':
-    try:
-        import android
-        from android.runnable import run_on_ui_thread
-        from jnius import autoclass
-        AndroidString = autoclass('java.lang.String')
-        AndroidActivityInfo = autoclass('android.content.pm.ActivityInfo')
-        AndroidPythonActivity = autoclass('org.kivy.android.PythonActivity')
-    except:
-        log_info(traceback.format_exc())
 
 
 class MainApp(App, SingletonInstance):
     def __init__(self, app_name):
         super(MainApp, self).__init__()
         Logger.info(f'Run: {app_name}')
+        self.platform_api = platform.get_platform_api()
         self.orientation = "all"
         self.app_name = app_name
         self.app_directory = "app"
@@ -87,19 +68,9 @@ class MainApp(App, SingletonInstance):
         self.popup_layout = None
         
         self.app_press_time = {}
-        
-    @run_on_ui_thread      
+      
     def set_orientation(self, orientation="all"):
-        if platform == 'android':
-            activity = AndroidPythonActivity.mActivity
-            request_orientation = AndroidActivityInfo.SCREEN_ORIENTATION_SENSOR
-            if "landscape" == orientation:
-                request_orientation = AndroidActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-            elif "portrait" == orientation:
-                request_orientation = AndroidActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-            activity.setRequestedOrientation(request_orientation)
-        else:
-            pass
+        self.platform_api.set_orientation(orientation)
     
     def get_name(self):
         return self.app_name
