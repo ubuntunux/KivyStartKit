@@ -12,6 +12,7 @@ from kivy.clock import Clock
 from kivy.config import Config
 from kivy.core.window import Window
 from kivy.logger import Logger
+from kivy.metrics import dp as DP
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.floatlayout import FloatLayout
@@ -55,13 +56,13 @@ class MainApp(App, SingletonInstance):
         self.active_app_buttons = {}
         self.app_scroll_view = None
         self.app_layout = None
-        self.app_button_size = (300, 100)
+        self.app_button_size = (DP(150), DP(50))
         
         self.background_layout = None
-        self.icon_size=(200, 200)
-        self.icon_font_height=50
-        self.icon_padding=20
-        self.icons = [] #OrderedDict()
+        self.icon_size = (DP(100), DP(100))
+        self.icon_font_height = DP(25)
+        self.icon_padding = DP(20)
+        self.icons = []
         
         self.is_popup = False
         self.popup_layout = None
@@ -94,9 +95,6 @@ class MainApp(App, SingletonInstance):
         from apps.javis.main import JavisApp
         self.register_app(JavisApp)
         
-        from apps.KivyRPG.main import KivyRPGApp
-        self.register_app(KivyRPGApp)
-        
         self.arrange_icons()
         
     def register_app(self, cls):
@@ -127,8 +125,7 @@ class MainApp(App, SingletonInstance):
         self.menu_layout = BoxLayout(
             orientation='horizontal', 
             size_hint=(1.0, None), 
-            height=self.app_button_size[1],
-            backgroind_color=dark_gray
+            height=self.app_button_size[1]
         )
         #self.menu_btn = Button(text="menu", size_hint=(None, 1.0), width=self.app_button_size[0], background_color=dark_gray)
         #self.menu_layout.add_widget(self.menu_btn)
@@ -263,10 +260,10 @@ class MainApp(App, SingletonInstance):
             return
         self.is_popup = True
         content = BoxLayout(orientation="vertical", size_hint=(1, 1))
-        size_hint = (0.9, 0.2) if get_is_vertical_window() else (0.3, 0.3)
-        self.popup_layout = Popup(title=title, content=content, auto_dismiss=False, size_hint=size_hint)
+        size = (DP(400), DP(150))
+        self.popup_layout = Popup(title=title, content=content, auto_dismiss=False, size_hint=(None, None), size=size)
         content.add_widget(Label(text=message))
-        btn_layout = BoxLayout(orientation="horizontal", size_hint=(1, 1), spacing=kivy.metrics.dp(5))
+        btn_layout = BoxLayout(orientation="horizontal", size_hint=(1, 1), spacing=DP(5))
         btn_yes = Button(text='Yes')
         btn_no = Button(text='No')
         btn_layout.add_widget(btn_no)

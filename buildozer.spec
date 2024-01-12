@@ -49,10 +49,10 @@ requirements = kivy, android, numpy, pygments, plyer
 #presplash.filename = %(source.dir)s/data/presplash.png
 
 # (str) Icon of the application
-#icon.filename = %(source.dir)s/data/icon.png
+icon.filename = %(source.dir)s/data/icons/icon.png
 
 # (str) Supported orientation (one of landscape, portrait or all)
-orientation = landscape, portrait
+orientation = all
 
 # (list) List of service to declare
 #services = NAME:ENTRYPOINT_TO_PY,NAME2:ENTRYPOINT2_TO_PY

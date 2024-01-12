@@ -1,3 +1,4 @@
+import os
 import sys
 import traceback
 
@@ -8,20 +9,27 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.textinput import TextInput
 
 from core.base_app import BaseApp
+from core import constants
+from utility.singleton import SingletonInstance
+
 from .chairman import ChairMan
 from .commands import Commander
 from .constants import *
 from .evaluator import Evaluator
 from .listener import Listener
 from .memory import Memory
-from utility.singleton import SingletonInstance
 
 
 class JavisApp(BaseApp, SingletonInstance):
-    app_name="Javis"
+    app_name = "Javis"
     
     def __init__(self):
         super(JavisApp, self).__init__(orientation="all")
+
+        self.output_directory = os.path.join(os.path.split(__file__)[0], 'output')
+        if not os.path.exists(self.output_directory):
+            os.makedirs(self.output_directory)
+        self.output_file = os.path.join(self.output_directory, 'output.txt')
         
         self.memory = Memory()
         self.chairman = ChairMan(self.memory)
@@ -70,8 +78,8 @@ class JavisApp(BaseApp, SingletonInstance):
         # print history 
         try:
             outputs = []
-            if os.path.exists(javis_output_file):
-                with open(javis_output_file, 'r') as f:
+            if os.path.exists(self.output_file):
+                with open(self.output_file, 'r') as f:
                     outputs = eval(f.read())
             for output in outputs:
                 self.print_output(output)
@@ -79,10 +87,13 @@ class JavisApp(BaseApp, SingletonInstance):
             self.print_output(traceback.format_exc())
 
     def save_output(self):
-        with open(javis_output_file, 'w') as f:
+        dir_name = os.path.split(self.output_file)[0]
+        if not os.path.exists(dir_name):
+            os.makedirs(dir_name)
+
+        with open(self.output_file, 'w') as f:
             outputs = [
-                output.text for output in self.output_layout.children
-                if output not in self.ignore_texts
+                output.text for output in self.output_layout.children if output not in self.ignore_texts
             ]
             f.write(repr(outputs))
 
@@ -98,7 +109,7 @@ class JavisApp(BaseApp, SingletonInstance):
         output = TextInput(
             halign='left',
             readonly=True,
-            font_name=app_font_name,
+            font_name=constants.DEFAULT_FONT_NAME,
             font_size="14dp",
             multiline=True,
             size_hint=(1, None),

@@ -12,8 +12,9 @@ from kivy.uix.image import Image
 from kivy.uix.scatterlayout import ScatterLayout
 from kivy.uix.textinput import TextInput
 
-from .constants import *
 from utility.kivy_helper import create_dynamic_rect
+from core import constants
+from .constants import *
 
 
 class Listener:
@@ -30,11 +31,11 @@ class Listener:
         self.top_layout = None
 
         # initialize config
-        if not Config.has_section(section_listener):
-            Config.add_section(section_listener)
+        if not Config.has_section(SECTION_LISTENER):
+            Config.add_section(SECTION_LISTENER)
 
-        if not Config.has_option(*config_listener_pos):
-            Config.set(*config_listener_pos, (0, 0))
+        if not Config.has_option(*CONFIG_LISTENER_POS):
+            Config.set(*CONFIG_LISTENER_POS, (0, 0))
         Config.write()
         
     def refresh_auto_compmete(self):
@@ -152,7 +153,7 @@ class Listener:
             height=text_height,
             multiline=True,
             auto_indent=True,
-            font_name=app_font_name,
+            font_name=constants.DEFAULT_FONT_NAME,
             font_size=text_font_size,
             padding_x=metrics.dp(10),
             padding_y=text_padding_y,
@@ -202,7 +203,7 @@ class Listener:
         #self.text_input.focus = True
 
         # logo
-        logo_image = Image(source=logo_file, allow_stretch=True, keep_ratio=True, size_hint_x=None)
+        logo_image = Image(source=ICON_FILE, allow_stretch=True, keep_ratio=True, size_hint_x=None)
         self.top_layout.add_widget(logo_image)
 
         # prev
@@ -234,7 +235,7 @@ class Listener:
         return self.root_layout
 
     def destroy(self):
-        Config.set(*config_listener_pos, self.root_layout.pos)
+        Config.set(*CONFIG_LISTENER_POS, self.root_layout.pos)
 
     def update_listener(self):
         while True:
