@@ -1,3 +1,4 @@
+from glob import glob
 import os
 import traceback
 from collections import OrderedDict
@@ -29,6 +30,7 @@ from utility.kivy_widgets import *
 from utility.screen_manager import ScreenHelper
 from utility.singleton import SingletonInstance
 
+from .constants import *
 from . import platform
 
 bright_blue = [1.5, 1.5, 2.0, 2]
@@ -46,9 +48,6 @@ class MainApp(App, SingletonInstance):
         self.root_widget = None
         self.screen_helper = None
         self.screen = None
-        self.size = (Window.size[0], Window.size[1])
-        self.width = self.size[0]
-        self.height = self.size[1]
         
         self.registed_classes = []
         self.current_app = None
@@ -80,10 +79,13 @@ class MainApp(App, SingletonInstance):
         
     def destroy(self):
         self.destroy_apps()
+        Config.set('graphics', 'width', Window.width)
+        Config.set('graphics', 'height', Window.height)
+        Config.write()
+        Logger.info("Bye")
 
     def on_stop(self, instance=None):
         self.destroy()
-        Config.write()
         
     def get_app_directory(self):
         if platform == 'android':
@@ -117,7 +119,6 @@ class MainApp(App, SingletonInstance):
             self.registed_classes.remove(cls)
 
     def build(self):
-        Window.maximize()
         Window.softinput_mode = 'below_target'
         # keyboard_mode: '', 'system', 'dock', 'multi', 'systemanddock', 'systemandmulti'
         Config.set('kivy', 'keyboard_mode', 'system')
@@ -125,8 +126,8 @@ class MainApp(App, SingletonInstance):
         
         # app list view
         self.menu_layout = BoxLayout(orientation='horizontal', size_hint=(1.0, None), height=self.app_button_size[1])
-        self.menu_btn = Button(text="menu", size_hint=(None, 1.0), width=self.app_button_size[0], background_color=dark_gray)
-        self.menu_layout.add_widget(self.menu_btn)
+        #self.menu_btn = Button(text="menu", size_hint=(None, 1.0), width=self.app_button_size[0], background_color=dark_gray)
+        #self.menu_layout.add_widget(self.menu_btn)
         
         self.app_layout = BoxLayout(orientation='horizontal', size_hint=(None, 1.0))
         self.app_scroll_view = ScrollView(size_hint=(1, 1))
@@ -301,9 +302,10 @@ class MainApp(App, SingletonInstance):
                 event = Clock.schedule_once(partial(deactive_app, app), 1)
                 self.app_press_time[app] = event
             def on_release(app, inst):
-                event = self.app_press_time.pop(app)
-                Clock.unschedule(event)
-                self.set_current_active_app(app)
+                if app in self.app_press_time:
+                    event = self.app_press_time.pop(app)
+                    Clock.unschedule(event)
+                    self.set_current_active_app(app)
             app_btn.bind(
                 on_press=partial(on_press, app),
                 on_release=partial(on_release, app)
@@ -350,6 +352,8 @@ class MainApp(App, SingletonInstance):
         if app is self.current_app:
             self.current_app = None 
         self.active_apps.pop(app.get_app_id())
+        if app in self.app_press_time:
+            self.app_press_time.pop(app)
         app._BaseApp__on_stop()
                 
     def update(self, dt):

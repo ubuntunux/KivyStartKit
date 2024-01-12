@@ -1,4 +1,5 @@
 import android
+from android.permissions import request_permissions, Permission
 from android.runnable import run_on_ui_thread
 from jnius import autoclass
 from utility.kivy_helper import log_info
@@ -11,6 +12,12 @@ class AndroidPlatformAPI(BasePlatformAPI):
         self.AndroidActivityInfo = autoclass('android.content.pm.ActivityInfo')
         self.AndroidPythonActivity = autoclass('org.kivy.android.PythonActivity')
         self.activity = self.AndroidPythonActivity.mActivity
+    
+    def initialize(self):
+        request_permissions([
+            Permission.READ_EXTERNAL_STORAGE,
+            Permission.WRITE_EXTERNAL_STORAGE
+        ])
     
     @run_on_ui_thread      
     def set_orientation(self, orientation="all"):

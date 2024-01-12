@@ -20,9 +20,6 @@ class BaseApp(App):
         self.orientation = orientation
         self.__screen = Screen(name=self.get_app_id())
         self.__back_event = None
-        self.size = MainApp.instance().size
-        self.width = self.size[0]
-        self.height = self.size[1]
         self.initialized = False
         
     def __initialize(self):
