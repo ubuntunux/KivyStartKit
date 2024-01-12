@@ -1,5 +1,5 @@
-from glob import glob
 import kivy
+import core
 from core.main_app import MainApp
 
 if __name__ == '__main__':

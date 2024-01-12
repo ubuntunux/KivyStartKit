@@ -1,19 +1,14 @@
 from glob import glob
 import os
-
-import kivy
 from kivy.config import Config
-from kivy.core.window import Window
-from kivy.logger import Logger
-
 from .constants import *
-
-Config.read(CONFIG_FILE)
-Config.set('kivy', 'log_level', 'info')
-Config.set('kivy', 'log_enable', 1)
-Config.set('kivy', 'log_name', '%Y%m%d_%H%M%S_%_.log')
-Config.set('kivy', 'log_dir', LOG_FOLDER)
-Config.set('kivy', 'log_maxfiles', MAX_LOG_NUM)
+Config.set('graphics', 'minimum_width', 320)
+Config.set('graphics', 'minimum_height', 240)
+log_folder = Config.get('kivy', 'log_dir')
+if log_folder != LOG_FOLDER:
+    Config.set('kivy', 'log_name', '%Y%m%d_%H%M%S_%_.log')
+    Config.set('kivy', 'log_maxfiles', MAX_LOG_NUM)
+    Config.set('kivy', 'log_dir', LOG_FOLDER)
 
 # clear old log
 logs = list(glob("{}/*.log".format(LOG_FOLDER)))
