@@ -110,7 +110,7 @@ class MainApp(App, SingletonInstance):
             self.create_app_icon(
                 cls.get_name(),
                 on_press,
-                background_normal="data/icons/logo_image.png"
+                background_normal=LOGO_FILE
             )
             #background_color=dark_gray
             self.registed_classes.append(cls)
