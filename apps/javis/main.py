@@ -26,10 +26,10 @@ class JavisApp(BaseApp, SingletonInstance):
     def __init__(self):
         super(JavisApp, self).__init__(orientation="all")
 
-        self.output_directory = os.path.join(os.path.split(__file__)[0], 'output')
+        self.output_directory = os.path.join(os.path.split(__file__)[0], '.log')
         if not os.path.exists(self.output_directory):
             os.makedirs(self.output_directory)
-        self.output_file = os.path.join(self.output_directory, 'output.txt')
+        self.output_file = os.path.join(self.output_directory, 'output.log')
         
         self.memory = Memory()
         self.chairman = ChairMan(self.memory)
