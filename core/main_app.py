@@ -95,10 +95,10 @@ class MainApp(App, SingletonInstance):
         from apps.javis.main import JavisApp
         self.register_app(JavisApp)
         
-        import sys
-        sys.path.append("..")
-        from KivyRPG.main import KivyRPGApp
-        self.register_app(KivyRPGApp)
+        # import sys
+        # sys.path.append("..")
+        # from KivyRPG.main import KivyRPGApp
+        # self.register_app(KivyRPGApp)
         
         self.arrange_icons()
         
