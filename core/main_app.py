@@ -57,7 +57,8 @@ class MainApp(App, SingletonInstance):
         self.app_scroll_view = None
         self.app_layout = None
         self.app_button_size = (DP(120), DP(30))
-        
+        self.menu_layout = None
+        self.menu_layout_box = None
         self.background_layout = None
         self.icon_size = (DP(60), DP(60))
         self.icon_font_height = DP(15)
@@ -132,6 +133,9 @@ class MainApp(App, SingletonInstance):
             size_hint=(1.0, None), 
             height=self.app_button_size[1]
         )
+        with self.menu_layout.canvas:
+            Color(0,0,0,0.1)
+            self.menu_layout_box = Rectangle(size=(max(Window.height, Window.height), self.menu_layout.height))
         #self.menu_btn = Button(text="menu", size_hint=(None, 1.0), width=self.app_button_size[0], background_color=dark_gray)
         #self.menu_layout.add_widget(self.menu_btn)
         
@@ -161,8 +165,6 @@ class MainApp(App, SingletonInstance):
         self.root_widget.add_widget(self.menu_layout)
 
         Window.bind(on_resize=self.on_resize)
-        
-        # post process
         self.bind(on_start=self.do_on_start)
         return self.root_widget
         
@@ -233,6 +235,7 @@ class MainApp(App, SingletonInstance):
         
     def do_on_start(self, ev):
         self.register_apps()
+        self.show_app_list(False)
         EventLoop.window.bind(on_keyboard=self.hook_keyboard)
         Clock.schedule_interval(self.update, 0)
     
@@ -293,6 +296,7 @@ class MainApp(App, SingletonInstance):
     def show_app_list(self, show):
         y = 0 if show else -self.menu_layout.height
         self.menu_layout.pos = (self.menu_layout.pos[0], y)
+        self.menu_layout_box.pos = self.menu_layout.pos
         
     def get_current_app(self):
         return self.current_app
@@ -360,6 +364,7 @@ class MainApp(App, SingletonInstance):
         self.active_apps.pop(app.get_app_id())
         if app in self.app_press_time:
             self.app_press_time.pop(app)
+        self.show_app_list(show = 0 < len(self.active_apps))
         app._BaseApp__on_stop()
                 
     def update(self, dt):

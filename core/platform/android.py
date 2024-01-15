@@ -1,18 +1,23 @@
+import traceback
 import android
 from android.permissions import request_permissions, Permission
 from android.runnable import run_on_ui_thread
 from android.storage import primary_external_storage_path
 from jnius import autoclass
+from kivy.logger import Logger
 from utility.kivy_helper import log_info
 from .default import BasePlatformAPI
 
 
 class AndroidPlatformAPI(BasePlatformAPI): 
     def __init__(self):
-        request_permissions([
-            Permission.READ_EXTERNAL_STORAGE,
-            Permission.WRITE_EXTERNAL_STORAGE
-        ])
+        try:
+            request_permissions([
+                Permission.READ_EXTERNAL_STORAGE,
+                Permission.WRITE_EXTERNAL_STORAGE
+            ])
+        except:
+            Logger.info(traceback.format_exc())
         self.AndroidString = autoclass('java.lang.String')
         self.AndroidActivityInfo = autoclass('android.content.pm.ActivityInfo')
         self.AndroidPythonActivity = autoclass('org.kivy.android.PythonActivity')
