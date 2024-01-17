@@ -1,34 +1,28 @@
-import os
-import traceback
-from collections import OrderedDict
-from functools import partial
-
-import kivy
-from kivy.app import App
 from kivy.logger import Logger
 from kivy.uix.screenmanager import Screen
 
-from .main_app import MainApp
 
-
-class BaseApp(App):
-    app_name = ""
+class BaseApp:
+    app_name = "App"
+    orientation = "all"
     
-    def __init__(self, orientation="all"):
-        Logger.info(f'Run: {self.get_name()}')
-        self.main_app = MainApp.instance()
-        self.orientation = orientation
-        self.__screen = Screen(name=self.get_app_id())
+    def __init__(self):
+        self.__display_name = self.app_name
+        self.__app_id = str(id(self))
+        self.__screen = None
         self.__back_event = None
-        self.initialized = False
+        self.__initialized = False
         
-    def __initialize(self):
+    def __initialize(self, display_name):
+        Logger.info(f"initialize {display_name}")
+        self.__display_name = display_name
+        self.__screen = Screen(name=self.get_app_id())
         self.initialize()
-        self.initialized = True
+        self.__initialized = True
         
     def __on_stop(self):
+        Logger.info(f"on_stop {self.get_display_name()}")
         self.on_stop()
-        self.clear_instance()
     
     def initialize(self):
         raise Exception("must implement!")
@@ -42,18 +36,20 @@ class BaseApp(App):
     def update(self, dt):
         raise Exception("must implement!")
 
-    @classmethod
-    def get_name(cls):
-        if cls.app_name:
-            return cls.app_name
-        return cls.__name__
+    @ classmethod
+    def get_app_name(cls):
+        return cls.app_name
+    
+    @ classmethod
+    def get_orientation(cls):
+        return cls.orientation
     
     def get_app_id(self):
-        return str(id(self))
+        return self.__app_id
     
-    def get_orientation(self):
-        return self.orientation
-        
+    def get_display_name(self):
+        return self.__display_name
+           
     def has_back_event(self):
         return self.__back_event is not None
 

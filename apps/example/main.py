@@ -1,18 +1,24 @@
 from kivy.uix.button import Button
-from app.app import BaseApp
-from utility.singleton import SingletonInstance
+from core.base_app import BaseApp
 
-class ExampleApp(BaseApp, SingletonInstance):
-    def __init__(self, app_name="ExampleApp"):
-        super(ExampleApp, self).__init__(app_name)
+# You must keep this rule.
+class App(BaseApp):
+    app_name = "Hello, world!"
+    orientation = "all" # all, landscape, portrait
+
+    def __init__(self):
+        super().__init__()
         
     def initialize(self):
-        btn = Button(text=self.app_name, size_hint=(1, 1))
+        btn = Button(text="Hello, world!", size_hint=(1, 1))
         self.add_widget(btn)
-
+    
     def on_stop(self):
         pass
-
+        
+    def on_resize(self, window, width, height):
+        pass
+        
     def update(self, dt):
         pass
-    
+ 

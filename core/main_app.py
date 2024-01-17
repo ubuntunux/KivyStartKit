@@ -1,11 +1,13 @@
 from glob import glob
+import inspect
+import importlib
 import os
 import traceback
 from collections import OrderedDict
 from functools import partial
+import types
 
 import kivy
-from kivy import platform
 from kivy.app import App
 from kivy.base import EventLoop
 from kivy.clock import Clock
@@ -33,24 +35,26 @@ from utility.singleton import SingletonInstance
 
 from .constants import *
 from . import platform
+from .base_app import BaseApp
 
 bright_blue = [1.5, 1.5, 2.0, 2]
 dark_gray = [0.4, 0.4, 0.4, 2]
 
 
 class MainApp(App, SingletonInstance):
-    def __init__(self, app_name):
+    app_name = "Kivy Start Kit"
+    app_directory = "apps"
+    orientation = "all"
+    platform_api = platform.get_platform_api()
+       
+    def __init__(self):
         super(MainApp, self).__init__()
-        Logger.info(f'Run: {app_name}')
-        self.platform_api = platform.get_platform_api()
-        self.orientation = "all"
-        self.app_name = app_name
-        self.app_directory = "app"
+        Logger.info(f'Run: {self.app_name}')
         self.root_widget = None
         self.screen_helper = None
         self.screen = None
         
-        self.registed_classes = []
+        self.registed_modules = []
         self.current_app = None
         self.active_apps = {}
         self.active_app_buttons = {}
@@ -70,55 +74,63 @@ class MainApp(App, SingletonInstance):
         
         self.app_press_time = {}
       
-    def set_orientation(self, orientation="all"):
-        self.platform_api.set_orientation(orientation)
-    
-    def get_name(self):
-        return self.app_name
-        
-    def get_app_id(self):
-        return str(id(self))
-        
     def destroy(self):
         self.destroy_apps()
         Config.set('graphics', 'width', Window.width)
         Config.set('graphics', 'height', Window.height)
         Config.write()
-        Logger.info("Bye")
+        Logger.info(f"destroy {self.app_name}")
 
     def on_stop(self, instance=None):
         self.destroy()
         
+    def get_app_id(self):
+        return str(id(self))
+        
     def get_app_directory(self):
         self.platform_api.get_app_directory()
         
+    def set_orientation(self, orientation="all"):
+        self.platform_api.set_orientation(orientation)
+    
     def register_apps(self):
-        from apps.javis.main import JavisApp
-        self.register_app(JavisApp)
+        from apps import example
+        self.register_app(example)
         
-        # import sys
-        # sys.path.append("..")
-        # from KivyRPG.main import KivyRPGApp
-        # self.register_app(KivyRPGApp)
+        from apps import javis
+        self.register_app(javis)
+        
+        import sys
+        sys.path.append("..")
+        import KivyRPG
+        self.register_app(KivyRPG)
         
         self.arrange_icons()
         
-    def register_app(self, cls):
-        if cls not in self.registed_classes:
-            def create_app(cls, inst):
-                self.create_app(cls)
-            on_press = partial(create_app, cls)
-            self.create_app_icon(
-                cls.get_name(),
-                on_press,
-                background_normal=LOGO_FILE
-            )
-            #background_color=dark_gray
-            self.registed_classes.append(cls)
+    def register_app(self, module):
+        if module in self.registed_modules or type(module) is not types.ModuleType:
+            return
+            
+        app_class = getattr(module, "__app__", None)
+        if not inspect.isclass(app_class) or not issubclass(app_class, BaseApp):
+            return
+                                      
+        def create_app(module, inst):
+            self.create_app(module)
+                
+        on_press = partial(create_app, module)
+        app_name = app_class.get_app_name()
+        self.create_app_icon(
+            app_name,
+            on_press,
+            background_normal=LOGO_FILE
+        )
+        #background_color=dark_gray
+        self.registed_modules.append(module)
     
-    def unregister_app(self, cls):
-        if cls in self.registed_classes:
-            self.registed_classes.remove(cls)
+    def unregister_app(self, module):
+        if module in self.registed_modules:
+            self.registed_modules.remove(module)
 
     def build(self):
         #Window.maximize()
@@ -219,8 +231,7 @@ class MainApp(App, SingletonInstance):
             size_hint=(None, None),
             size=self.icon_size,
             **kargs
-        )
-        
+        )        
         icon_btn.bind(on_press=on_press)
         icon_label = Label(
             text=icon_name,
@@ -228,7 +239,6 @@ class MainApp(App, SingletonInstance):
             size_hint=(None,None),
             size=(self.icon_size[0], self.icon_font_height)
         )
-        
         icon_layout.add_widget(icon_btn)
         icon_layout.add_widget(icon_label)
         self.icons.append(icon_layout)
@@ -300,12 +310,30 @@ class MainApp(App, SingletonInstance):
         
     def get_current_app(self):
         return self.current_app
+    
+    def create_app(self, module):
+        try:
+            app = module.__app__()
+        except:
+            error = traceback.format_exc()
+            Logger.info(error)
+            toast(error)
+            return
         
-    def create_app(self, cls):
-        app = cls.instance()
-        if not app.initialized:
-            app._BaseApp__initialize()
-            app_btn = Button(text=app.get_name(), size_hint=(None, 1.0), width=self.app_button_size[0], background_color=dark_gray)        
+        if app is None or not isinstance(app, BaseApp):
+            return
+        
+        app_id = app.get_app_id()
+        Logger.info((app_id, self.active_apps))   
+        if app_id not in self.active_apps:
+            display_name = app.get_app_name()
+            app._BaseApp__initialize(display_name=display_name)
+            app_btn = Button(
+                text=app.get_app_name(),
+                size_hint=(None, 1.0),
+                width=self.app_button_size[0],
+                background_color=dark_gray
+            )        
             def deactive_app(app, dt):
                 self.deactive_app(app)
             def on_press(app, inst):
@@ -324,8 +352,9 @@ class MainApp(App, SingletonInstance):
             self.app_layout.width = app_btn.width * len(self.app_layout.children)
             if Window.size[0] < self.app_layout.width:
                 self.app_scroll_view.scroll_x = 1.0        
-            self.active_app_buttons[app.get_app_id()] = app_btn
-            self.active_apps[app.get_app_id()] = app
+            app_id = app.get_app_id()
+            self.active_app_buttons[app_id] = app_btn
+            self.active_apps[app_id] = app
             self.screen_helper.add_screen(app.get_screen(), False)
         self.set_current_active_app(app)
                 
@@ -335,8 +364,8 @@ class MainApp(App, SingletonInstance):
             app = self.active_apps[key]
             self.deactive_app(app)
             
-        while self.registed_classes:
-            app = self.registed_classes[-1]
+        while self.registed_modules:
+            app = self.registed_modules[-1]
             self.unregister_app(app)  
                 
     def set_current_active_app(self, app):
@@ -350,8 +379,8 @@ class MainApp(App, SingletonInstance):
         else:
             self.screen_helper.current_screen(app.get_screen())
             self.set_orientation(app.get_orientation())
-            toast(app.get_name())
             self.show_app_list(False)
+            toast(app.get_app_name())
         self.current_app = app
             
     def deactive_app(self, app):

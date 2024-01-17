@@ -2,6 +2,9 @@ from glob import glob
 import os
 from kivy.config import Config
 from .constants import *
+from . import platform
+
+# set config
 Config.set('graphics', 'minimum_width', 320)
 Config.set('graphics', 'minimum_height', 240)
 log_folder = Config.get('kivy', 'log_dir')
@@ -21,3 +24,6 @@ if MAX_LOG_NUM <= log_count:
             os.remove(log_file)
         except:
             pass
+
+# initialize platform
+platform_api = platform.get_platform_api()

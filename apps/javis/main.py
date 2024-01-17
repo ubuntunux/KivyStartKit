@@ -10,7 +10,6 @@ from kivy.uix.textinput import TextInput
 
 from core.base_app import BaseApp
 from core import constants
-from utility.singleton import SingletonInstance
 
 from .chairman import ChairMan
 from .commands import Commander
@@ -20,12 +19,12 @@ from .listener import Listener
 from .memory import Memory
 
 
-class JavisApp(BaseApp, SingletonInstance):
-    app_name = "Javis"
-    
-    def __init__(self):
-        super(JavisApp, self).__init__(orientation="all")
+class JavisApp(BaseApp):
+    app_name = "JAVIS"
+    orientation = "all" # all, landscape, portrait
 
+    def __init__(self, *args, **kargs):
+        super(JavisApp, self).__init__(*args, **kargs)
         self.output_directory = os.path.join(os.path.split(__file__)[0], '.log')
         if not os.path.exists(self.output_directory):
             os.makedirs(self.output_directory)
@@ -147,7 +146,3 @@ class JavisApp(BaseApp, SingletonInstance):
     
     def update(self, dt):
         pass
-    
-
-def main():
-    return JavisApp()

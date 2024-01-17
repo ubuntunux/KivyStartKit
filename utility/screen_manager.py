@@ -45,7 +45,8 @@ class ScreenHelper(SingletonInstance):
     def remove_screen(self, screen):
         if screen.name in self.screen_manager.screen_names:
             self.screen_manager.remove_widget(screen)
-            self.prev_screen()
+            if screen.name == self.get_current_screen_name():
+                self.prev_screen()
             
     def get_screen(self, screen_name):
         return self.screen_map.get(screen_name)
