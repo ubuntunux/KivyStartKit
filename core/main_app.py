@@ -33,12 +33,10 @@ from utility.kivy_widgets import *
 from utility.screen_manager import ScreenHelper
 from utility.singleton import SingletonInstance
 
-from .constants import *
 from . import platform
+from .constants import *
 from .base_app import BaseApp
-
-bright_blue = [1.5, 1.5, 2.0, 2]
-dark_gray = [0.4, 0.4, 0.4, 2]
+from .ui import UIManager
 
 
 class MainApp(App, SingletonInstance):
@@ -50,30 +48,36 @@ class MainApp(App, SingletonInstance):
     def __init__(self):
         super(MainApp, self).__init__()
         Logger.info(f'Run: {self.app_name}')
-        self.root_widget = None
-        self.screen_helper = None
-        self.screen = None
-        
         self.registed_modules = []
         self.current_app = None
         self.active_apps = {}
-        self.active_app_buttons = {}
-        self.app_scroll_view = None
-        self.app_layout = None
-        self.app_button_size = (DP(120), DP(30))
-        self.menu_layout = None
-        self.menu_layout_box = None
-        self.background_layout = None
-        self.icon_size = (DP(60), DP(60))
-        self.icon_font_height = DP(15)
-        self.icon_padding = DP(10)
-        self.icons = []
-        
         self.is_popup = False
         self.popup_layout = None
+        self.root_widget = None
+        self.screen_helper = None
+        self.ui_manager = UIManager()
         
-        self.app_press_time = {}
-      
+        self.bind(on_start=self.do_on_start)
+    
+    def build(self):
+        #Window.maximize()
+        Window.softinput_mode = 'below_target'
+        # keyboard_mode: '', 'system', 'dock', 'multi', 'systemanddock', 'systemandmulti'
+        Config.set('kivy', 'keyboard_mode', 'system')
+        Window.configure_keyboards()
+        Window.bind(on_resize=self.on_resize)
+        
+        self.root_widget = FloatLayout(size_hint=(1,1))
+        background = Image(source="data/images/ubuntu-wallpaper-mobile.jpg", size_hint=(1,1), fit_mode="fill")
+        self.root_widget.add_widget(background)
+        self.screen_helper = ScreenHelper(size_hint=(1,1))
+        self.root_widget.add_widget(self.screen_helper.screen_manager)
+        
+        self.ui_manager._BaseApp__initialize(display_name="UI Manager")
+        self.ui_manager.build(self.root_widget, self.screen_helper)
+        
+        return self.root_widget
+        
     def destroy(self):
         self.destroy_apps()
         Config.set('graphics', 'width', Window.width)
@@ -83,176 +87,23 @@ class MainApp(App, SingletonInstance):
 
     def on_stop(self, instance=None):
         self.destroy()
-        
-    def get_app_id(self):
-        return str(id(self))
-        
+         
     def get_app_directory(self):
         self.platform_api.get_app_directory()
         
     def set_orientation(self, orientation="all"):
         self.platform_api.set_orientation(orientation)
-    
-    def register_apps(self):
-        from apps import example
-        self.register_app(example)
-        
-        from apps import javis
-        self.register_app(javis)
-        
-        import sys
-        sys.path.append("..")
-        import KivyRPG
-        self.register_app(KivyRPG)
-        
-        self.arrange_icons()
-        
-    def register_app(self, module):
-        if module in self.registed_modules or type(module) is not types.ModuleType:
-            return
-            
-        app_class = getattr(module, "__app__", None)
-        if not inspect.isclass(app_class) or not issubclass(app_class, BaseApp):
-            return
-                                      
-        def create_app(module, inst):
-            self.create_app(module)
-                
-        on_press = partial(create_app, module)
-        app_name = app_class.get_app_name()
-        self.create_app_icon(
-            app_name,
-            on_press,
-            background_normal=LOGO_FILE
-        )
-        #background_color=dark_gray
-        self.registed_modules.append(module)
-    
-    def unregister_app(self, module):
-        if module in self.registed_modules:
-            self.registed_modules.remove(module)
 
-    def build(self):
-        #Window.maximize()
-        Window.softinput_mode = 'below_target'
-        # keyboard_mode: '', 'system', 'dock', 'multi', 'systemanddock', 'systemandmulti'
-        Config.set('kivy', 'keyboard_mode', 'system')
-        Window.configure_keyboards()
-        
-        # app list view
-        self.menu_layout = BoxLayout(
-            orientation='horizontal', 
-            size_hint=(1.0, None), 
-            height=self.app_button_size[1]
-        )
-        with self.menu_layout.canvas:
-            Color(0,0,0,0.1)
-            self.menu_layout_box = Rectangle(size=(max(Window.height, Window.height), self.menu_layout.height))
-        #self.menu_btn = Button(text="menu", size_hint=(None, 1.0), width=self.app_button_size[0], background_color=dark_gray)
-        #self.menu_layout.add_widget(self.menu_btn)
-        
-        self.app_layout = BoxLayout(orientation='horizontal', size_hint=(None, 1.0))
-        self.app_scroll_view = ScrollView(size_hint=(1, 1))
-        self.app_scroll_view.add_widget(self.app_layout)
-        self.menu_layout.add_widget(self.app_scroll_view)
-        
-        self.screen = Screen(name=self.get_app_id())
-        self.background_layout = GridLayout(
-            cols=1,
-            padding=self.icon_padding,
-            spacing=self.icon_padding,
-            size_hint=(1,None)
-        )
-        self.background_scroll_view = ScrollView(size_hint=(1, 1))
-        self.background_scroll_view.add_widget(self.background_layout)
-        self.screen.add_widget(self.background_scroll_view)
-        
-        # screen manager
-        self.screen_helper = ScreenHelper(size_hint=(1,1))
-        self.screen_helper.add_screen(self.screen, True) 
-        self.root_widget = FloatLayout(size_hint=(1,1))
-        background = Image(source="data/images/ubuntu-wallpaper-mobile.jpg", size_hint=(1,1), fit_mode="fill")
-        self.root_widget.add_widget(background)
-        self.root_widget.add_widget(self.screen_helper.screen_manager)
-        self.root_widget.add_widget(self.menu_layout)
-
-        Window.bind(on_resize=self.on_resize)
-        self.bind(on_start=self.do_on_start)
-        return self.root_widget
-        
-    def clear_icons(self):
-        while self.background_layout.children:
-            horizontal_layout = self.background_layout.children[-1]
-            while horizontal_layout.children:
-                icon = horizontal_layout.children[-1]
-                horizontal_layout.remove_widget(icon)
-            self.background_layout.remove_widget(horizontal_layout)
-    
-    def arrange_icons(self):
-        self.clear_icons()
-        for icon in self.icons:
-            horizontal_layout = self.get_background_horizontal_layout() 
-            horizontal_layout.add_widget(icon)
-        
-    def get_background_horizontal_layout(self):
-        icon_width = self.icon_size[0] + self.icon_padding * 2
-        num_x = max(1, int((Window.width - self.icon_padding * 2) / icon_width))    
-        spacing = max(0, (Window.width - icon_width * num_x) / (num_x - 1)) + self.icon_padding
-        horizontal_layouts = self.background_layout.children   
-        if horizontal_layouts:
-            horizontal_layout = horizontal_layouts[0]
-            if len(horizontal_layout.children) < num_x:
-                return horizontal_layout
-        
-        layout_height = self.icon_size[1] + self.icon_font_height + self.icon_padding
-        horizontal_layout = BoxLayout(
-            orientation="horizontal",
-            padding=self.icon_padding,
-            spacing=spacing,
-            size_hint=(1,None),
-            height=layout_height,
-            pos_hint={"top":1}
-        )
-        self.background_layout.add_widget(horizontal_layout)
-        padding = self.background_layout.padding
-        spacing = self.background_layout.spacing
-        num = len(self.background_layout.children)
-        height = layout_height * num + spacing[1] * (num-1) + padding[1] + self.menu_layout.height
-        self.background_layout.height = height
-        return horizontal_layout
-            
-    def create_app_icon(self, icon_name, on_press, **kargs):  
-        icon_layout = BoxLayout(
-            orientation="vertical",
-            size_hint=(None, None),
-            size=add(self.icon_size, (0, self.icon_font_height))
-        )
-        icon_btn = Button(
-            size_hint=(None, None),
-            size=self.icon_size,
-            **kargs
-        )        
-        icon_btn.bind(on_press=on_press)
-        icon_label = Label(
-            text=icon_name,
-            halign="center",
-            size_hint=(None,None),
-            size=(self.icon_size[0], self.icon_font_height)
-        )
-        icon_layout.add_widget(icon_btn)
-        icon_layout.add_widget(icon_label)
-        self.icons.append(icon_layout)
-        
     def do_on_start(self, ev):
         self.register_apps()
-        self.show_app_list(False)
+        self.ui_manager.show_app_list(False)
         EventLoop.window.bind(on_keyboard=self.hook_keyboard)
         Clock.schedule_interval(self.update, 0)
     
     def on_resize(self, window, width, height):
         for app in self.active_apps.values():
             app.on_resize(window, width, height)
-        self.arrange_icons()
+        self.ui_manager.on_resize(window, width, height)
         
     def hook_keyboard(self, window, key, *largs):
         # key - back
@@ -272,7 +123,8 @@ class MainApp(App, SingletonInstance):
             self.is_popup = False
         else:
             self.popup("Exit?", "", self.stop, None)
-        
+    
+    # Todo - popup widget    
     def popup(self, title, message, lambda_yes, lambda_no):
         if self.is_popup:
             return
@@ -286,7 +138,6 @@ class MainApp(App, SingletonInstance):
         btn_no = Button(text='No')
         btn_layout.add_widget(btn_no)
         btn_layout.add_widget(btn_yes)
-
         content.add_widget(btn_layout)
         result = True
 
@@ -302,14 +153,46 @@ class MainApp(App, SingletonInstance):
         btn_no.bind(on_press=lambda inst: close_popup(inst, False))
         self.popup_layout.open()
         return
-    
-    def show_app_list(self, show):
-        y = 0 if show else -self.menu_layout.height
-        self.menu_layout.pos = (self.menu_layout.pos[0], y)
-        self.menu_layout_box.pos = self.menu_layout.pos
         
     def get_current_app(self):
         return self.current_app
+        
+    def register_apps(self):
+        from apps import example
+        self.register_app(example)
+        
+        from apps import javis
+        self.register_app(javis)
+        
+        import sys
+        sys.path.append("..")
+        import KivyRPG
+        self.register_app(KivyRPG)
+        
+        self.ui_manager.arrange_icons()
+        
+    def register_app(self, module):
+        if module in self.registed_modules or type(module) is not types.ModuleType:
+            return
+            
+        app_class = getattr(module, "__app__", None)
+        if not inspect.isclass(app_class) or not issubclass(app_class, BaseApp):
+            return
+                                      
+        def create_app(module, inst):
+            self.create_app(module)       
+        
+        self.ui_manager.create_app_icon(
+            app_class.get_app_name(),
+            partial(create_app, module),
+            background_normal=LOGO_FILE
+            #background_color=dark_gray
+        )
+        self.registed_modules.append(module)
+    
+    def unregister_app(self, module):
+        if module in self.registed_modules:
+            self.registed_modules.remove(module)
     
     def create_app(self, module):
         try:
@@ -317,6 +200,7 @@ class MainApp(App, SingletonInstance):
         except:
             error = traceback.format_exc()
             Logger.info(error)
+            # todo - popup message
             toast(error)
             return
         
@@ -328,32 +212,12 @@ class MainApp(App, SingletonInstance):
         if app_id not in self.active_apps:
             display_name = app.get_app_name()
             app._BaseApp__initialize(display_name=display_name)
-            app_btn = Button(
-                text=app.get_app_name(),
-                size_hint=(None, 1.0),
-                width=self.app_button_size[0],
-                background_color=dark_gray
-            )        
-            def deactive_app(app, dt):
-                self.deactive_app(app)
-            def on_press(app, inst):
-                event = Clock.schedule_once(partial(deactive_app, app), 1)
-                self.app_press_time[app] = event
-            def on_release(app, inst):
-                if app in self.app_press_time:
-                    event = self.app_press_time.pop(app)
-                    Clock.unschedule(event)
-                    self.set_current_active_app(app)
-            app_btn.bind(
-                on_press=partial(on_press, app),
-                on_release=partial(on_release, app)
+            self.ui_manager.create_active_app_button(
+                app,
+                display_name,
+                self.deactive_app,
+                self.set_current_active_app
             )
-            self.app_layout.add_widget(app_btn)        
-            self.app_layout.width = app_btn.width * len(self.app_layout.children)
-            if Window.size[0] < self.app_layout.width:
-                self.app_scroll_view.scroll_x = 1.0        
-            app_id = app.get_app_id()
-            self.active_app_buttons[app_id] = app_btn
             self.active_apps[app_id] = app
             self.screen_helper.add_screen(app.get_screen(), False)
         self.set_current_active_app(app)
@@ -373,27 +237,23 @@ class MainApp(App, SingletonInstance):
             return
             
         if app is None:
-            self.screen_helper.current_screen(self.screen)
-            self.set_orientation(self.orientation)
-            self.show_app_list(True)
+            self.ui_manager.show_app_list(True)
+            self.screen_helper.current_screen(self.ui_manager.get_screen())
+            self.set_orientation(self.ui_manager.get_orientation())
         else:
+            self.ui_manager.show_app_list(False)
             self.screen_helper.current_screen(app.get_screen())
             self.set_orientation(app.get_orientation())
-            self.show_app_list(False)
             toast(app.get_app_name())
         self.current_app = app
             
     def deactive_app(self, app):
-        btn = self.active_app_buttons.pop(app.get_app_id())
-        btn.parent.remove_widget(btn)
+        self.ui_manager.deactive_app_button(app)
+        self.screen_helper.current_screen(self.ui_manager.get_screen())
         self.screen_helper.remove_screen(app.get_screen())
-        self.screen_helper.current_screen(self.screen)
         if app is self.current_app:
             self.current_app = None 
         self.active_apps.pop(app.get_app_id())
-        if app in self.app_press_time:
-            self.app_press_time.pop(app)
-        self.show_app_list(show = 0 < len(self.active_apps))
         app._BaseApp__on_stop()
                 
     def update(self, dt):
