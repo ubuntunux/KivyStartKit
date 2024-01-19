@@ -98,63 +98,6 @@ class Listener:
         # redo
         btn_redo = Button(size_hint=(None, 1), width=metrics.dp(40), text=">")
         btn_redo.bind(on_press=self.on_press_redo)
-        
-        # text layout
-        def on_enter(text_input, is_force_run, instance):
-            cmd = text_input.text.strip()
-            if cmd:
-                prev_stdout = sys.stdout
-                sys.stdout = StringIO()
-
-                cmd_lines = cmd.split("\n")
-                # indent mode - continue input but not run
-                if not is_force_run:
-                    is_cursor_at_end = len(text_input.text) == text_input.cursor_index()
-                    num_lines_of_cmd = text_input.text.lstrip().count('\n')
-                    run_code = is_cursor_at_end and 1 <= (num_lines_of_cmd - len(cmd_lines))
-                    lastline = cmd_lines[-1]
-                    if not run_code and (not is_cursor_at_end or lastline[-1] in ("\\", ":") or self.is_indent_mode):
-                        self.is_indent_mode = True
-                        text_input.height = text_input.minimum_height
-                        return
-
-                # prepare running command
-                self.is_indent_mode = False
-
-                # display command
-                results = []
-                for line_index, cmd_line in enumerate(cmd_lines):
-                    results.append((">>> " if line_index == 0 else "... ") + cmd_line)
-                results = "\n".join(results)
-                app.print_output(results)
-
-                # regist to histroy
-                if 0 == len(self.history) or self.history[-1] != cmd:
-                    self.history.append(cmd)
-                    self.history_index = -1
-
-                # run command
-                if app.commander.run_command(cmd):
-                    pass
-                else:
-                    try:
-                        print(eval(cmd, self.globals))
-                    except:
-                        try:
-                            exec(cmd, self.globals)
-                        except:
-                            print(traceback.format_exc())
-
-                # display output
-                output_text = sys.stdout.getvalue().rstrip()
-                if output_text:
-                    app.print_output(output_text)
-
-                # reset
-                sys.stdout = prev_stdout
-                text_input.text = ''
-                text_input.height = text_input.minimum_height
-                text_input.focus = True
 
         # input widget
         px = metrics.dp(10)
@@ -214,7 +157,7 @@ class Listener:
         
         # run
         btn_enter = Button(text="Run", size_hint=(1, 1), background_color=(1.3, 1.3, 2,2))
-        btn_enter.bind(on_press=partial(on_enter, self.text_input, True))
+        btn_enter.bind(on_press=partial(self.execute_command, self.text_input, True))
         
         # quit
         '''
@@ -234,11 +177,67 @@ class Listener:
         self.on_resize(Window, Window.width, Window.height)
         
         return self.root_layout
-        
+ 
+    def execute_command(self, text_input, is_force_run, instance):
+        cmd = text_input.text.strip()
+        if cmd:
+            prev_stdout = sys.stdout
+            sys.stdout = StringIO()
+
+            cmd_lines = cmd.split("\n")
+            # indent mode - continue input but not run
+            if not is_force_run:
+                is_cursor_at_end = len(text_input.text) == text_input.cursor_index()
+                num_lines_of_cmd = text_input.text.lstrip().count('\n')
+                run_code = is_cursor_at_end and 1 <= (num_lines_of_cmd - len(cmd_lines))
+                lastline = cmd_lines[-1]
+                if not run_code and (not is_cursor_at_end or lastline[-1] in ("\\", ":") or self.is_indent_mode):
+                    self.is_indent_mode = True
+                    text_input.height = text_input.minimum_height
+                    return
+
+            # prepare running command
+            self.is_indent_mode = False
+
+            # display command
+            results = []
+            for line_index, cmd_line in enumerate(cmd_lines):
+                results.append((">>> " if line_index == 0 else "... ") + cmd_line)
+            results = "\n".join(results)
+            self.app.print_output(results)
+
+            # regist to histroy
+            if 0 == len(self.history) or self.history[-1] != cmd:
+                self.history.append(cmd)
+                self.history_index = -1
+
+            # run command
+            if self.app.commander.run_command(cmd):
+                pass
+            else:
+                try:
+                    print(eval(cmd, self.globals))
+                except:
+                    try:
+                        exec(cmd, self.globals)
+                    except:
+                        print(traceback.format_exc())
+
+            # display output
+            output_text = sys.stdout.getvalue().rstrip()
+            if output_text:
+                self.app.print_output(output_text)
+
+            # reset
+            sys.stdout = prev_stdout
+            text_input.text = ''
+            text_input.height = text_input.minimum_height
+            #text_input.focus = True
+    
     def on_key_down(self, keyboard, keycode, key, modifiers):
         key_name = keycode[1]
         if key_name == 'enter' or key_name == 'numpadenter':
-            on_enter(self.text_input, False, self.text_input)
+            self.execute_command(self.text_input, False, self.text_input)
         elif key_name == 'up':
             self.on_press_prev(None)
         elif key_name == 'down':
@@ -254,17 +253,17 @@ class Listener:
         self.text_input.do_redo()
     
     def on_press_prev(self, inst):
-            num_history = len(self.history)
-            if 0 < num_history:
-                if self.history_index < 0:
-                    self.history_index = num_history - 1
-                elif 0 < self.history_index:
-                    self.history_index -= 1
-                self.text_input.text = self.history[self.history_index]
-                self.text_input.height = self.text_input.minimum_height
-                self.is_indent_mode = self.text_input.text.find("\n") > -1
+        num_history = len(self.history)
+        if 0 < num_history:
+            if self.history_index < 0:
+                self.history_index = num_history - 1
+            elif 0 < self.history_index:
+                self.history_index -= 1
+            self.text_input.text = self.history[self.history_index]
+            self.text_input.height = self.text_input.minimum_height
+            self.is_indent_mode = self.text_input.text.find("\n") > -1
 
-    def on_press_next(inst):
+    def on_press_next(self, inst):
             num_history = len(self.history)
             if 0 < num_history and 0 <= self.history_index < num_history:
                 self.history_index += 1
