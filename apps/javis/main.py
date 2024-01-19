@@ -146,7 +146,7 @@ class JavisApp(BaseApp):
         num_lines = len(self.output._lines_labels)
         for i in range(prev_line_index,num_lines):
             line_labels = self.output._lines_labels[i]
-            width = line_labels.size[0] + self.output.font_size
+            width = line_labels.size[0] + self.output.font_size * 3
             self.output.width = max(self.output.width, width)
         self.output_line_index = num_lines - 1
         self.output.height = self.output.minimum_height
