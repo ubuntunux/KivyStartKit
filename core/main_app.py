@@ -211,7 +211,16 @@ class MainApp(App, SingletonInstance):
         Logger.info((app_id, self.active_apps))   
         if app_id not in self.active_apps:
             display_name = app.get_app_name()
-            app._BaseApp__initialize(display_name=display_name)
+            
+            try:
+                app._BaseApp__initialize(display_name=display_name)
+            except:
+                error = traceback.format_exc()
+                Logger.info(error)
+                # todo - popup message
+                toast(error)
+                return
+                
             self.ui_manager.create_active_app_button(
                 app,
                 display_name,

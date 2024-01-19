@@ -70,7 +70,13 @@ class Listener:
         self.root_layout.add_widget(self.top_layout)
 
         # input_layout
-        self.input_layout = BoxLayout(orientation='horizontal', size_hint=(1.0, 1.0), height=text_height)
+        px = metrics.dp(20)
+        self.input_layout = BoxLayout(
+            orientation='horizontal',
+            size_hint=(1.0, 1.0),
+            height=text_height,
+            padding=(px, 0, px, 0)
+        )
         self.root_layout.add_widget(self.input_layout)
         
         # auto complete
@@ -86,7 +92,7 @@ class Listener:
         )
         self.auto_complete_vertical_layout = BoxLayout(orientation='vertical', size_hint=(1, 1), padding=metrics.dp(10))
         self.auto_complete_layout.add_widget(self.auto_complete_vertical_layout)
-        app.add_widget(self.auto_complete_layout)
+        #app.add_widget(self.auto_complete_layout)
         self.refresh_auto_compmete()
         
         # text layout
@@ -147,24 +153,21 @@ class Listener:
                 text_input.focus = True
 
         # input widget
+        px = metrics.dp(10)
+        py = text_padding_y
         self.text_input = TextInput(
             text='',
-            size_hint=(3, None),
+            size_hint=(1, None),
             height=text_height,
             multiline=True,
             auto_indent=True,
             font_name=constants.DEFAULT_FONT_NAME,
             font_size=text_font_size,
-            padding_x=metrics.dp(10),
-            padding_y=text_padding_y,
+            padding=(px,py,px,py),
+            do_wrap=False
         )
         # self.text_input.bind(on_text_validate=partial(on_enter, self.text_input, False))
         self.input_layout.add_widget(self.text_input)
-
-        # button run
-        btn_enter = Button(text="Run", size_hint=(1, None), height=text_height - 2.0, background_color=(1.3, 1.3, 2,2))
-        btn_enter.bind(on_press=partial(on_enter, self.text_input, True))
-        self.input_layout.add_widget(btn_enter)
 
         def on_press_prev(inst):
             num_history = len(self.history)
@@ -174,6 +177,7 @@ class Listener:
                 elif 0 < self.history_index:
                     self.history_index -= 1
                 self.text_input.text = self.history[self.history_index]
+                self.text_input.height = self.text_input.minimum_height
                 self.is_indent_mode = self.text_input.text.find("\n") > -1
 
         def on_press_next(inst):
@@ -184,6 +188,7 @@ class Listener:
                     self.text_input.text = ''
                 else:
                     self.text_input.text = self.history[self.history_index]
+                self.text_input.height = self.text_input.minimum_height
                 self.is_indent_mode = self.text_input.text.find("\n") > -1
 
         def on_key_down(keyboard, keycode, key, modifiers):
@@ -203,7 +208,7 @@ class Listener:
         #self.text_input.focus = True
 
         # logo
-        logo_image = Image(source=ICON_FILE, allow_stretch=True, keep_ratio=True, size_hint_x=None)
+        logo_image = Image(source=ICON_FILE, fit_mode="fill", size_hint_x=None)
         self.top_layout.add_widget(logo_image)
 
         # prev
@@ -216,14 +221,20 @@ class Listener:
         btn_next = Button(size_hint=(1, 1), text=">>", background_color=dark_gray)
         self.top_layout.add_widget(btn_next)
         btn_next.bind(on_press=on_press_next)
-
+        
+        # clear
         def on_clear(*args):
             app.clear_output()
-
+        
         btn_clear = Button(size_hint=(1, 1), text="Clear", background_color=dark_gray)
         btn_clear.bind(on_press=on_clear)
         self.top_layout.add_widget(btn_clear)
-
+        
+        # run
+        btn_enter = Button(text="Run", size_hint=(1, 1), background_color=(1.3, 1.3, 2,2))
+        btn_enter.bind(on_press=partial(on_enter, self.text_input, True))
+        self.top_layout.add_widget(btn_enter)
+        
         # quit
         '''
         def on_press_quit(inst):
@@ -232,7 +243,13 @@ class Listener:
         self.top_layout.add_widget(btn_quit)
         btn_quit.bind(on_press=on_press_quit)
         '''
+        
+        self.on_resize(Window, Window.width, Window.height)
+        
         return self.root_layout
+        
+    def on_resize(self, window, width, height):
+        pass
 
     def destroy(self):
         Config.set(*CONFIG_LISTENER_POS, self.root_layout.pos)
