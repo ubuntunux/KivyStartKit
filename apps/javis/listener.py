@@ -6,6 +6,7 @@ from io import StringIO
 from kivy import metrics
 from kivy.config import Config
 from kivy.core.window import Window
+from kivy.logger import Logger
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.image import Image
@@ -20,44 +21,35 @@ from .constants import *
 dark_gray = [0.4, 0.4, 0.4, 2]
 
 class Listener:
-    def __init__(self, memory):
-        self.app = None
-        self.memory = memory
+    def __init__(self, app, memory):
         self.globals = {}
+        self.app = app
+        self.memory = memory
         self.root_layout = None
         self.history = []
         self.history_index = -1
+        self.num_history = 5
         self.is_indent_mode = False
+        self.is_searching_history = False
         self.text_input = None
         self.input_layout = None
         self.top_layout = None
         self.keyboard = None
-
-        # initialize config
-        if not Config.has_section(SECTION_LISTENER):
-            Config.add_section(SECTION_LISTENER)
-
-        if not Config.has_option(*CONFIG_LISTENER_POS):
-            Config.set(*CONFIG_LISTENER_POS, (0, 0))
-        Config.write()
         
-    def refresh_auto_compmete(self):
-        text_font_size = metrics.dp(14)
-        text_padding_y = metrics.dp(10)
-        text_height = text_font_size + text_padding_y * 2.0
-        self.auto_complete_layout.height = self.auto_complete_vertical_layout.padding[0] * 2.0
+    def initialize(self):
+        pass
         
-        def func_auto_complete(text, inst):
-            self.text_input.text = text
+    def load_history_data(self, history_data):
+        self.history = history_data.get("history", [])
+        self.history_index = history_data.get("history_index", -1)
+    
+    def get_history_data(self):
+        return {
+            "history": self.history,
+            "history_index": self.history_index
+        }
         
-        for text in self.app.commander.get_commands():
-            btn = Button(text=text, size_hint=(1.0, None), font_size=text_font_size, height=text_height, padding_y=text_padding_y)
-            btn.bind(on_press=partial(func_auto_complete, text))
-            self.auto_complete_vertical_layout.add_widget(btn)
-            self.auto_complete_layout.height += text_height
-
-    def initialize(self, app):
-        self.app = app
+    def build(self):
         text_font_size = metrics.dp(14)
         text_padding_y = metrics.dp(10)
         text_height = text_font_size + text_padding_y * 2.0
@@ -115,11 +107,12 @@ class Listener:
         )
         self.keyboard = Window.request_keyboard(self.keyboard_closed, self.text_input)
         self.keyboard.bind(on_key_down=self.on_key_down)
+        Window.release_keyboard()
+        self.text_input.keyboard_mode = "auto" # auto, managed
         
         self.input_layout.add_widget(btn_undo)
         self.input_layout.add_widget(self.text_input)
         self.input_layout.add_widget(btn_redo)
-        
         
         # auto complete
         self.auto_complete_layout = ScatterLayout(
@@ -150,7 +143,7 @@ class Listener:
         
         # clear
         def on_clear(*args):
-            app.clear_output()
+            self.app.clear_output()
         
         btn_clear = Button(size_hint=(1, 1), text="Clear", background_color=dark_gray)
         btn_clear.bind(on_press=on_clear)
@@ -162,7 +155,7 @@ class Listener:
         # quit
         '''
         def on_press_quit(inst):
-            app.stop()
+            self.app.stop()
         btn_quit = Button(size_hint=(0.5, 1), text="Quit", background_color=dark_gray)
         self.top_layout.add_widget(btn_quit)
         btn_quit.bind(on_press=on_press_quit)
@@ -175,10 +168,25 @@ class Listener:
         self.top_layout.add_widget(btn_enter)
         
         self.on_resize(Window, Window.width, Window.height)
-        
         return self.root_layout
  
+    def refresh_auto_compmete(self):
+        text_font_size = metrics.dp(14)
+        text_padding_y = metrics.dp(10)
+        text_height = text_font_size + text_padding_y * 2.0
+        self.auto_complete_layout.height = self.auto_complete_vertical_layout.padding[0] * 2.0
+        
+        def func_auto_complete(text, inst):
+            self.text_input.text = text
+        
+        for text in self.app.commander.get_commands():
+            btn = Button(text=text, size_hint=(1.0, None), font_size=text_font_size, height=text_height, padding_y=text_padding_y)
+            btn.bind(on_press=partial(func_auto_complete, text))
+            self.auto_complete_vertical_layout.add_widget(btn)
+            self.auto_complete_layout.height += text_height
+
     def execute_command(self, text_input, is_force_run, instance):
+        self.is_searching_history = False
         cmd = text_input.text.strip()
         if cmd:
             prev_stdout = sys.stdout
@@ -207,9 +215,19 @@ class Listener:
             self.app.print_output(results)
 
             # regist to histroy
-            if 0 == len(self.history) or self.history[-1] != cmd:
-                self.history.append(cmd)
-                self.history_index = -1
+            last_cmd = self.get_last_command()
+            if last_cmd == "" or last_cmd != cmd:
+                Logger.info(f"self.history_index: {self.history_index}, last_cmd: {last_cmd}, history: {self.history}")
+                self.history_index += 1
+                if len(self.history) < self.num_history:
+                    self.history.insert(self.history_index, cmd)
+                    Logger.info(f"insert: {self.history_index, cmd, self.history}")
+                else:
+                    if len(self.history) <= self.history_index:
+                        self.history_index = 0
+                    self.history[self.history_index] = cmd
+                    
+                    Logger.info(f"replace: {self.history_index, cmd, self.history}")
 
             # run command
             if self.app.commander.run_command(cmd):
@@ -235,13 +253,14 @@ class Listener:
             #text_input.focus = True
     
     def on_key_down(self, keyboard, keycode, key, modifiers):
-        key_name = keycode[1]
-        if key_name == 'enter' or key_name == 'numpadenter':
-            self.execute_command(self.text_input, False, self.text_input)
-        elif key_name == 'up':
-            self.on_press_prev(None)
-        elif key_name == 'down':
-            self.on_press_next(None)
+        if self.text_input.focus:
+            key_name = keycode[1]
+            if key_name == 'enter' or key_name == 'numpadenter':
+                self.execute_command(self.text_input, False, self.text_input)
+            elif key_name == 'up':
+                self.on_press_prev(None)
+            elif key_name == 'down':
+                self.on_press_next(None)
 
     def keyboard_closed(self, *args):
         pass
@@ -251,35 +270,45 @@ class Listener:
     
     def on_press_redo(self, inst):
         self.text_input.do_redo()
-    
-    def on_press_prev(self, inst):
+        
+    def get_last_command(self):
+        if self.history_index < len(self.history):
+            return self.history[self.history_index]
+        return ""
+        
+    def on_search_history(self, direction=1):
         num_history = len(self.history)
-        if 0 < num_history:
-            if self.history_index < 0:
+        if num_history < 1:
+            return
+            
+        Logger.info(f"search is_searching_history: {self.is_searching_history}, history_index: {self.history_index}")
+            
+        if self.is_searching_history:
+            self.history_index += direction
+            if num_history <= self.history_index:
+                self.history_index = 0
+            elif self.history_index < 0:
                 self.history_index = num_history - 1
-            elif 0 < self.history_index:
-                self.history_index -= 1
-            self.text_input.text = self.history[self.history_index]
-            self.text_input.height = self.text_input.minimum_height
-            self.is_indent_mode = self.text_input.text.find("\n") > -1
-
+        self.is_searching_history = True
+        
+        Logger.info(f"result is_searching_history: {self.is_searching_history}, history_index: {self.history_index}, cmd: {self.history[self.history_index]}, history: {self.history}")
+        
+        self.text_input.text = self.history[self.history_index]
+        self.text_input.height = self.text_input.minimum_height
+        self.is_indent_mode = self.text_input.text.find("\n") > -1
+        
+    def on_press_prev(self, inst):
+        self.on_search_history(direction=-1)
+            
     def on_press_next(self, inst):
-            num_history = len(self.history)
-            if 0 < num_history and 0 <= self.history_index < num_history:
-                self.history_index += 1
-                if self.history_index == num_history:
-                    self.text_input.text = ''
-                else:
-                    self.text_input.text = self.history[self.history_index]
-                self.text_input.height = self.text_input.minimum_height
-                self.is_indent_mode = self.text_input.text.find("\n") > -1
-    
+        self.on_search_history(direction=1)
+        
     def on_resize(self, window, width, height):
         pass
 
     def destroy(self):
-        Config.set(*CONFIG_LISTENER_POS, self.root_layout.pos)
-
+        Config.set(self.app.get_app_name(), CONFIG_HISTORY, self.history)
+        
     def update_listener(self):
         while True:
             self.memory.listener_data.listen_data = input("listen: ")

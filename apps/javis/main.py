@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 import traceback
@@ -27,15 +28,14 @@ class JavisApp(BaseApp):
 
     def __init__(self, *args, **kargs):
         super(JavisApp, self).__init__(*args, **kargs)
-        self.output_directory = os.path.join(os.path.split(__file__)[0], '.log')
-        if not os.path.exists(self.output_directory):
-            os.makedirs(self.output_directory)
-        self.output_file = os.path.join(self.output_directory, 'output.log')
+        self.output_directory = os.path.join(os.path.split(__file__)[0], 'data')
+        self.output_file = os.path.join(self.output_directory, 'output.ini')
+        self.history_file = os.path.join(self.output_directory, 'history.ini')
         
         self.memory = Memory()
         self.chairman = ChairMan(self.memory)
         self.evaluator = Evaluator(self.memory)
-        self.listener = Listener(self.memory)
+        self.listener = Listener(self, self.memory)
         self.commander = Commander(self)
         self.screen_helper = None
         self.screen = None
@@ -64,10 +64,18 @@ class JavisApp(BaseApp):
         # initialize config
         
     def initialize(self):
+        if not os.path.exists(self.output_directory):
+            os.makedirs(self.output_directory)
+                 
+        self.listener.initialize()
+
+        # build gui
         self.build()
+        
+        # run
         self.print_output("Python " + sys.version.strip(), save=False)
         self.print_output(os.path.abspath("."), save=False)
-        self.load_output()  
+        self.load_data()  
 
     def build(self):
         layout = BoxLayout(orientation='vertical', size=(1, 1))
@@ -93,19 +101,26 @@ class JavisApp(BaseApp):
         layout.add_widget(self.output_scroll_view)
 
         # initialize listner
-        self.listener_widget = self.listener.initialize(self)
+        self.listener_widget = self.listener.build()
         layout.add_widget(self.listener_widget)
     
     def on_stop(self):
         self.listener.destroy()
-        self.save_output()
+        self.save_data()
         Config.write()
     
     def on_resize(self, window, width, height):
         pass
         
-    def load_output(self):
+    def load_data(self):
         try:
+            # load history
+            if os.path.exists(self.history_file):
+                with open(self.history_file, 'r') as f:
+                    history_data = eval(f.read())
+                    self.listener.load_history_data(history_data)
+        
+            # load output
             outputs = []
             if os.path.exists(self.output_file):
                 with open(self.output_file, 'r') as f:
@@ -115,13 +130,15 @@ class JavisApp(BaseApp):
         except:
             self.print_output(traceback.format_exc())
 
-    def save_output(self):
-        dir_name = os.path.split(self.output_file)[0]
-        if not os.path.exists(dir_name):
-            os.makedirs(dir_name)
+    def save_data(self):
+        if not os.path.exists(self.output_directory):
+            os.makedirs(self.output_directory)
 
         with open(self.output_file, 'w') as f:
-            f.write(repr(self.save_text_list))
+            f.write(json.dumps(self.save_text_list, indent=4))
+        
+        with open(self.history_file, 'w') as f:
+            f.write(json.dumps(self.listener.get_history_data(), indent=4))
 
     def clear_output(self):
         self.save_text_list.clear()
