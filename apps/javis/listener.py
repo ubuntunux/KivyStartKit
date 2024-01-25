@@ -217,18 +217,14 @@ class Listener:
             # regist to histroy
             last_cmd = self.get_last_command()
             if last_cmd == "" or last_cmd != cmd:
-                Logger.info(f"self.history_index: {self.history_index}, last_cmd: {last_cmd}, history: {self.history}")
                 self.history_index += 1
                 if len(self.history) < self.num_history:
                     self.history.insert(self.history_index, cmd)
-                    Logger.info(f"insert: {self.history_index, cmd, self.history}")
                 else:
                     if len(self.history) <= self.history_index:
                         self.history_index = 0
                     self.history[self.history_index] = cmd
                     
-                    Logger.info(f"replace: {self.history_index, cmd, self.history}")
-
             # run command
             if self.app.commander.run_command(cmd):
                 pass
@@ -280,9 +276,7 @@ class Listener:
         num_history = len(self.history)
         if num_history < 1:
             return
-            
-        Logger.info(f"search is_searching_history: {self.is_searching_history}, history_index: {self.history_index}")
-            
+       
         if self.is_searching_history:
             self.history_index += direction
             if num_history <= self.history_index:
@@ -290,8 +284,6 @@ class Listener:
             elif self.history_index < 0:
                 self.history_index = num_history - 1
         self.is_searching_history = True
-        
-        Logger.info(f"result is_searching_history: {self.is_searching_history}, history_index: {self.history_index}, cmd: {self.history[self.history_index]}, history: {self.history}")
         
         self.text_input.text = self.history[self.history_index]
         self.text_input.height = self.text_input.minimum_height
