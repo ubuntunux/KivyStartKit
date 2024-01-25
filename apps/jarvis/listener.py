@@ -299,7 +299,7 @@ class Listener:
         pass
 
     def destroy(self):
-        Config.set(self.app.get_app_name(), CONFIG_HISTORY, self.history)
+        pass
         
     def update_listener(self):
         while True:

@@ -161,8 +161,8 @@ class MainApp(App, SingletonInstance):
         from apps import example
         self.register_app(example)
         
-        from apps import javis
-        self.register_app(javis)
+        from apps import jarvis
+        self.register_app(jarvis)
         
         import sys
         sys.path.append("..")

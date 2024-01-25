@@ -22,12 +22,12 @@ from .listener import Listener
 from .memory import Memory
 
 
-class JavisApp(BaseApp):
-    app_name = "JAVIS"
+class JarvisApp(BaseApp):
+    app_name = "JARVIS"
     orientation = "all" # all, landscape, portrait
 
     def __init__(self, *args, **kargs):
-        super(JavisApp, self).__init__(*args, **kargs)
+        super(JarvisApp, self).__init__(*args, **kargs)
         self.output_directory = os.path.join(os.path.split(__file__)[0], 'data')
         self.output_file = os.path.join(self.output_directory, 'output.ini')
         self.history_file = os.path.join(self.output_directory, 'history.ini')
