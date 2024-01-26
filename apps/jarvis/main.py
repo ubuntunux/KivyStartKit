@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import traceback
+import kivy
 from kivy.logger import Logger
 from kivy.config import Config
 from kivy.core.window import Window
@@ -46,7 +47,7 @@ class JarvisApp(BaseApp):
         self.output_scroll_view = None
         self.is_first_update = True
         self.save_text_list = []
-
+      
         # # create
         # chairman_thread = Thread(target=chairman, args=[memory])
         # listener_thread = Thread(target=listener, args=[memory])
@@ -73,8 +74,9 @@ class JarvisApp(BaseApp):
         self.build()
         
         # run
-        self.print_output("Python " + sys.version.strip(), save=False)
-        self.print_output(os.path.abspath("."), save=False)
+        self.print_output(f"Python {sys.version.strip()}", save=False)
+        self.print_output(f"Kivy v{kivy.__version__}", save=False)
+        self.print_output(f'Working directory: {os.path.abspath(".")}', save=False)
         self.load_data()  
 
     def build(self):

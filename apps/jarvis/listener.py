@@ -10,6 +10,7 @@ from kivy.logger import Logger
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.image import Image
+from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.scatterlayout import ScatterLayout
 from kivy.uix.textinput import TextInput
 
@@ -115,23 +116,31 @@ class Listener:
         self.input_layout.add_widget(btn_redo)
         
         # auto complete
-        self.auto_complete_layout = ScatterLayout(
+        self.command_list_layout = ScatterLayout(
             size_hint=(None, None),
             width=text_font_size * 10.0 + text_padding_y * 2.0, 
             height=text_height
         )
-        create_dynamic_rect(self.auto_complete_layout, color=(0.1, 0.1, 0.1, 1.0))
-        self.auto_complete_layout.pos = (
-            Window.size[0] - self.auto_complete_layout.width,
-            self.auto_complete_layout.height
+        create_dynamic_rect(self.command_list_layout, color=(0.1, 0.1, 0.1, 1.0))
+        self.command_list_layout.pos = (
+            Window.size[0] - self.command_list_layout.width,
+            self.command_list_layout.height
         )
-        self.auto_complete_vertical_layout = BoxLayout(orientation='vertical', size_hint=(1, 1), padding=metrics.dp(10))
-        self.auto_complete_layout.add_widget(self.auto_complete_vertical_layout)
-        #app.add_widget(self.auto_complete_layout)
-        self.refresh_auto_compmete()
+        self.command_list_vertical_layout = BoxLayout(orientation='vertical', size_hint=(1, 1), padding=metrics.dp(10))
+        self.command_list_layout.add_widget(self.command_list_vertical_layout)
+        self.build_command_list()
 
         # logo
-        logo_image = Image(source=ICON_FILE, fit_mode="fill", size_hint_x=None)
+        def toggle_commands(inst, touch):
+            if not inst.collide_point(*touch.pos):
+                return False
+            if self.command_list_layout.parent:
+                self.app.remove_widget(self.command_list_layout)
+            else:
+                self.app.add_widget(self.command_list_layout)
+            return True  
+        logo_image = Image(size_hint=(None, 1), source=ICON_FILE, fit_mode="fill")
+        logo_image.bind(on_touch_down=toggle_commands)
         
         # prev
         btn_prev = Button(size_hint=(1, 1), text="<<", background_color=dark_gray)
@@ -170,20 +179,20 @@ class Listener:
         self.on_resize(Window, Window.width, Window.height)
         return self.root_layout
  
-    def refresh_auto_compmete(self):
+    def build_command_list(self):
         text_font_size = metrics.dp(14)
         text_padding_y = metrics.dp(10)
         text_height = text_font_size + text_padding_y * 2.0
-        self.auto_complete_layout.height = self.auto_complete_vertical_layout.padding[0] * 2.0
+        self.command_list_layout.height = self.command_list_vertical_layout.padding[0] * 2.0
         
-        def func_auto_complete(text, inst):
+        def func_command_list(text, inst):
             self.text_input.text = text
         
         for text in self.app.commander.get_commands():
             btn = Button(text=text, size_hint=(1.0, None), font_size=text_font_size, height=text_height, padding_y=text_padding_y)
-            btn.bind(on_press=partial(func_auto_complete, text))
-            self.auto_complete_vertical_layout.add_widget(btn)
-            self.auto_complete_layout.height += text_height
+            btn.bind(on_press=partial(func_command_list, text))
+            self.command_list_vertical_layout.add_widget(btn)
+            self.command_list_layout.height += text_height
 
     def execute_command(self, text_input, is_force_run, instance):
         self.is_searching_history = False
