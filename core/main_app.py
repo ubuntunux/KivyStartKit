@@ -169,6 +169,9 @@ class MainApp(App, SingletonInstance):
         import KivyRPG
         self.register_app(KivyRPG)
         
+        from apps import addapp
+        self.register_app(addapp)
+        
         self.ui_manager.arrange_icons()
         
     def register_app(self, module):

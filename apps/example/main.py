@@ -1,3 +1,4 @@
+from kivy.logger import Logger
 from kivy.uix.button import Button
 from core.base_app import BaseApp
 
