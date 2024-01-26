@@ -183,10 +183,9 @@ class MainApp(App, SingletonInstance):
             self.create_app(module)       
         
         self.ui_manager.create_app_icon(
-            app_class.get_app_name(),
-            partial(create_app, module),
-            background_normal=LOGO_FILE
-            #background_color=dark_gray
+            icon_name=app_class.get_app_name(),
+            icon_file=LOGO_FILE,
+            on_press=partial(create_app, module),  
         )
         self.registed_modules.append(module)
     
@@ -207,11 +206,9 @@ class MainApp(App, SingletonInstance):
         if app is None or not isinstance(app, BaseApp):
             return
         
-        app_id = app.get_app_id()
-        Logger.info((app_id, self.active_apps))   
+        app_id = app.get_app_id()  
         if app_id not in self.active_apps:
             display_name = app.get_app_name()
-            
             try:
                 app._BaseApp__initialize(display_name=display_name)
             except:

@@ -104,18 +104,22 @@ class UIManager(BaseApp):
         screen_helper.add_screen(self.get_screen(), True)
         root_widget.add_widget(self.menu_layout)
     
-    def create_app_icon(self, icon_name, on_press, **kargs):  
+    def create_app_icon(self, icon_name, icon_file, on_press):  
         icon_layout = BoxLayout(
             orientation="vertical",
             size_hint=(None, None),
             size=add(self.icon_size, (0, self.icon_font_height))
         )
-        icon_btn = Button(
+        icon_btn = Image(
             size_hint=(None, None),
             size=self.icon_size,
-            **kargs
-        )        
-        icon_btn.bind(on_press=on_press)
+            source=icon_file,
+            fit_mode="fill"
+        )
+        def on_touch_down(on_press, inst, touch):
+            if inst.collide_point(*touch.pos):
+                on_press(inst)  
+        icon_btn.bind(on_touch_down=partial(on_touch_down, on_press))
         icon_label = Label(
             text=icon_name,
             halign="center",
