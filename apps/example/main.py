@@ -6,7 +6,8 @@ from core.base_app import BaseApp
 class App(BaseApp):
     app_name = "Hello, world!"
     orientation = "all" # all, landscape, portrait
-
+    allow_multiple_instance = False
+    
     def __init__(self):
         super().__init__()
         

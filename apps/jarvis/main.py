@@ -26,7 +26,8 @@ from .memory import Memory
 class JarvisApp(BaseApp):
     app_name = "JARVIS"
     orientation = "all" # all, landscape, portrait
-
+    allow_multiple_instance = False
+    
     def __init__(self, *args, **kargs):
         super(JarvisApp, self).__init__(*args, **kargs)
         self.output_directory = os.path.join(os.path.split(__file__)[0], 'data')

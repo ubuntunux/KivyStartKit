@@ -1,12 +1,15 @@
 from kivy.logger import Logger
 from kivy.uix.screenmanager import Screen
+from utility.singleton import SingletonInstance
 
 
-class BaseApp:
+class BaseApp(SingletonInstance):
     app_name = "App"
     orientation = "all"
+    allow_multiple_instance = False 
     
     def __init__(self):
+        super().__init__()
         self.__display_name = self.app_name
         self.__app_id = str(id(self))
         self.__screen = None
@@ -23,6 +26,7 @@ class BaseApp:
     def __on_stop(self):
         Logger.info(f"on_stop {self.get_display_name()}")
         self.on_stop()
+        self.clear_instance()
     
     def initialize(self):
         raise Exception("must implement!")

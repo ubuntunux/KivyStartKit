@@ -22,6 +22,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
+from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.scatter import Scatter
 from kivy.uix.screenmanager import Screen
 from kivy.uix.scrollview import ScrollView
@@ -67,7 +68,7 @@ class MainApp(App, SingletonInstance):
         Window.configure_keyboards()
         Window.bind(on_resize=self.on_resize)
         
-        self.root_widget = FloatLayout(size_hint=(1,1))
+        self.root_widget = RelativeLayout(size_hint=(1,1))
         background = Image(source="data/images/ubuntu-wallpaper-mobile.jpg", size_hint=(1,1), fit_mode="fill")
         self.root_widget.add_widget(background)
         self.screen_helper = ScreenHelper(size_hint=(1,1))
@@ -198,7 +199,7 @@ class MainApp(App, SingletonInstance):
     
     def create_app(self, module):
         try:
-            app = module.__app__()
+            app = module.__app__.instance()
         except:
             error = traceback.format_exc()
             Logger.info(error)

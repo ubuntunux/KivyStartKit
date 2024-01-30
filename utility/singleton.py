@@ -1,13 +1,10 @@
 class SingletonInstance:
     __instance = None
-
-    @classmethod
-    def __get_instance(cls):
-        return cls.__instance
+    allow_multiple_instance = False
 
     @classmethod
     def instance(cls, *args, **kargs):
-        if cls.__instance is None:
+        if cls.__instance is None or cls.allow_multiple_instance:
             cls.__instance = cls(*args, **kargs)
         return cls.__instance
         
