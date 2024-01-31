@@ -54,7 +54,7 @@ class MainApp(App, SingletonInstance):
         self.root_widget = None
         self.screen_helper = None
         self.ui_manager = UIManager()
-        self.popup = KivyPopup()
+        self.exit_popup = KivyPopup()
         
         self.bind(on_start=self.do_on_start)
     
@@ -75,6 +75,20 @@ class MainApp(App, SingletonInstance):
         self.ui_manager._BaseApp__initialize(display_name="UI Manager")
         self.ui_manager.build(self.root_widget, self.screen_helper)
         
+        # exit popup
+        content_widget = Label(text="Do you really want to quit?")
+        def on_press_yes(inst):
+            self.stop()
+            self.exit_popup.dismiss()
+        btn_yes = Button(text='Yes')
+        btn_no = Button(text='No')
+        btn_yes.bind(on_press=on_press_yes)
+        btn_no.bind(on_press=lambda inst: self.exit_popup.dismiss())
+        self.exit_popup.initialize_popup(
+            title="Exit", 
+            content_widget=content_widget, 
+            buttons=[btn_no, btn_yes]
+        )    
         return self.root_widget
         
     def destroy(self):
@@ -117,15 +131,10 @@ class MainApp(App, SingletonInstance):
                 current_app.run_back_event()
             else:
                 self.set_current_active_app(None)
-        elif self.popup.is_opened():
-            self.popup.dismiss()
+        elif self.exit_popup.is_opened():
+            self.exit_popup.dismiss()
         else:
-            self.popup.open(
-                title="Exit", 
-                body_widget=Label(text="Do you really want to quit?"), 
-                callback_yes=self.stop
-            )
-            
+            self.exit_popup.open()
     def get_current_app(self):
         return self.current_app
         

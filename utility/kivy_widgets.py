@@ -8,23 +8,27 @@ from kivy.uix.popup import Popup
 from kivy.uix.textinput import TextInput
 
 class KivyLabel(TextInput):
-    def __init__(self, **kargs):
-        if "readonly" not in kargs:
-            kargs["readonly"] = True
-        if "use_bubble" not in kargs:
-            kargs["use_bubble"] = False
-        if "use_handles" not in kargs:
-            kargs["use_handles"] = False
-        if "allow_copy" not in kargs:
-            kargs["allow_copy"] = False
-        if "multiline" not in kargs:
-            kargs["multiline"] = True
-        if "background_color" not in kargs:
-            kargs["background_color"] = (1,1,1,0)
-        if "foreground_color" not in kargs:
-            kargs["foreground_color"] = (1,1,1,1)
-            
-        super(KivyLabel, self).__init__(**kargs)
+    def __init__(
+        self, 
+        readonly=True,
+        use_bubble=False,
+        use_handles=False,
+        allow_copy=False,
+        multiline=True,
+        background_color=(1,1,1,0),
+        foreground_color=(1,1,1,1),
+        **kargs
+    ):     
+        super().__init__(
+            readonly=readonly,
+            use_bubble=use_bubble,
+            use_handles=use_handles,
+            allow_copy=allow_copy,
+            multiline=multiline,
+            background_color=background_color,
+            foreground_color=foreground_color,
+            **kargs
+        )
     
     def on_touch_down(self, *args):
         return False
@@ -59,44 +63,36 @@ class DebugLabel(KivyLabel):
 class KivyPopup:
     def __init__(self):
         self.is_popup = False
+        self.popup_layout = None
         
-    def open(
+    def initialize_popup(
         self,
         title,
-        body_widget=None,
         auto_dismiss=False,
         callback_open=None,
         callback_close=None,
-        callback_yes=None,
-        callback_no=None
+        content_widget=None,
+        buttons=[]
     ):
         if self.is_popup:
             self.dismiss()
             
         layout_width = min(DP(400), Window.width - DP(20))
-        layout_height = DP(100)
+        layout_height = DP(50)
         content = BoxLayout(orientation="vertical", size_hint=(1, 1))
         self.popup_layout = Popup(title=title, content=content, auto_dismiss=auto_dismiss, size_hint=(None, None), size=(layout_width, layout_height))
         
-        if body_widget:
+        if content_widget:
             layout_height += DP(50)
-            content.add_widget(body_widget)
+            content.add_widget(content_widget)
         
-        btn_layout = BoxLayout(orientation="horizontal", size_hint=(1, 1), spacing=DP(5))
-        btn_yes = Button(text='Yes')
-        btn_no = Button(text='No')
-        btn_layout.add_widget(btn_no)
-        btn_layout.add_widget(btn_yes)
-        content.add_widget(btn_layout)
-        
-        def close_popup(instance, is_yes):
-            if is_yes and callback_yes:
-                callback_yes()
-            elif callback_no:
-                callback_no()
-            self.popup_layout.dismiss()
-            self.is_popup = False
-        
+        if buttons:
+            layout_height += DP(50)
+            btn_layout = BoxLayout(orientation="horizontal", size_hint=(1, 1), spacing=DP(5))
+            content.add_widget(btn_layout)
+            for button in buttons:
+                btn_layout.add_widget(button)
+                
         def on_open(inst):
             if callback_open:
                 callback_open()
@@ -107,12 +103,11 @@ class KivyPopup:
                 callback_close()
             self.is_popup = False
 
-        btn_yes.bind(on_press=lambda inst: close_popup(inst, True))
-        btn_no.bind(on_press=lambda inst: close_popup(inst, False))
-        
         self.popup_layout.height = layout_height
         self.popup_layout.bind(on_open=on_open)
         self.popup_layout.bind(on_dismiss=on_dismiss)
+        
+    def open(self):
         self.popup_layout.open()
     
     def dismiss(self):
