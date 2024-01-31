@@ -1,4 +1,10 @@
 from kivy.clock import Clock
+from kivy.core.window import Window
+from kivy.logger import Logger
+from kivy.metrics import dp as DP
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.button import Button
+from kivy.uix.popup import Popup
 from kivy.uix.textinput import TextInput
 
 class KivyLabel(TextInput):
@@ -50,3 +56,69 @@ class DebugLabel(KivyLabel):
                 self.debug_text = []
         self.height = self.minimum_height
         
+class KivyPopup:
+    def __init__(self):
+        self.is_popup = False
+        
+    def open(
+        self,
+        title,
+        body_widget=None,
+        auto_dismiss=False,
+        callback_open=None,
+        callback_close=None,
+        callback_yes=None,
+        callback_no=None
+    ):
+        if self.is_popup:
+            self.dismiss()
+            
+        layout_width = min(DP(400), Window.width - DP(20))
+        layout_height = DP(100)
+        content = BoxLayout(orientation="vertical", size_hint=(1, 1))
+        self.popup_layout = Popup(title=title, content=content, auto_dismiss=auto_dismiss, size_hint=(None, None), size=(layout_width, layout_height))
+        
+        if body_widget:
+            layout_height += DP(50)
+            content.add_widget(body_widget)
+        
+        btn_layout = BoxLayout(orientation="horizontal", size_hint=(1, 1), spacing=DP(5))
+        btn_yes = Button(text='Yes')
+        btn_no = Button(text='No')
+        btn_layout.add_widget(btn_no)
+        btn_layout.add_widget(btn_yes)
+        content.add_widget(btn_layout)
+        
+        def close_popup(instance, is_yes):
+            if is_yes and callback_yes:
+                callback_yes()
+            elif callback_no:
+                callback_no()
+            self.popup_layout.dismiss()
+            self.is_popup = False
+        
+        def on_open(inst):
+            if callback_open:
+                callback_open()
+            self.is_popup = True
+                
+        def on_dismiss(inst):
+            if callback_close:
+                callback_close()
+            self.is_popup = False
+
+        btn_yes.bind(on_press=lambda inst: close_popup(inst, True))
+        btn_no.bind(on_press=lambda inst: close_popup(inst, False))
+        
+        self.popup_layout.height = layout_height
+        self.popup_layout.bind(on_open=on_open)
+        self.popup_layout.bind(on_dismiss=on_dismiss)
+        self.popup_layout.open()
+    
+    def dismiss(self):
+        if self.is_popup:
+            self.popup_layout.dismiss()
+    
+    def is_opened(self):
+        return self.is_popup
+

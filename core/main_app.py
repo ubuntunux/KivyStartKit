@@ -21,7 +21,6 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
 from kivy.uix.label import Label
-from kivy.uix.popup import Popup
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.scatter import Scatter
 from kivy.uix.screenmanager import Screen
@@ -52,11 +51,10 @@ class MainApp(App, SingletonInstance):
         self.registed_modules = []
         self.current_app = None
         self.active_apps = {}
-        self.is_popup = False
-        self.popup_layout = None
         self.root_widget = None
         self.screen_helper = None
         self.ui_manager = UIManager()
+        self.popup = KivyPopup()
         
         self.bind(on_start=self.do_on_start)
     
@@ -119,42 +117,15 @@ class MainApp(App, SingletonInstance):
                 current_app.run_back_event()
             else:
                 self.set_current_active_app(None)
-        elif self.is_popup and self.popup_layout:
-            self.popup_layout.dismiss()
-            self.is_popup = False
+        elif self.popup.is_opened():
+            self.popup.dismiss()
         else:
-            self.popup("Exit?", "", self.stop, None)
-    
-    # Todo - popup widget    
-    def popup(self, title, message, lambda_yes, lambda_no):
-        if self.is_popup:
-            return
-        self.is_popup = True
-        content = BoxLayout(orientation="vertical", size_hint=(1, 1))
-        size = (DP(400), DP(150))
-        self.popup_layout = Popup(title=title, content=content, auto_dismiss=False, size_hint=(None, None), size=size)
-        content.add_widget(Label(text=message))
-        btn_layout = BoxLayout(orientation="horizontal", size_hint=(1, 1), spacing=DP(5))
-        btn_yes = Button(text='Yes')
-        btn_no = Button(text='No')
-        btn_layout.add_widget(btn_no)
-        btn_layout.add_widget(btn_yes)
-        content.add_widget(btn_layout)
-        result = True
-
-        def close_popup(instance, is_yes):
-            if is_yes and lambda_yes:
-                lambda_yes()
-            elif lambda_no:
-                lambda_no()
-            self.popup_layout.dismiss()
-            self.is_popup = False
-
-        btn_yes.bind(on_press=lambda inst: close_popup(inst, True))
-        btn_no.bind(on_press=lambda inst: close_popup(inst, False))
-        self.popup_layout.open()
-        return
-        
+            self.popup.open(
+                title="Exit", 
+                body_widget=Label(text="Do you really want to quit?"), 
+                callback_yes=self.stop
+            )
+            
     def get_current_app(self):
         return self.current_app
         
