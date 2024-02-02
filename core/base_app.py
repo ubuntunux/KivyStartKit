@@ -15,29 +15,39 @@ class BaseApp(SingletonInstance):
         self.__screen = None
         self.__back_event = None
         self.__initialized = False
+        self.__stop = False
         
-    def __initialize(self, display_name):
-        Logger.info(f"initialize {display_name}")
-        self.__display_name = display_name
-        self.__screen = Screen(name=self.get_app_id())
-        self.initialize()
-        self.__initialized = True
+    def initialize(self, display_name):
+        if not self.__initialized:
+            Logger.info(f"initialize {display_name}")
+            self.__display_name = display_name
+            self.__screen = Screen(name=self.get_app_id())
+            self.on_initialize()
+            self.__initialized = True
+            
+    def is_stopped(self):
+        return self.__stop
         
-    def __on_stop(self):
-        Logger.info(f"on_stop {self.get_display_name()}")
-        self.on_stop()
-        self.clear_instance()
+    def stop(self):
+        if not self.__stop:
+            Logger.info(f"on_stop {self.get_display_name()}")
+            self.on_stop()
+            self.clear_instance()
+            self.__stop = True
     
-    def initialize(self):
+    def on_initialize(self):
         raise Exception("must implement!")
-        
+ 
     def on_stop(self):
+        raise Exception("must implement!")
+    
+    def on_back(self):
         raise Exception("must implement!")
     
     def on_resize(self, window, width, height):
         raise Exception("must implement!")
 
-    def update(self, dt):
+    def on_update(self, dt):
         raise Exception("must implement!")
 
     @ classmethod
@@ -53,15 +63,6 @@ class BaseApp(SingletonInstance):
     
     def get_display_name(self):
         return self.__display_name
-           
-    def has_back_event(self):
-        return self.__back_event is not None
-
-    def run_back_event(self):
-        return self.__back_event()
-
-    def set_back_event(self, func):
-        self.__back_event = func
 
     def get_screen(self):
         return self.__screen

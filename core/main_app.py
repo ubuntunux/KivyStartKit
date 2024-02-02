@@ -55,6 +55,7 @@ class MainApp(App, SingletonInstance):
         self.screen_helper = None
         self.ui_manager = UIManager()
         self.exit_popup = KivyPopup()
+        self.key_press_time = {}
         
         self.bind(on_start=self.do_on_start)
     
@@ -65,6 +66,8 @@ class MainApp(App, SingletonInstance):
         Config.set('kivy', 'keyboard_mode', 'system')
         Window.configure_keyboards()
         Window.bind(on_resize=self.on_resize)
+        Window.bind(on_key_up=self.on_key_up)
+        Window.bind(on_keyboard=self.on_key_down)
         
         self.root_widget = RelativeLayout(size_hint=(1,1))
         background = Image(source="data/images/ubuntu-wallpaper-mobile.jpg", size_hint=(1,1), fit_mode="fill")
@@ -72,7 +75,7 @@ class MainApp(App, SingletonInstance):
         self.screen_helper = ScreenHelper(size_hint=(1,1))
         self.root_widget.add_widget(self.screen_helper.screen_manager)
         
-        self.ui_manager._BaseApp__initialize(display_name="UI Manager")
+        self.ui_manager.initialize(display_name="UI Manager")
         self.ui_manager.build(self.root_widget, self.screen_helper)
         
         # exit popup
@@ -110,31 +113,62 @@ class MainApp(App, SingletonInstance):
     def do_on_start(self, ev):
         self.register_apps()
         self.ui_manager.show_app_list(False)
-        EventLoop.window.bind(on_keyboard=self.hook_keyboard)
         Clock.schedule_interval(self.update, 0)
     
     def on_resize(self, window, width, height):
         for app in self.active_apps.values():
             app.on_resize(window, width, height)
         self.ui_manager.on_resize(window, width, height)
+    
+    def on_key_down(self, window, key, scancode, codepoint, modifier):
+        if key in self.key_press_time:
+            return True
+            
+        key_event = None
         
-    def hook_keyboard(self, window, key, *largs):
         # key - back
         if key == 27:
-            self.back_event()
-            return True
+            def deactive_current_app(triggered_time):
+                app = self.get_current_app()
+                if app:
+                    self.deactive_app(app)
+                else:
+                    self.back_event()
+            key_event = Clock.schedule_once(deactive_current_app, 1)
+        else:
+            return False
+         
+        if key_event:   
+            self.key_press_time[key] = key_event   
+        return True
+        
+    def on_key_up(self, window, key, scancode):
+        key_event = self.key_press_time.get(key, None)
+        is_valid_event = key_event and key_event.is_triggered != 0
+        # key - back
+        if key == 27:
+            if is_valid_event:
+                self.back_event()
+        else:
+            return False
+               
+        if key in self.key_press_time:
+            self.key_press_time.pop(key)
+            
+        if key_event:
+            Clock.unschedule(key_event)
+        return True
 
     def back_event(self):
         current_app = self.get_current_app()
         if current_app is not None:
-            if current_app.has_back_event():
-                current_app.run_back_event()
-            else:
+            if not current_app.on_back():
                 self.set_current_active_app(None)
         elif self.exit_popup.is_opened():
             self.exit_popup.dismiss()
         else:
             self.exit_popup.open()
+            
     def get_current_app(self):
         return self.current_app
         
@@ -194,7 +228,7 @@ class MainApp(App, SingletonInstance):
         if app_id not in self.active_apps:
             display_name = app.get_app_name()
             try:
-                app._BaseApp__initialize(display_name=display_name)
+                app.initialize(display_name=display_name)
             except:
                 error = traceback.format_exc()
                 Logger.info(error)
@@ -205,7 +239,6 @@ class MainApp(App, SingletonInstance):
             self.ui_manager.create_active_app_button(
                 app,
                 display_name,
-                self.deactive_app,
                 self.set_current_active_app
             )
             self.active_apps[app_id] = app
@@ -236,7 +269,7 @@ class MainApp(App, SingletonInstance):
             self.set_orientation(app.get_orientation())
             toast(app.get_app_name())
         self.current_app = app
-            
+
     def deactive_app(self, app):
         self.ui_manager.deactive_app_button(app)
         self.screen_helper.current_screen(self.ui_manager.get_screen())
@@ -244,10 +277,15 @@ class MainApp(App, SingletonInstance):
         if app is self.current_app:
             self.current_app = None 
         self.active_apps.pop(app.get_app_id())
-        app._BaseApp__on_stop()
-                
+        app.stop()
+   
     def update(self, dt):
         dt = max(1/1000, min(dt, 1/10))
-        
+        deactive_apps = []
         for app in self.active_apps.values():
-            app.update(dt)
+            app.on_update(dt)
+            if app.is_stopped():
+                deactive_apps.append(app)
+        
+        for app in deactive_apps:
+            self.deactive_app(app)

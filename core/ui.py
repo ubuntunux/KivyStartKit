@@ -61,16 +61,19 @@ class UIManager(BaseApp):
         self.icons = []
         self.app_press_time = {}
         
-    def initialize(self):
+    def on_initialize(self):
         pass
         
     def on_stop(self):
         pass
         
+    def on_back(self):
+        return False
+        
     def on_resize(self, window, width, height):
         self.arrange_icons()
         
-    def update(self, dt):
+    def on_update(self, dt):
         pass
     
     def build(self, root_widget, screen_helper):
@@ -134,7 +137,6 @@ class UIManager(BaseApp):
         self,
         app,
         display_name,
-        callback_deactive_app,
         callback_set_current_active_app
     ):
         app_btn = Button(
@@ -144,7 +146,7 @@ class UIManager(BaseApp):
             background_color=dark_gray
         )        
         def deactive_app(app, dt):
-            callback_deactive_app(app)
+            app.stop()
         def on_press(app, inst):
             event = Clock.schedule_once(partial(deactive_app, app), 1)
             self.app_press_time[app] = event

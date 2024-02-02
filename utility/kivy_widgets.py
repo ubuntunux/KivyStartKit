@@ -83,15 +83,17 @@ class KivyPopup:
         self.popup_layout = Popup(title=title, content=content, auto_dismiss=auto_dismiss, size_hint=(None, None), size=(layout_width, layout_height))
         
         if content_widget:
-            layout_height += DP(50)
+            layout_height += max(DP(50), content_widget.height)
             content.add_widget(content_widget)
         
         if buttons:
-            layout_height += DP(50)
+            max_button_height = DP(50)
             btn_layout = BoxLayout(orientation="horizontal", size_hint=(1, 1), spacing=DP(5))
             content.add_widget(btn_layout)
             for button in buttons:
+                max_button_height = max(max_button_height, button.height)
                 btn_layout.add_widget(button)
+            layout_height += max_button_height
                 
         def on_open(inst):
             if callback_open:

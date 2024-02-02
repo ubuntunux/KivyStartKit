@@ -65,7 +65,7 @@ class JarvisApp(BaseApp):
         # chairman_thread.join(0.1)
         # initialize config
         
-    def initialize(self):
+    def on_initialize(self):
         if not os.path.exists(self.output_directory):
             os.makedirs(self.output_directory)
                  
@@ -111,6 +111,9 @@ class JarvisApp(BaseApp):
         self.listener.destroy()
         self.save_data()
         Config.write()
+        
+    def on_back(self):
+        return False
     
     def on_resize(self, window, width, height):
         pass
@@ -180,5 +183,5 @@ class JarvisApp(BaseApp):
         self.output_scroll_view.scroll_x = 0
         self.output_scroll_view.scroll_y = 0
 
-    def update(self, dt):
+    def on_update(self, dt):
         pass

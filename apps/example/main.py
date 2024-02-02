@@ -11,16 +11,19 @@ class App(BaseApp):
     def __init__(self):
         super().__init__()
         
-    def initialize(self):
+    def on_initialize(self):
         btn = Button(text="Hello, world!", size_hint=(1, 1))
         self.add_widget(btn)
     
     def on_stop(self):
         pass
+    
+    def on_back(self):
+        return False
         
     def on_resize(self, window, width, height):
         pass
         
-    def update(self, dt):
+    def on_update(self, dt):
         pass
  
