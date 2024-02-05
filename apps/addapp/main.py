@@ -1,8 +1,12 @@
 from kivy.logger import Logger
+from kivy.metrics import dp as DP
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
+from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.label import Label
 from kivy.uix.screenmanager import Screen
+from kivy.uix.popup import Popup
+from kivy.uix.textinput import TextInput
 
 from core.base_app import BaseApp
 from utility.screen_manager import ScreenHelper
@@ -21,6 +25,7 @@ class App(BaseApp):
 
     def on_initialize(self):
         content_widget = Label(text="Do you really want to quit?")
+        content_widget = FileChooserListView(height=DP(500))
         def on_press_yes(inst):
             self.stop()
             self.popup.dismiss()
@@ -33,6 +38,7 @@ class App(BaseApp):
             content_widget=content_widget, 
             buttons=[btn_no, btn_yes]
         )
+        self.popup.open()
         
     def on_stop(self):
         pass
