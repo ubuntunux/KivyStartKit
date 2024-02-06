@@ -22,26 +22,34 @@ class App(BaseApp):
     def __init__(self):
         super().__init__()
         self.popup = KivyPopup()
+        self.filechooser = None
 
     def on_initialize(self):
-        content_widget = Label(text="Do you really want to quit?")
-        content_widget = FileChooserListView(height=DP(500))
-        def on_press_yes(inst):
-            self.stop()
-            self.popup.dismiss()
+        self.filechooser = Label(text="Do you really want to quit?")
+        self.filechooser = FileChooserListView(height=DP(500))
+
         btn_yes = Button(text='Yes')
         btn_no = Button(text='No')
-        btn_yes.bind(on_press=on_press_yes)
-        btn_no.bind(on_press=lambda inst: self.popup.dismiss())
+        btn_yes.bind(on_press=self.on_press_yes)
+        btn_no.bind(on_press=self.on_press_no)
+        
         self.popup.initialize_popup(
-            title="Add a application", 
-            content_widget=content_widget, 
+            title="Choose a dirctory that include the app.", 
+            content_widget=self.filechooser, 
             buttons=[btn_no, btn_yes]
         )
         self.popup.open()
         
     def on_stop(self):
         pass
+        
+    def on_press_yes(self, inst):
+        Logger.info(self.filechooser.path)
+        self.stop()
+        self.popup.dismiss()
+    
+    def on_press_no(self, inst):
+        self.popup.dismiss()
     
     def on_back(self):
         return False

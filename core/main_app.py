@@ -5,6 +5,7 @@ import os
 import traceback
 from collections import OrderedDict
 from functools import partial
+import sys
 import types
 
 import kivy
@@ -173,20 +174,24 @@ class MainApp(App, SingletonInstance):
         return self.current_app
         
     def register_apps(self):
-        from apps import example
-        self.register_app(example)
-        
-        from apps import jarvis
-        self.register_app(jarvis)
-        
-        import sys
-        sys.path.append("..")
-        import KivyRPG
-        self.register_app(KivyRPG)
-        
-        from apps import addapp
-        self.register_app(addapp)
-        
+        for filename in glob(f"{APP_DATA_FOLDER}/*.app"):
+            app_info = {}
+            try:
+                with open(filename, "r") as f:
+                    app_info = eval(f.read())
+            except:
+                Logger.error(traceback.format_exc())
+            module_dirname = app_info.get("path", "")
+            module_name = app_info.get("module", "")
+            module_path = os.path.join(module_dirname, module_name)
+            if os.path.exists(module_path):
+                if module_dirname not in sys.path:
+                    sys.path.append(module_dirname)
+                try:
+                    exec(f"import {module_name}")
+                    exec(f"self.register_app({module_name})")
+                except:
+                    Logger.error(traceback.format_exc())
         self.ui_manager.arrange_icons()
         
     def register_app(self, module):

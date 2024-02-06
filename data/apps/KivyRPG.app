@@ -1,0 +1,4 @@
+{
+    "path": "..",
+    "module": "KivyRPG"
+}
