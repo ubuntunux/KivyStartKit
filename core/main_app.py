@@ -181,26 +181,31 @@ class MainApp(App, SingletonInstance):
                     app_info = eval(f.read())
             except:
                 Logger.error(traceback.format_exc())
-            module_dirname = app_info.get("path", "")
-            module_name = app_info.get("module", "")
-            module_path = os.path.join(module_dirname, module_name)
-            if os.path.exists(module_path):
-                if module_dirname not in sys.path:
-                    sys.path.append(module_dirname)
-                try:
-                    exec(f"import {module_name}")
-                    exec(f"self.register_app({module_name})")
-                except:
-                    Logger.error(traceback.format_exc())
+            self.register_app_info(app_info)
         self.ui_manager.arrange_icons()
+        
+    def register_app_info(self, app_info):
+        module_dirname = app_info.get("path", "")
+        module_name = app_info.get("module", "")
+        module_path = os.path.join(module_dirname, module_name)
+        result = False
+        if os.path.exists(module_path):
+            if module_dirname not in sys.path:
+                sys.path.append(module_dirname)
+            try:
+                exec(f"import {module_name}")
+                result = eval(f"self.register_app({module_name})")
+            except:
+                Logger.error(traceback.format_exc())
+        return result
         
     def register_app(self, module):
         if module in self.registed_modules or type(module) is not types.ModuleType:
-            return
+            return False
             
         app_class = getattr(module, "__app__", None)
         if not inspect.isclass(app_class) or not issubclass(app_class, BaseApp):
-            return
+            return False
                                       
         def create_app(module, inst):
             self.create_app(module)       
@@ -211,6 +216,7 @@ class MainApp(App, SingletonInstance):
             on_press=partial(create_app, module),  
         )
         self.registed_modules.append(module)
+        return True
     
     def unregister_app(self, module):
         if module in self.registed_modules:

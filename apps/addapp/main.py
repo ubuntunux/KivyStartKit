@@ -1,3 +1,5 @@
+import uuid
+
 from kivy.logger import Logger
 from kivy.metrics import dp as DP
 from kivy.uix.boxlayout import BoxLayout
@@ -9,6 +11,8 @@ from kivy.uix.popup import Popup
 from kivy.uix.textinput import TextInput
 
 from core.base_app import BaseApp
+from core.main_app import MainApp
+from core.constants import *
 from utility.screen_manager import ScreenHelper
 from utility.kivy_widgets import *
 
@@ -27,7 +31,7 @@ class App(BaseApp):
     def on_initialize(self):
         self.filechooser = Label(text="Do you really want to quit?")
         self.filechooser = FileChooserListView(height=DP(500))
-
+        
         btn_yes = Button(text='Yes')
         btn_no = Button(text='No')
         btn_yes.bind(on_press=self.on_press_yes)
@@ -44,7 +48,21 @@ class App(BaseApp):
         pass
         
     def on_press_yes(self, inst):
-        Logger.info(self.filechooser.path)
+        app_path, module_name = os.path.split(self.filechooser.path)
+        app_info = {
+            "path": app_path,
+            "module": module_name
+        }
+        
+        filename = uuid.uuid4().hex + ".app"
+        filepath = os.path.join(APP_DATA_FOLDER, filename)
+        if not os.path.exists(filepath):
+            main_app = MainApp.instance()
+            if main_app.register_app_info(app_info):
+                main_app.ui_manager.arrange_icons()
+                with open(filepath, "w") as f:
+                    f.write(str(app_info))
+        
         self.stop()
         self.popup.dismiss()
     

@@ -1,0 +1,1 @@
+{'path': '/storage/emulated/0/WorkSpace', 'module': 'KivyRPG'}

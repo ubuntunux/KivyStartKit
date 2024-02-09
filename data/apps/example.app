@@ -1,4 +1,0 @@
-{
-    "path": "apps",
-    "module": "example"
-}
