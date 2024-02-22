@@ -59,6 +59,7 @@ class UIManager(BaseApp):
         self.icon_font_height = DP(15)
         self.icon_padding = DP(10)
         self.icons = []
+        self.module_icon_map = {}
         self.app_press_time = {}
         self.app_icon_press_time = {}
         
@@ -108,7 +109,7 @@ class UIManager(BaseApp):
         screen_helper.add_screen(self.get_screen(), True)
         root_widget.add_widget(self.menu_layout)
     
-    def create_app_icon(self, icon_name, icon_file, on_press, on_long_press):  
+    def create_app_icon(self, module_path, icon_name, icon_file, on_press, on_long_press):  
         icon_layout = BoxLayout(
             orientation="vertical",
             size_hint=(None, None),
@@ -131,8 +132,8 @@ class UIManager(BaseApp):
         def on_touch_up(on_press, inst, touch):
             if inst.collide_point(*touch.pos):
                 if inst in self.app_icon_press_time:
-                    Logger.info(f"up: {inst}")
                     event = self.app_icon_press_time.pop(inst)
+                    #Logger.info(f"up: event.is_triggered {event.is_triggered}")
                     if event.is_triggered != 0:
                         Clock.unschedule(event)
                         on_press(inst)
@@ -151,7 +152,14 @@ class UIManager(BaseApp):
         )
         icon_layout.add_widget(icon_btn)
         icon_layout.add_widget(icon_label)
+        self.module_icon_map[module_path] = icon_layout
         self.icons.append(icon_layout)
+        
+    def remove_app_icon(self, module_path):
+        icon_layout = self.module_icon_map.get(module_path, None)
+        Logger.info(f"remove_app_icon: {icon_layout}")
+        if icon_layout in self.icons:
+            self.icons.remove(icon_layout)
     
     def create_active_app_button(
         self,

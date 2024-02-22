@@ -1,3 +1,4 @@
+import copy
 from glob import glob
 import inspect
 import importlib
@@ -218,6 +219,7 @@ class MainApp(App, SingletonInstance):
             self.ui_manager.arrange_icons()
             
         self.ui_manager.create_app_icon(
+            module_path=module.__file__,
             icon_name=app_class.get_app_name(),
             icon_file=LOGO_FILE,
             on_press=partial(create_app, module),
@@ -227,12 +229,12 @@ class MainApp(App, SingletonInstance):
         return True
     
     def unregister_module(self, module):
-        Logger.info(f"unregister_module: {module}")
-        apps = self.module_apps.get(module, [])
-        for app in apps:
-            self.deactive_app(app)
-            
+        Logger.info(f"unregister_module: {module}")   
         if module in self.registed_modules:
+            apps = copy.copy(self.module_apps.get(module, []))
+            for app in apps:
+                self.deactive_app(app)
+            self.ui_manager.remove_app_icon(module.__file__)
             self.registed_modules.remove(module)
     
     def create_app(self, module):
@@ -303,8 +305,7 @@ class MainApp(App, SingletonInstance):
         self.current_app = app
 
     def deactive_app(self, app):
-        Logger.info(f"create_app: {app.get_app_name()}")
-         
+        Logger.info(f"deactive_app: {app.get_app_name()}")
         self.ui_manager.deactive_app_button(app)
         self.screen_helper.current_screen(self.ui_manager.get_screen())
         self.screen_helper.remove_screen(app.get_screen())
