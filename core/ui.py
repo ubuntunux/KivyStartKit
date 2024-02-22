@@ -60,6 +60,7 @@ class UIManager(BaseApp):
         self.icon_padding = DP(10)
         self.icons = []
         self.app_press_time = {}
+        self.app_icon_press_time = {}
         
     def on_initialize(self):
         pass
@@ -107,7 +108,7 @@ class UIManager(BaseApp):
         screen_helper.add_screen(self.get_screen(), True)
         root_widget.add_widget(self.menu_layout)
     
-    def create_app_icon(self, icon_name, icon_file, on_press):  
+    def create_app_icon(self, icon_name, icon_file, on_press, on_long_press):  
         icon_layout = BoxLayout(
             orientation="vertical",
             size_hint=(None, None),
@@ -119,10 +120,29 @@ class UIManager(BaseApp):
             source=icon_file,
             fit_mode="fill"
         )
-        def on_touch_down(on_press, inst, touch):
+        def on_touch_down(on_long_press, inst, touch):
             if inst.collide_point(*touch.pos):
-                on_press(inst)  
-        icon_btn.bind(on_touch_down=partial(on_touch_down, on_press))
+                Logger.info(f"down: {inst}")
+                event = Clock.schedule_once(on_long_press, 1)
+                self.app_icon_press_time[inst] = event
+                return True
+            return False
+            
+        def on_touch_up(on_press, inst, touch):
+            if inst.collide_point(*touch.pos):
+                if inst in self.app_icon_press_time:
+                    Logger.info(f"up: {inst}")
+                    event = self.app_icon_press_time.pop(inst)
+                    if event.is_triggered != 0:
+                        Clock.unschedule(event)
+                        on_press(inst)
+                        return True
+            return False
+            
+        icon_btn.bind(
+            on_touch_down=partial(on_touch_down, on_long_press),
+            on_touch_up=partial(on_touch_up, on_press)
+        )
         icon_label = Label(
             text=icon_name,
             halign="center",

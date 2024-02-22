@@ -52,6 +52,7 @@ class MainApp(App, SingletonInstance):
         self.registed_modules = []
         self.current_app = None
         self.active_apps = {}
+        self.module_apps = {}
         self.root_widget = None
         self.screen_helper = None
         self.ui_manager = UIManager()
@@ -112,7 +113,7 @@ class MainApp(App, SingletonInstance):
         self.platform_api.set_orientation(orientation)
 
     def do_on_start(self, ev):
-        self.register_apps()
+        self.register_modules()
         self.ui_manager.show_app_list(False)
         Clock.schedule_interval(self.update, 0)
     
@@ -173,7 +174,7 @@ class MainApp(App, SingletonInstance):
     def get_current_app(self):
         return self.current_app
         
-    def register_apps(self):
+    def register_modules(self):
         for filename in glob(f"{APP_DATA_FOLDER}/*.app"):
             app_info = {}
             try:
@@ -181,10 +182,10 @@ class MainApp(App, SingletonInstance):
                     app_info = eval(f.read())
             except:
                 Logger.error(traceback.format_exc())
-            self.register_app_info(app_info)
+            self.register_module_info(app_info)
         self.ui_manager.arrange_icons()
         
-    def register_app_info(self, app_info):
+    def register_module_info(self, app_info):
         module_dirname = app_info.get("path", "")
         module_name = app_info.get("module", "")
         module_path = os.path.join(module_dirname, module_name)
@@ -194,31 +195,43 @@ class MainApp(App, SingletonInstance):
                 sys.path.append(module_dirname)
             try:
                 exec(f"import {module_name}")
-                result = eval(f"self.register_app({module_name})")
+                result = eval(f"self.register_module({module_name})")
             except:
                 Logger.error(traceback.format_exc())
         return result
         
-    def register_app(self, module):
+    def register_module(self, module):
         if module in self.registed_modules or type(module) is not types.ModuleType:
             return False
             
         app_class = getattr(module, "__app__", None)
         if not inspect.isclass(app_class) or not issubclass(app_class, BaseApp):
             return False
-                                      
-        def create_app(module, inst):
-            self.create_app(module)       
         
+        Logger.info(f"register_module: {module}")
+                                   
+        def create_app(module, inst):
+            self.create_app(module)
+        
+        def delete_app(module, inst):
+            self.unregister_module(module)
+            self.ui_manager.arrange_icons()
+            
         self.ui_manager.create_app_icon(
             icon_name=app_class.get_app_name(),
             icon_file=LOGO_FILE,
-            on_press=partial(create_app, module),  
+            on_press=partial(create_app, module),
+            on_long_press=partial(delete_app, module)
         )
         self.registed_modules.append(module)
         return True
     
-    def unregister_app(self, module):
+    def unregister_module(self, module):
+        Logger.info(f"unregister_module: {module}")
+        apps = self.module_apps.get(module, [])
+        for app in apps:
+            self.deactive_app(app)
+            
         if module in self.registed_modules:
             self.registed_modules.remove(module)
     
@@ -238,6 +251,8 @@ class MainApp(App, SingletonInstance):
         app_id = app.get_app_id()  
         if app_id not in self.active_apps:
             display_name = app.get_app_name()
+            Logger.info(f"create_app: {app.get_app_name()}")
+         
             try:
                 app.initialize(display_name=display_name)
             except:
@@ -253,6 +268,10 @@ class MainApp(App, SingletonInstance):
                 self.set_current_active_app
             )
             self.active_apps[app_id] = app
+            if module in self.module_apps:
+                self.module_apps[module].append(app)
+            else:
+                self.module_apps[module] = [app]
             self.screen_helper.add_screen(app.get_screen(), False)
         self.set_current_active_app(app)
                 
@@ -263,13 +282,15 @@ class MainApp(App, SingletonInstance):
             self.deactive_app(app)
             
         while self.registed_modules:
-            app = self.registed_modules[-1]
-            self.unregister_app(app)  
+            module = self.registed_modules[-1]
+            self.unregister_module(module)  
                 
     def set_current_active_app(self, app):
         if app is self.current_app:
             return
-            
+        
+        Logger.info(f"set_current_active_app: {app}")
+           
         if app is None:
             self.ui_manager.show_app_list(True)
             self.screen_helper.current_screen(self.ui_manager.get_screen())
@@ -282,12 +303,18 @@ class MainApp(App, SingletonInstance):
         self.current_app = app
 
     def deactive_app(self, app):
+        Logger.info(f"create_app: {app.get_app_name()}")
+         
         self.ui_manager.deactive_app_button(app)
         self.screen_helper.current_screen(self.ui_manager.get_screen())
         self.screen_helper.remove_screen(app.get_screen())
         if app is self.current_app:
             self.current_app = None 
         self.active_apps.pop(app.get_app_id())
+        for (module, apps) in self.module_apps.items():
+            if app in apps:
+                apps.remove(app)
+                break
         app.stop()
    
     def update(self, dt):

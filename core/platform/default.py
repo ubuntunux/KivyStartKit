@@ -8,6 +8,9 @@ class BasePlatformAPI(SingletonInstance):
     
     def get_app_directory(self):
         return os.path.abspath(".")
+        
+    def get_home_directory(self):
+        return os.path.expanduser('~')
     
     def set_orientation(self, orientation="all"):
         pass

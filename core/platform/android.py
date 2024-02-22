@@ -26,6 +26,9 @@ class AndroidPlatformAPI(BasePlatformAPI):
     def get_app_directory(self):
         sd_card = primary_external_storage_path()
         return sd_card
+    
+    def get_home_directory(self):
+        return primary_external_storage_path()
         
     @run_on_ui_thread      
     def set_orientation(self, orientation="all"):
