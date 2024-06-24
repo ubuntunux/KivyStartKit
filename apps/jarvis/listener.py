@@ -277,7 +277,7 @@ class Listener:
         self.text_input.do_redo()
         
     def get_last_command(self):
-        if self.history_index < len(self.history):
+        if 0 <= self.history_index < len(self.history):
             return self.history[self.history_index]
         return ""
         
