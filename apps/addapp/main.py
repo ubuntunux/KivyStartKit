@@ -153,7 +153,7 @@ class App(BaseApp):
         filepath = os.path.join(APP_DATA_FOLDER, filename)
         if not os.path.exists(filepath):
             main_app = MainApp.instance()
-            if main_app.register_app_info(app_info):
+            if main_app.register_module_info(app_info):
                 main_app.ui_manager.arrange_icons()
                 try:
                     with open(filepath, "w") as f:
