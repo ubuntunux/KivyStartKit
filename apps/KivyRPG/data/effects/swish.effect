@@ -1,0 +1,27 @@
+{
+"emitter_data": {
+    "sound_file":"hits/CRS_attack_nor01",
+    "particle_count": 1
+},
+"particle_data": {
+    "is_world_space":False,
+    "elastin":0.0, 
+    "collision":False, 
+    "size":[100,100], 
+    "image_file":"swish",
+    "loop":1, 
+    "fade":1.0,
+    "sequence":[1,1], 
+    "play_speed":1.0,
+    "color":(1,1,1,1),
+    "delay":RangeVar(0.0), 
+    "life_time":RangeVar(0.3), 
+    "gravity":RangeVar(0),
+    "velocity":RangeVar([0, 0]),
+    "angular_velocity":RangeVar(0), 
+    "rotate":RangeVar(0), 
+    "scaling":RangeVar(1),
+    "opacity":RangeVar(1),
+    "offset":RangeVar((0,0)),
+}
+}

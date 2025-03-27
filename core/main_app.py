@@ -187,6 +187,7 @@ class MainApp(App, SingletonInstance):
         self.ui_manager.arrange_icons()
 
     def register_module_info(self, app_info):
+        print(app_info)
         module_dirname = app_info.get("path", "")
         module_name = app_info.get("module", "")
         module_path = os.path.join(module_dirname, module_name)
