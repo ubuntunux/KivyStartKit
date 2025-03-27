@@ -1,0 +1,11 @@
+{
+    "source": "tiles_00",
+    "tile_data": {
+        "grass": {
+            "region": (1/16, 4/16, 1/16, 1/16)
+        },
+        "grass_stone_lt": {
+            "region": (0/16, 5/16, 1/16, 1/16)
+        }
+    }
+}

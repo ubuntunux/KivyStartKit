@@ -1,0 +1,15 @@
+{
+    "source": "rpg_sprites_10",
+    "actions": {
+        "idle": {
+            "region": (0, 0, 1/4, 1/2)
+        }
+    },
+    "behavior_class": "Player",
+    "properties": {
+        "walk_speed": 500.0,
+        "max_hp": 100.0,
+        "max_mp": 100.0
+    },
+    "weapon":"sword"
+}

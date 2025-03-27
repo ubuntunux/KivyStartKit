@@ -1,1 +1,1 @@
-{'path': '/storage/emulated/0/Workspace', 'module': 'KivyRPG'}
+{'path': 'apps', 'module': 'KivyRPG'}
