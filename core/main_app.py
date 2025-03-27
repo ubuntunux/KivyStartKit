@@ -196,7 +196,8 @@ class MainApp(App, SingletonInstance):
                 sys.path.append(module_dirname)
             try:
                 exec(f"import {module_name}")
-                result = eval(f"self.register_module({module_name})")
+                loaded_module = eval(f"sys.modules.get('{module_name}')")
+                result = exec(f"self.register_module(loaded_module)")
             except:
                 Logger.error(traceback.format_exc())
         return result
