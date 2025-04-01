@@ -59,6 +59,27 @@ class LevelManager(SingletonInstance):
         
     def get_effect_layout(self):
         return self.effect_layer
+        
+    def pos_to_tile(self, pos):
+        tile_pos = Vector(pos) / TILE_SIZE
+        tile_pos.x = int(tile_pos.x)
+        tile_pos.y = int(tile_pos.y)
+        return tile_pos
+    
+    def tile_to_pos(self, tile_pos):
+        pos = Vector(tile_pos) * TILE_SIZE
+        pos.x += TILE_WIDTH * 0.5
+        pos.y += TILE_HEIGHT * 0.5
+        return pos
+    
+    def get_next_tile_pos(self, tile_pos, front):
+        next_tile_pos = Vector(tile_pos)
+        if abs(front.x) < abs(front.y):
+            next_tile_pos.y += sign(front.y)
+        else:
+            next_tile_pos.x += sign(front.x)
+        #Logger.info((tile_pos, front))
+        return next_tile_pos
     
     def index_to_pos(self, index):
         y = int(index / self.num_x)
@@ -98,8 +119,8 @@ class LevelManager(SingletonInstance):
         self.pop_actor(actor)
         # set
         main_tile_pos = actor.get_tile_pos()
-        tile_to_actor = actor.get_pos() - tile_to_pos(main_tile_pos)
-        coverage_tile = get_next_tile_pos(main_tile_pos, tile_to_actor)
+        tile_to_actor = actor.get_pos() - self.tile_to_pos(main_tile_pos)
+        coverage_tile = self.get_next_tile_pos(main_tile_pos, tile_to_actor)
         area = [main_tile_pos]
         if main_tile_pos != coverage_tile:
             area.append(coverage_tile)

@@ -46,9 +46,9 @@ class ActorManager(SingletonInstance):
         
     def create_actors(self):
         is_player = True
-        player_pos = (10, 10)
+        tile_pos = (10, 10)
         character_data = GameResourceManager.instance().get_character_data("player")  
-        self.create_actor(character_data, player_pos, is_player)
+        self.create_actor(character_data, tile_pos, is_player)
         
         is_player = False
         monster_positions = [(5, 5), (8, 8)]
@@ -66,6 +66,7 @@ class ActorManager(SingletonInstance):
         character = Character(
             character_data=character_data,
             tile_pos=tile_pos,
+            pos=self.level_manager.tile_to_pos(tile_pos),
             size=TILE_SIZE,
             is_player=is_player
         )

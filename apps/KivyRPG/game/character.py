@@ -77,7 +77,7 @@ class Character(Scatter):
         cls.level_manager = level_manager
         cls.effect_manager = effect_manager
     
-    def __init__(self, character_data, tile_pos, size, is_player):
+    def __init__(self, character_data, tile_pos, pos, size, is_player):
         super().__init__(size=size)
         self.action = Action(character_data.action_data)
         self.image = Image(size=size, fit_mode="fill")
@@ -86,7 +86,7 @@ class Character(Scatter):
         
         self.properties = CharacterProperties(character_data.property_data)
         self.behavior = character_data.behavior_class(self)
-        self.transform_component = TransformComponent(self, tile_pos, self.properties)
+        self.transform_component = TransformComponent(self, tile_pos, pos, self.properties)
         self.center = self.transform_component.get_pos()
         self.updated_pos = True
         self.updated_tile_pos = True
@@ -114,7 +114,7 @@ class Character(Scatter):
         self.spawn_tile_pos = Vector(spawn_tile_pos)
         
     def get_front_tile_pos(self):
-        return get_next_tile_pos(self.get_tile_pos(), self.get_front())
+        return self.level_manager.get_next_tile_pos(self.get_tile_pos(), self.get_front())
     
     def get_front(self):
         return self.transform_component.get_front()
