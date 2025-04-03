@@ -27,7 +27,6 @@ class ActorManager(SingletonInstance):
         self.player = None
              
     def initialize(self, level_manager, character_layout):
-        respurce_manager = GameResourceManager.instance()
         self.level_manager = level_manager
         self.character_layout = character_layout
         Character.set_managers(
@@ -77,7 +76,7 @@ class ActorManager(SingletonInstance):
         self.actors.append(character)
         
     def callback_touch(self, inst, touch):
-        tile_pos = pos_to_tile(touch.pos)
+        tile_pos = self.level_manager.pos_to_tile(touch.pos)
         actor = self.level_manager.get_actor(tile_pos)
         if actor is not None:
             self.get_player().trace_actor(actor)
