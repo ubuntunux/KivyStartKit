@@ -11,7 +11,7 @@ class Audio():
         
     def play_audio(self):
         if self.sound:
-            if self.sound.status != 'stop':
+            if self.sound.state != 'stop':
                 self.sound.stop()
             self.sound.play()
         
