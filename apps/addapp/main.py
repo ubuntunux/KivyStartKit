@@ -1,7 +1,5 @@
-from distutils.dir_util import copy_tree
 import os
 import traceback
-import uuid
 
 from kivy.logger import Logger
 from kivy.metrics import dp as DP
@@ -9,15 +7,12 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.label import Label
-from kivy.uix.screenmanager import Screen
-from kivy.uix.popup import Popup
 from kivy.uix.textinput import TextInput
 
 from core import platform
 from core.base_app import BaseApp
 from core.main_app import MainApp
 from core.constants import *
-from utility.screen_manager import ScreenHelper
 from utility.kivy_widgets import *
 from utility.kivy_helper import *
 
