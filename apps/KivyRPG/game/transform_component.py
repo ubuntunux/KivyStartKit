@@ -9,12 +9,14 @@ class TransformComponent():
         self.level_manager = LevelManager.instance()
         self.actor = actor
         self.target_actor = None
+        self.target_pos = Vector(0,0)
+        self.move_to_target = False
         self.tile_pos = Vector(tile_pos)
         self.pos = Vector(pos)
         self.prev_tile_pos = Vector(tile_pos)
         self.prev_pos = Vector(pos)
         self.front = Vector(1, 0)
-        self.target_positions = []
+        self.move_direction = Vector(0,0)
         self.properties = properties
         
     def get_pos(self):
@@ -32,13 +34,13 @@ class TransformComponent():
     def get_front(self):
         return self.front
         
-    def get_coverage_tile_pos(self):
-        tile_to_actor = self.pos - self.level_manager.tile_to_pos(self.tile_pos)
-        return self.level_manager.get_next_tile_pos(self.tile_pos, tile_to_actor)
-        
     def set_pos(self, pos):
         self.pos = Vector(pos)
         self.tile_pos = self.level_manager.pos_to_tile(pos)
+    
+    def set_move_direction(self, direction):
+        self.move_direction = direction
+        self.set_front(direction)
     
     def set_front(self, front):
         dir_x = sign(front.x)
@@ -90,75 +92,42 @@ class TransformComponent():
         return False
         
     def trace_actor(self, level_manager, actor):
+        if actor:
+            self.move_to(actor.get_pos())
         self.target_actor = actor
-        if actor is not None:
-            self.move_to(level_manager, actor.get_tile_pos())
+            
+    def move_to(self, target_pos):
+        self.target_actor = None
+        self.target_pos = target_pos
+        self.move_to_target = True
         
-    def move_to(self, level_manager, target_tile_pos):
-        target_pos = level_manager.tile_to_pos(target_tile_pos)
-        if GRID_BASED_MOVEMENT:
-            tile_world_pos = level_manager.tile_to_pos(self.tile_pos)
-            to_tile = tile_world_pos - self.pos
-            is_vertical_line = abs(to_tile.x) < abs(to_tile.y)
-            is_origin = (tile_world_pos == self.pos)
-            to_target = target_pos - tile_world_pos
-            checked_list = [Vector(self.tile_pos)]
-            paths = []
-            result = False
-            if is_origin:
-                result = self.path_find(level_manager, self.tile_pos, target_tile_pos, to_target, checked_list, paths) 
+    def update_transform(self, level_manager, dt):   
+        pos = Vector(self.get_pos())
+        move_dist = self.properties.get_walk_speed() * dt
+        if self.move_to_target:
+            if self.target_actor:
+                self.move_to(self.target_actor.get_pos())
+            
+            target_tile_pos = level_manager.pos_to_tile(self.target_pos)
+            to_target = self.target_pos - self.pos
+            
+            is_horizontal = self.front.x != 0
+            if is_horizontal:
+                pos.x += sign(to_target.x) * min(abs(to_target.x), move_dist)
+                self.set_front(Vector(sign(to_target.x), 0))
+                if abs(to_target.x) <= move_dist:
+                    self.set_front(Vector(0, sign(to_target.y)))
             else:
-                next_tile_pos = Vector(self.tile_pos)
-                component = 1 if is_vertical_line else 0
-                if self.tile_pos[component] != target_tile_pos[component]:
-                    next_tile_pos[component] += sign(to_target[component])
-                    if level_manager.is_blocked(next_tile_pos, self.actor):
-                        next_tile_pos = Vector(self.tile_pos)
-                result = self.path_find(level_manager, next_tile_pos, target_tile_pos, to_target, checked_list, paths)
-                paths.append(next_tile_pos)     
-            self.target_positions = []
-            if result:
-                for p in paths:
-                    self.target_positions.append(level_manager.tile_to_pos(p))
-            #Logger.info(("Result: ", self.target_positions))
-        
-    def update_transform(self, level_manager, dt, force_update=False):   
-        if self.target_positions or force_update:
-            # calc target pos
-            target_pos = self.target_positions[-1] if self.target_positions else Vector(self.pos)
-            target_tile_pos = level_manager.pos_to_tile(target_pos)
-            to_target = (target_pos - self.pos).normalize()
-            move_dist = self.properties.get_walk_speed() * dt
-            dist = target_pos.distance(self.pos)
-            # calc next pos
-            next_pos = self.pos + to_target * move_dist
-            tile_world_pos = level_manager.tile_to_pos(self.tile_pos)
-            to_tile = (tile_world_pos - self.pos)
-            next_to_tile = (tile_world_pos - next_pos)    
-            # move 
-            self.prev_pos = Vector(self.pos)
-            self.prev_tile_pos = Vector(self.tile_pos)
-            if dist <= move_dist:
-                self.set_pos(target_pos)
-                if self.target_positions:
-                    self.target_positions.pop()
-            else:
-                self.set_pos(next_pos)
-            self.set_front(to_target)
-            # check blocked
-            coverage_tile_pos = self.get_coverage_tile_pos()
-            if level_manager.is_blocked(coverage_tile_pos, self.actor):
-                self.set_pos(self.prev_pos)
-                if self.target_positions:
-                    target_tile_pos = level_manager.pos_to_tile(self.target_positions[0])
-                    self.move_to(level_manager, target_tile_pos)
-            # regist actor
-            if self.prev_pos != self.pos or force_update:
-                level_manager.set_actor(self.actor)
-            # trace target  
-            if self.target_actor \
-                and target_tile_pos != self.target_actor.get_tile_pos() \
-                and self.prev_tile_pos != self.tile_pos:
-                self.move_to(level_manager, self.target_actor.get_tile_pos())
-            return True
-        return False
+                pos.y += sign(to_target.y) * min(abs(to_target.y), move_dist)
+                self.set_front(Vector(0, sign(to_target.y)))
+                if abs(to_target.y) <= move_dist:
+                    self.set_front(Vector(sign(to_target.x), 0))
+        else:
+            pos.x += self.move_direction.x * move_dist
+            pos.y += self.move_direction.y * move_dist 
+        self.move_direction = Vector(0,0) # reset
+        self.prev_pos = Vector(self.pos)
+        self.pos = pos
+        self.prev_tile_pos = self.tile_pos
+        self.tile_pos = self.level_manager.pos_to_tile(self.pos)
+        return True

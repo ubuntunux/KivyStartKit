@@ -156,8 +156,11 @@ class Character(Scatter):
     # Transform
     def move_to(self, tile_pos):
         if self.level_manager.is_in_level(tile_pos):
-            self.transform_component.trace_actor(self.level_manager, None)
-            self.transform_component.move_to(self.level_manager, tile_pos)
+            pos = self.level_manager.tile_to_pos(tile_pos)
+            self.transform_component.move_to(pos)
+    
+    def set_move_direction(self, direction):
+        self.transform_component.set_move_direction(direction)
     
     def trace_actor(self, actor):
         self.transform_component.trace_actor(self.level_manager, actor)

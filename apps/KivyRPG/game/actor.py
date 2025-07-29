@@ -81,19 +81,19 @@ class ActorManager(SingletonInstance):
         if actor is not None:
             self.get_player().trace_actor(actor)
         else:
-            self.get_player().move_to(tile_pos)
+            self.get_player().move_to(touch.pos)
             
     def callback_move(self, direction):
-        tile_pos = self.get_player().get_tile_pos()
+        move_dir = Vector(0,0)
         if "left" == direction:
-            tile_pos = tile_pos + Vector(-1, 0)
+            move_dir = Vector(-1, 0)
         elif "right" == direction:
-            tile_pos = tile_pos + Vector(1, 0)
+            move_dir = Vector(1, 0)
         elif "up" == direction:
-            tile_pos = tile_pos + Vector(0, 1)
+            move_dir = Vector(0, 1)
         elif "down" == direction:
-            tile_pos = tile_pos + Vector(0, -1)
-        self.get_player().move_to(tile_pos)
+            move_dir = Vector(0, -1)
+        self.get_player().set_move_direction(move_dir)
         
     def callback_attack(self, inst):
         self.get_player().set_attack()   
