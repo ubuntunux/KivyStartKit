@@ -25,7 +25,7 @@ class Resource:
         if self.loader:
             self.source = self.loader(self.name, self.filepath)
             if self.source is None:
-                Logger.warning(f"failed to load {resource_name}: {self.filepath}") 
+                Logger.warning(f"failed to load {self.name}: {self.filepath}") 
         return self.source
     
     def unload_resource(self):
