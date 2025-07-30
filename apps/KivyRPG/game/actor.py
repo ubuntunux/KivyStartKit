@@ -70,14 +70,13 @@ class ActorManager(SingletonInstance):
             is_player=is_player
         )
         self.character_layout.add_widget(character)
-        self.level_manager.set_actor(character)
+        self.level_manager.add_actor(character)
         if is_player:
             self.player = character
         self.actors.append(character)
         
     def callback_touch(self, inst, touch):
-        tile_pos = self.level_manager.pos_to_tile(touch.pos)
-        actor = self.level_manager.get_actor(tile_pos)
+        actor = self.level_manager.get_collide_point(touch.pos)
         if actor is not None:
             self.get_player().trace_actor(actor)
         else:

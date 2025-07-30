@@ -112,13 +112,13 @@ class DirectionController():
             mag_x = max(0, abs(diff[0]) - self.dead_zone_size)
             mag_y = max(0, abs(diff[1]) - self.dead_zone_size)
             direction = None
-            if mag_x < mag_y:
+            if mag_x <= mag_y:
                 if 0 < sign(diff[1]):
                     direction = "up"
                 else:
                     direction = "down"
             elif mag_y < mag_x:
-                if 0 < sign(diff[0]):
+                if 0 <= sign(diff[0]):
                     direction = "right"
                 else:
                     direction = "left"

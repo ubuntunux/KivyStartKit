@@ -24,7 +24,6 @@ class LevelManager(SingletonInstance):
         self.goal_scroll_y = -1
         self.tiles = []
         self.actors = []
-        self.actor_map = {}
         self.app = app
         self.actor_manager = None
         self.num_x = 16
@@ -96,39 +95,20 @@ class LevelManager(SingletonInstance):
         actor = self.get_actor(pos)
         return actor is not filter_actor and actor is not None
     
-    def get_actor_area(self, actor):
-        return self.actor_map.get(actor, [])
-        
-    def get_actor(self, pos):
-        index = self.pos_to_index(pos)
-        if index < len(self.actors):
-            return self.actors[index]
-        return None
-        
+    def get_collide_point(self, point, radius=0.0, filters=[]):
+        for actor in self.actors:
+            if actor and actor not in filters:
+                if (radius + actor.get_radius()) >= (point.distance(actor.get_pos())):
+                    return actor
+                
     def pop_actor(self, actor):
-        if actor is not None:
-            old_area = self.get_actor_area(actor)
-            for old_pos in old_area:
-                index = self.pos_to_index(old_pos)
-                if index < len(self.actors):
-                    self.actors[index] = None
-            if self.actor_map.get(actor) is not None:
-                self.actor_map.pop(actor)
-        
-    def set_actor(self, actor):
-        self.pop_actor(actor)
-        # set
-        main_tile_pos = actor.get_tile_pos()
-        tile_to_actor = actor.get_pos() - self.tile_to_pos(main_tile_pos)
-        coverage_tile = self.get_next_tile_pos(main_tile_pos, tile_to_actor)
-        area = [main_tile_pos]
-        if main_tile_pos != coverage_tile:
-            area.append(coverage_tile)
-        for tile_pos in area:
-            index = self.pos_to_index(tile_pos)
-            if index < len(self.actors):
-                self.actors[index] = actor
-        self.actor_map[actor] = area    
+        if actor in self.actors:
+            self.actors.remove(actor)
+    
+    def add_actor(self, actor):
+        actor.get_pos()
+        if actor not in self.actors:
+            self.actors.append(actor)
     
     def update_layer_size(self, layer_size):
         self.top_layer.size = layer_size
@@ -195,9 +175,7 @@ class LevelManager(SingletonInstance):
         self.tile_map_widget.clear_widgets()
 
     def clear_level_actors(self):
-        for i in range(len(self.actors)):
-            self.actors[i] = None
-        self.actor_map.clear()
+        self.actors.clear()
         self.actor_manager.clear_actors()
         self.character_layer.clear_widgets()
     

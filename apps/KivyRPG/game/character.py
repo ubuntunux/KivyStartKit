@@ -88,6 +88,7 @@ class Character(Scatter):
         self.behavior = character_data.behavior_class(self)
         self.transform_component = TransformComponent(self, tile_pos, pos, self.properties)
         self.center = self.transform_component.get_pos()
+        self.radius = math.sqrt(sum([x*x for x in size])) * 0.5
         self.updated_pos = True
         self.updated_tile_pos = True
         self.spawn_tile_pos = Vector(tile_pos)
@@ -113,14 +114,17 @@ class Character(Scatter):
     def set_spawn_tile_pos(self, spawn_tile_pos):
         self.spawn_tile_pos = Vector(spawn_tile_pos)
         
-    def get_front_tile_pos(self):
-        return self.level_manager.get_next_tile_pos(self.get_tile_pos(), self.get_front())
+    def get_attack_pos(self):
+        return self.get_pos() + self.get_front() * 100.0
     
     def get_front(self):
         return self.transform_component.get_front()
 
     def get_direction_x(self):
         return sign(self.transform[0])
+    
+    def get_radius(self):
+        return self.radius
     
     def get_pos(self):
         return self.transform_component.get_pos()
@@ -133,10 +137,7 @@ class Character(Scatter):
     
     def get_prev_tile_pos(self):
         return self.transform_component.get_prev_tile_pos()
-    
-    def get_coverage_tile_pos(self):
-        return self.transform_component.get_coverage_tile_pos()
-             
+       
     def get_updated_pos(self):
         return self.updated_pos
         
@@ -170,7 +171,7 @@ class Character(Scatter):
         if not self.action.is_action_state(ActionState.ATTACK):
             self.action.set_action_state(ActionState.ATTACK)
             self.weapon.set_attack(self.get_front())
-            target = self.level_manager.get_actor(self.get_front_tile_pos())
+            target = self.level_manager.get_collide_point(self.get_attack_pos(), 100.0, [self])
             if target and target is not self:
                 damage = self.get_damage()
                 self.actor_manager.regist_attack_info(self, target, damage)
