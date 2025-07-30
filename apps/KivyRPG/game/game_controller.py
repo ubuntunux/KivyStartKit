@@ -22,7 +22,7 @@ class DirectionController():
         self.button_size = 200
         self.bound_size = self.button_size + 200
         self.bound_offset = 20
-        self.dead_zone_size = 50
+        self.dead_zone_size = 20
         self.button_neutral_pos = (
             self.bound_offset + self.bound_size * 0.5,
             self.bound_offset + self.bound_size * 0.5
@@ -109,22 +109,20 @@ class DirectionController():
     def update(self, dt):
         if self.touch_id is not None:
             diff = sub(add(self.bound.pos, self.button.center), self.button_neutral_pos)
-            mag_x = max(0, abs(diff[0]) - self.dead_zone_size)
-            mag_y = max(0, abs(diff[1]) - self.dead_zone_size)
-            direction = None
-            if mag_x <= mag_y:
-                if 0 < sign(diff[1]):
-                    direction = "up"
+            if diff[0] == 0 and diff[1] == 0:
+                return
+            mag_x = min(1, max(0, abs(diff[0]) - self.dead_zone_size))
+            mag_y = min(1, max(0, abs(diff[1]) - self.dead_zone_size))
+            direction = Vector(diff[0] * mag_x, diff[1] * mag_y).normalize()
+            MOVEMENT_1D = True
+            if MOVEMENT_1D:
+                dir_x = sign(direction.x)
+                dir_y = sign(direction.y)
+                if abs(direction.x) < abs(direction.y):
+                    direction = Vector(0, dir_y)
                 else:
-                    direction = "down"
-            else:
-                if 0 <= sign(diff[0]):
-                    direction = "right"
-                else:
-                    direction = "left"
-
-            if direction:
-                self.game_controller.pressed_direction(direction)
+                    direction = Vector(dir_x, 0)
+            self.game_controller.pressed_direction(direction)
         
         
 class GameController(SingletonInstance):

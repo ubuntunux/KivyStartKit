@@ -45,9 +45,9 @@ class TransformComponent():
     def set_front(self, front):
         dir_x = sign(front.x)
         dir_y = sign(front.y)
-        if abs(dir_x) < abs(dir_y):
+        if abs(front.x) < abs(front.y):
             self.front = Vector(0, dir_y)
-        elif abs(dir_y) < abs(dir_x):
+        else:
             self.front = Vector(dir_x, 0)
             
     def path_find(self, level_manager, tile_pos, target_tile_pos, target_dir, checked_list, paths, depth=0):

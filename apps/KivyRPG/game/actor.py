@@ -83,16 +83,7 @@ class ActorManager(SingletonInstance):
             self.get_player().move_to(touch.pos)
             
     def callback_move(self, direction):
-        move_dir = Vector(0,0)
-        if "left" == direction:
-            move_dir = Vector(-1, 0)
-        elif "right" == direction:
-            move_dir = Vector(1, 0)
-        elif "up" == direction:
-            move_dir = Vector(0, 1)
-        elif "down" == direction:
-            move_dir = Vector(0, -1)
-        self.get_player().set_move_direction(move_dir)
+        self.get_player().set_move_direction(direction)
         
     def callback_attack(self, inst):
         self.get_player().set_attack()   
