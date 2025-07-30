@@ -117,7 +117,7 @@ class DirectionController():
                     direction = "up"
                 else:
                     direction = "down"
-            elif mag_y < mag_x:
+            else:
                 if 0 <= sign(diff[0]):
                     direction = "right"
                 else:
