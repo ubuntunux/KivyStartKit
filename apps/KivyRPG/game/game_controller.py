@@ -7,6 +7,8 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.widget import Widget
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.relativelayout import RelativeLayout
+from kivy.uix.textinput import TextInput
+from kivy.utils import platform 
 from utility.singleton import SingletonInstance
 from .game_resource import GameResourceManager
 from .constant import *
@@ -29,10 +31,11 @@ class DirectionController:
         self.button = None
         self.button_color = Color(1,1,1,1)
         self.touch_id = None
-
-        self.keyboard = Window.request_keyboard(self.keyboard_closed, self)
-        self.keyboard.bind(on_key_down=self.on_key_down)
-        self.keyboard.bind(on_key_up=self.on_key_up)
+        if platform != 'android':
+            self.text_input = TextInput()
+            self.keyboard = Window.request_keyboard(self.keyboard_closed, self.text_input)
+            self.keyboard.bind(on_key_down=self.on_key_down)
+            self.keyboard.bind(on_key_up=self.on_key_up)
         self.key_pressed = {}
         self.key_hold = {}
         self.key_released = {}
@@ -87,8 +90,10 @@ class DirectionController:
         self.keyboard_closed()
 
     def keyboard_closed(self):
-        self.keyboard.unbind(on_key_down=self.on_key_down)
-        self.keyboard = None
+        if platform != 'android':
+            if self.keyboard:
+                self.keyboard.unbind(on_key_down=self.on_key_down)
+                self.keyboard = None
         self.key_pressed = {}
         self.key_hold = {}
         self.key_released = {}
