@@ -25,6 +25,8 @@ class ActorManager(SingletonInstance):
         self.attack_infos = []
         self.player = None
         self.spawn_term = 3.0
+        self.spawn_timer = 0.0
+        self.limit_actors = 15
              
     def initialize(self, level_manager):
         self.level_manager = level_manager
@@ -47,32 +49,30 @@ class ActorManager(SingletonInstance):
         self.actors.clear()
         
     def reset_actors(self):
+        self.spawn_timer = 0.0
         self.clear_actors()
         self.spawn_player()
-        self.spawn_monster()
-        self.spawn_monster()
     
     def spawn_player(self):
         if not self.player:
             character_data = GameResourceManager.instance().get_character_data("player")  
-            tile_pos = self.level_manager.get_random_tile_pos()
-            return self.create_actor(character_data, tile_pos, is_player=True)
+            pos = self.level_manager.get_random_pos()
+            return self.create_actor(character_data, pos, is_player=True)
         
     def spawn_monster(self):
         character_data = GameResourceManager.instance().get_character_data("monster")  
-        tile_pos = self.level_manager.get_random_tile_pos()
-        return self.create_actor(character_data, tile_pos, is_player=False)   
+        pos = self.level_manager.get_random_pos()
+        return self.create_actor(character_data, pos, is_player=False)   
         
     def remove_actor(self, actor):
         self.level_manager.pop_actor(actor)
         if actor in self.actors:
             self.actors.remove(actor)
         
-    def create_actor(self, character_data, tile_pos, is_player):
+    def create_actor(self, character_data, pos, is_player):
         character = Character(
             character_data=character_data,
-            tile_pos=tile_pos,
-            pos=self.level_manager.tile_to_pos(tile_pos),
+            pos=pos,
             size=TILE_SIZE,
             is_player=is_player
         )
@@ -99,6 +99,10 @@ class ActorManager(SingletonInstance):
         self.attack_infos.append(AttackInfo(actor, target, damage))
     
     def update(self, dt):
+        self.spawn_timer -= dt
+        if self.spawn_timer < 0.0 and len(self.actors) < self.limit_actors:
+            self.spawn_monster()
+            self.spawn_timer = self.spawn_term
         effect_manager = GameEffectManager.instance()
         # dead
         for actor in self.dead_characters:
@@ -114,7 +118,9 @@ class ActorManager(SingletonInstance):
         
         # attack infos
         for attack_info in self.attack_infos:
-            if attack_info.target and attack_info.target.is_alive():
+            if attack_info.target and \
+               attack_info.target.is_alive() and \
+               attack_info.target.is_player != attack_info.actor.is_player:
                 attack_info.target.set_damage(attack_info.damage)
                 effect_manager.create_effect(
                     effect_name="hit",

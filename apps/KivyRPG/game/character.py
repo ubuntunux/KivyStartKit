@@ -47,6 +47,7 @@ class CharacterProperties():
     def __init__(self, property_data):
         self.hp = 100.0
         self.mp = 100.0
+        self.move_speed = 1.0
         self.property_data = property_data
     
     def reset_properties(self):
@@ -60,10 +61,13 @@ class CharacterProperties():
         return self.mp
     
     def get_walk_speed(self):
-        return self.property_data.walk_speed
+        return self.property_data.walk_speed * self.move_speed
     
     def set_damage(self, damage):
         self.hp -= damage
+        
+    def set_move_speed(self, move_speed):
+        self.move_speed = move_speed
 
 
 class Character(Scatter):
@@ -77,7 +81,7 @@ class Character(Scatter):
         cls.level_manager = level_manager
         cls.effect_manager = effect_manager
     
-    def __init__(self, character_data, tile_pos, pos, size, is_player):
+    def __init__(self, character_data, pos, size, is_player):
         super().__init__(size=size)
         self.action = Action(character_data.action_data)
         self.image = Image(size=size, fit_mode="fill")
@@ -86,12 +90,10 @@ class Character(Scatter):
         
         self.properties = CharacterProperties(character_data.property_data)
         self.behavior = character_data.behavior_class(self)
-        self.transform_component = TransformComponent(self, tile_pos, pos, self.properties)
+        self.transform_component = TransformComponent(self, pos, self.properties)
         self.center = self.transform_component.get_pos()
         self.radius = math.sqrt(sum([x*x for x in size])) * 0.5
-        self.updated_pos = True
-        self.updated_tile_pos = True
-        self.spawn_tile_pos = Vector(tile_pos)
+        self.updated_transform = True
         self.is_player = is_player
         
         self.weapon = Weapon(self, character_data.weapon_data)
@@ -107,13 +109,7 @@ class Character(Scatter):
             post_multiply=True,
             anchor=self.to_local(*self.center)
         )
-                 
-    def get_spawn_tile_pos(self):
-        return self.spawn_tile_pos
     
-    def set_spawn_tile_pos(self, spawn_tile_pos):
-        self.spawn_tile_pos = Vector(spawn_tile_pos)
-        
     def get_attack_pos(self):
         attack_dist = 100.0
         return Vector(self.get_pos() + self.get_front() * attack_dist)
@@ -130,21 +126,12 @@ class Character(Scatter):
     def get_pos(self):
         return self.transform_component.get_pos()
     
-    def get_tile_pos(self):
-        return self.transform_component.get_tile_pos()
-    
     def get_prev_pos(self):
         return self.transform_component.get_prev_pos()
     
-    def get_prev_tile_pos(self):
-        return self.transform_component.get_prev_tile_pos()
-       
-    def get_updated_pos(self):
-        return self.updated_pos
+    def get_updated_transform(self):
+        return self.updated_transform
         
-    def get_updated_tile_pos(self):
-        return self.updated_tile_pos
-    
     # Properties
     def is_alive(self):
         return 0 < self.properties.get_hp()
@@ -155,10 +142,12 @@ class Character(Scatter):
     def set_damage(self, damage):
         self.properties.set_damage(damage)
         
+    def set_move_speed(self, move_speed):
+        self.properties.set_move_speed(move_speed)
+        
     # Transform
-    def move_to(self, tile_pos):
-        if self.level_manager.is_in_level(tile_pos):
-            pos = self.level_manager.tile_to_pos(tile_pos)
+    def move_to(self, pos):
+        if self.level_manager.is_in_level(self):
             self.transform_component.move_to(pos)
     
     def set_move_direction(self, direction):
@@ -178,12 +167,11 @@ class Character(Scatter):
                 self.actor_manager.regist_attack_info(self, target, damage)
     
     def update(self, dt):
-        self.behavior.update_behavior(self.actor_manager, self.level_manager, dt)
+        self.behavior.update_behavior(dt)
         self.action.update_action(dt)
         self.weapon.update_weapon(dt, self.get_front())
-        self.updated_pos = self.transform_component.update_transform(self.level_manager, dt)
-        self.updated_tile_pos = self.get_prev_tile_pos() != self.get_tile_pos()
-        if self.updated_pos:
+        self.updated_transform = self.transform_component.update_transform(dt)
+        if self.updated_transform:
             self.center = self.transform_component.get_pos()
             prev_direction_x = self.get_direction_x()
             curr_front_x = sign(self.transform_component.front.x)

@@ -26,8 +26,8 @@ class LevelManager(SingletonInstance):
         self.tiles = []
         self.app = app
         self.actor_manager = None
-        self.num_x = 16
-        self.num_y = 16
+        self.num_x = 8
+        self.num_y = 8
         self.num_tiles = self.num_x * self.num_y
         
     def initialize(self, parent_widget, actor_manager, fx_manager):
@@ -71,15 +71,6 @@ class LevelManager(SingletonInstance):
         pos.y += TILE_HEIGHT * 0.5
         return pos
     
-    def get_next_tile_pos(self, tile_pos, front):
-        next_tile_pos = Vector(tile_pos)
-        if abs(front.x) < abs(front.y):
-            next_tile_pos.y += sign(front.y)
-        else:
-            next_tile_pos.x += sign(front.x)
-        #Logger.info((tile_pos, front))
-        return next_tile_pos
-    
     def index_to_pos(self, index):
         y = int(index / self.num_x)
         x = index - y
@@ -91,9 +82,15 @@ class LevelManager(SingletonInstance):
     def get_random_tile_pos(self):
         return (random.randint(1, self.num_x) - 1, random.randint(1, self.num_y) - 1)
     
-    def is_in_level(self, tile_pos):
-        return 0 <= tile_pos[0] and tile_pos[0] <= (self.num_x - 1) and 0 <= tile_pos[1] and tile_pos[1] <= (self.num_y - 1)
-    
+    def get_random_pos(self):
+        return self.tile_to_pos(self.get_random_tile_pos())
+        
+    def is_in_level(self, actor):
+        return 0 <= actor.pos[0] and \
+            actor.pos[0] + actor.width < self.tile_map_widget.width and \
+            0 <= actor.pos[1] and \
+            actor.pos[1] + actor.height < self.tile_map_widget.height
+        
     def is_blocked(self, pos, filter_actor=None):
         actor = self.get_actor(pos)
         return actor is not filter_actor and actor is not None
