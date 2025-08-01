@@ -115,7 +115,8 @@ class Character(Scatter):
         self.spawn_tile_pos = Vector(spawn_tile_pos)
         
     def get_attack_pos(self):
-        return self.get_pos() + self.get_front() * 100.0
+        attack_dist = 100.0
+        return Vector(self.get_pos() + self.get_front() * attack_dist)
     
     def get_front(self):
         return self.transform_component.get_front()

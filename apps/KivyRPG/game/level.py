@@ -1,3 +1,4 @@
+import random
 from kivy.graphics import Color, Rectangle
 from kivy.graphics.texture import Texture
 from kivy.logger import Logger
@@ -23,7 +24,6 @@ class LevelManager(SingletonInstance):
         self.goal_scroll_x = -1
         self.goal_scroll_y = -1
         self.tiles = []
-        self.actors = []
         self.app = app
         self.actor_manager = None
         self.num_x = 16
@@ -87,29 +87,31 @@ class LevelManager(SingletonInstance):
         
     def pos_to_index(self, pos):
         return int(pos[1] * self.num_x + pos[0])
+        
+    def get_random_tile_pos(self):
+        return (random.randint(1, self.num_x) - 1, random.randint(1, self.num_y) - 1)
     
     def is_in_level(self, tile_pos):
-        return 0 <= tile_pos.x and tile_pos.x <= (self.num_x - 1) and 0 <= tile_pos.y and tile_pos.y <= (self.num_y - 1)
+        return 0 <= tile_pos[0] and tile_pos[0] <= (self.num_x - 1) and 0 <= tile_pos[1] and tile_pos[1] <= (self.num_y - 1)
     
     def is_blocked(self, pos, filter_actor=None):
         actor = self.get_actor(pos)
         return actor is not filter_actor and actor is not None
     
     def get_collide_point(self, point, radius=0.0, filters=[]):
-        for actor in self.actors:
+        for actor in self.actor_manager.get_actors():
             if actor and actor not in filters:
                 if (radius + actor.get_radius()) >= (point.distance(actor.get_pos())):
                     return actor
                 
     def pop_actor(self, actor):
-        if actor in self.actors:
-            self.actors.remove(actor)
+        if actor and actor.parent is self.character_layer:
+            self.character_layer.remove_widget(actor)
     
     def add_actor(self, actor):
-        actor.get_pos()
-        if actor not in self.actors:
-            self.actors.append(actor)
-    
+        if actor and actor.parent is not self.character_layer:
+            self.character_layer.add_widget(actor)
+            
     def update_layer_size(self, layer_size):
         self.top_layer.size = layer_size
         self.effect_layer.size = layer_size
@@ -127,7 +129,6 @@ class LevelManager(SingletonInstance):
         self.num_x = 30
         self.num_y = 30
         self.num_tiles = self.num_x * self.num_y
-        self.actors = [None for i in range(self.num_tiles)]
         
         texture_size = 32
         stride = 4
@@ -167,21 +168,19 @@ class LevelManager(SingletonInstance):
     def open_level(self, level_name):
         self.close_level()
         self.generate_tile_map(level_name)
-        self.actor_manager.create_actors()
+        self.actor_manager.reset_actors()
         
     def close_level(self):
         self.clear_level_actors()
         self.tiles.clear()
         self.tile_map_widget.clear_widgets()
+        self.actor_manager.clear_actors()
 
     def clear_level_actors(self):
-        self.actors.clear()
-        self.actor_manager.clear_actors()
         self.character_layer.clear_widgets()
     
     def reset_level(self):
-        self.clear_level_actors()
-        self.actor_manager.create_actors()
+        self.actor_manager.reset_actors()
         
     def callback_reset_level(self, inst):
         self.reset_level()

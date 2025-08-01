@@ -20,15 +20,14 @@ class ActorManager(SingletonInstance):
     def __init__(self, app):
         self.app = app
         self.level_manager = None
-        self.character_layout = None
         self.actors = []
         self.dead_characters = []
         self.attack_infos = []
         self.player = None
+        self.spawn_term = 3.0
              
-    def initialize(self, level_manager, character_layout):
+    def initialize(self, level_manager):
         self.level_manager = level_manager
-        self.character_layout = character_layout
         Character.set_managers(
             actor_manager=self, 
             level_manager=self.level_manager,
@@ -38,29 +37,37 @@ class ActorManager(SingletonInstance):
     def get_player(self):
         return self.player
         
+    def get_actors(self):
+        return self.actors
+        
     def clear_actors(self):
         for actor in self.actors:
-            actor.parent.remove_widget(actor)
+            self.level_manager.pop_actor(actor)
+        self.player = None
         self.actors.clear()
         
-    def create_actors(self):
-        is_player = True
-        tile_pos = (10, 10)
-        character_data = GameResourceManager.instance().get_character_data("player")  
-        self.create_actor(character_data, tile_pos, is_player)
+    def reset_actors(self):
+        self.clear_actors()
+        self.spawn_player()
+        self.spawn_monster()
+        self.spawn_monster()
+    
+    def spawn_player(self):
+        if not self.player:
+            character_data = GameResourceManager.instance().get_character_data("player")  
+            tile_pos = self.level_manager.get_random_tile_pos()
+            return self.create_actor(character_data, tile_pos, is_player=True)
         
-        is_player = False
-        monster_positions = [(5, 5), (8, 8)]
+    def spawn_monster(self):
         character_data = GameResourceManager.instance().get_character_data("monster")  
-        for tile_pos in monster_positions:
-            self.create_actor(character_data, Vector(tile_pos), is_player)   
+        tile_pos = self.level_manager.get_random_tile_pos()
+        return self.create_actor(character_data, tile_pos, is_player=False)   
         
     def remove_actor(self, actor):
-        if actor is not None:
-            actor.parent.remove_widget(actor)
+        self.level_manager.pop_actor(actor)
+        if actor in self.actors:
             self.actors.remove(actor)
-            self.level_manager.pop_actor(actor)
-    
+        
     def create_actor(self, character_data, tile_pos, is_player):
         character = Character(
             character_data=character_data,
@@ -69,14 +76,14 @@ class ActorManager(SingletonInstance):
             size=TILE_SIZE,
             is_player=is_player
         )
-        self.character_layout.add_widget(character)
-        self.level_manager.add_actor(character)
+        self.actors.append(character)
         if is_player:
             self.player = character
-        self.actors.append(character)
+        self.level_manager.add_actor(character)
+        return character
         
     def callback_touch(self, inst, touch):
-        actor = self.level_manager.get_collide_point(touch.pos)
+        actor = self.level_manager.get_collide_point(Vector(touch.pos))
         if actor is not None:
             self.get_player().trace_actor(actor)
         else:
