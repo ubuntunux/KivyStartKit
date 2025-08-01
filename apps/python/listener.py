@@ -139,7 +139,7 @@ class Listener:
             else:
                 self.app.add_widget(self.command_list_layout)
             return True  
-        logo_image = Image(size_hint=(None, 1), source=ICON_FILE, fit_mode="fill")
+        logo_image = Image(size_hint=(None, 1), source=ICON_FILE, fit_mode="contain", keep_ratio=True, allow_stretch=False)
         logo_image.bind(on_touch_down=toggle_commands)
         
         # prev

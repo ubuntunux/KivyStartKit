@@ -24,7 +24,7 @@ from .memory import Memory
 
 
 class JarvisApp(BaseApp):
-    app_name = "JARVIS"
+    app_name = "Python"
     orientation = "all" # all, landscape, portrait
     allow_multiple_instance = False
     

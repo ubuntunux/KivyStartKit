@@ -1,15 +1,26 @@
 # KivyStartKit
-- Kivy Framework을 사용하여 앱을 쉽게 만들 수 있는 멀티플랫폼 파이썬 어플리케이션
+- KivyStartKit is an easy-to-use framework for creating Kivy apps.
+
+# Install
+```commandline
+git clone https://github.com/ubuntunux/KivyStartKit
+cd KivyStartKit
+pip install -r requirements.txt
+python main.py
+```
+ 
 
 ## Requirements
-* kivy-2.2.1
+* numpy
+* kivy-2.3.0
+  * Kivy 2.3.1 has an audio freezing bug, so you should install Kivy 2.3.0.
 
 ## Built-in apps
 
 #### App Manager
 <img src="https://github.com/ubuntunux/KivyStartKit/assets/16193695/79635796-d79b-4c18-a84e-bb119875aa45" width=25%/>
 
-#### Jarvis - Python Interpreter
+#### Python Interpreter
 <img src="https://github.com/ubuntunux/KivyStartKit/assets/16193695/e3eecad3-fb20-4141-b12a-0ab00e90193a"  width=25%/>
 
 #### RPG Game

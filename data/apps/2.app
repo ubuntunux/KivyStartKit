@@ -1,1 +1,1 @@
-{'path': 'apps', 'module': 'jarvis'}
+{'path': 'apps', 'module': 'python'}
