@@ -32,6 +32,10 @@ class DirectionController:
 
         self.keyboard = Window.request_keyboard(self.keyboard_closed, self)
         self.keyboard.bind(on_key_down=self.on_key_down)
+        self.keyboard.bind(on_key_up=self.on_key_up)
+        self.key_pressed = {}
+        self.key_hold = {}
+        self.key_released = {}
         
     def initialize(self, controller_layer):
         resource_manager = GameResourceManager.instance()
@@ -85,17 +89,27 @@ class DirectionController:
     def keyboard_closed(self):
         self.keyboard.unbind(on_key_down=self.on_key_down)
         self.keyboard = None
+        self.key_pressed = {}
+        self.key_hold = {}
+        self.key_released = {}
 
     def on_key_down(self, keyboard, keycode, text, modifiers):
-        keycode_value = keycode[0]
-        if keycode_value == 97:
-            self.game_controller.pressed_direction(Vector(1, 0))
-        elif keycode_value == 100:
-            self.game_controller.pressed_direction(Vector(-1, 0))
-        elif keycode_value == 119:
-            self.game_controller.pressed_direction(Vector(0, 1))
-        elif keycode_value == 115:
-            self.game_controller.pressed_direction(Vector(0, -1))
+        key_value = keycode[0]
+        self.key_pressed[key_value] = True
+        self.key_hold[key_value] = True
+        self.key_released[key_value] = False
+
+    def on_key_up(self, keyboard, keycode):
+        key_value = keycode[0]
+        self.key_pressed[key_value] = False
+        self.key_hold[key_value] = False
+        self.key_released[key_value] = True
+
+    def update_key_pressed(self):
+        for key, pressed in self.key_pressed.items():
+            if pressed:
+                self.key_pressed[key] = False
+                self.key_hold[key] = True
         
     def on_touch_down(self, inst, touch):
         if self.touch_id is None and inst.collide_point(*touch.pos):
@@ -127,6 +141,8 @@ class DirectionController:
         )
         
     def update(self, dt):
+        self.update_key_pressed()
+
         if self.touch_id is not None:
             diff = sub(add(self.bound.pos, self.button.center), self.button_neutral_pos)
             if diff[0] == 0 and diff[1] == 0:
@@ -143,6 +159,15 @@ class DirectionController:
                 else:
                     direction = Vector(dir_x, 0)
             self.game_controller.pressed_direction(direction)
+
+        if self.key_hold.get(97):
+            self.game_controller.pressed_direction(Vector(-1, 0))
+        elif self.key_hold.get(100):
+            self.game_controller.pressed_direction(Vector(1, 0))
+        elif self.key_hold.get(119):
+            self.game_controller.pressed_direction(Vector(0, 1))
+        elif self.key_hold.get(115):
+            self.game_controller.pressed_direction(Vector(0, -1))
         
         
 class GameController(SingletonInstance):
