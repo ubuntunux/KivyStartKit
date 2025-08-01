@@ -17,6 +17,9 @@ class GameEffectManager(EffectManager):
     def initialize(self, level_manager, effect_layout):
         self.level_manager = level_manager
         super(GameEffectManager, self).initialize(effect_layout)
+
+    def close(self):
+        pass
         
     def create_effect(self, effect_name, flip_x=False, flip_y=False, attach_to=None, **kargs):
         game_resource = GameResourceManager.instance()

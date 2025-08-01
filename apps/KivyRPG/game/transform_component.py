@@ -28,7 +28,6 @@ class TransformComponent():
         
     def set_pos(self, pos):
         self.pos = Vector(pos)
-        self.tile_pos = self.level_manager.pos_to_tile(pos)
     
     def set_move_direction(self, direction):
         self.move_direction = direction
@@ -59,9 +58,7 @@ class TransformComponent():
         if self.move_to_target:
             if self.target_actor:
                 self.target_pos = self.target_actor.get_pos()
-            
             to_target = self.target_pos - self.pos
-            
             is_horizontal = self.front.x != 0
             if is_horizontal:
                 pos.x += sign(to_target.x) * min(abs(to_target.x), move_dist)

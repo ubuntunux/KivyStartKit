@@ -34,6 +34,9 @@ class GameResourceManager(ResourceManager):
         self.register_resources(self.tile_data_path, [".data"], self.tile_data_set, self.tile_data_set_loader, None)
         self.register_resources(self.weapon_data_path, [".data"], self.weapon_data, self.weapon_data_loader, None)
         self.register_resources(self.character_data_path, [".data"], self.character_data, self.character_data_loader, None)
+
+    def close(self):
+        pass
         
     def destroy(self):
         super().destroy()

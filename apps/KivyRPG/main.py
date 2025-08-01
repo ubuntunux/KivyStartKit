@@ -67,8 +67,12 @@ class KivyRPGApp(BaseApp):
         self.level_manager.open_level("default")
         
     def on_stop(self):
-        pass
-        
+        self.game_controller.close()
+        self.effect_manager.close()
+        self.actor_manager.close()
+        self.level_manager.close()
+        self.resource_manager.close()
+
     def on_back(self):
         pass
         

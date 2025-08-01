@@ -1,3 +1,4 @@
+from kivy.core.window import Window
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.image import Image
@@ -6,16 +7,14 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.widget import Widget
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.relativelayout import RelativeLayout
-from utility.kivy_helper import *
 from utility.singleton import SingletonInstance
-from .level import LevelManager
-from .actor import ActorManager
 from .game_resource import GameResourceManager
 from .constant import *
 
 
-class DirectionController():
-    def __init__(self, game_controller):
+class DirectionController:
+    def __init__(self, app, game_controller):
+        self.app = app
         self.game_controller = game_controller
         self.button_active_opacity = 0.5
         self.button_deactive_opacity = 0.2
@@ -30,6 +29,9 @@ class DirectionController():
         self.button = None
         self.button_color = Color(1,1,1,1)
         self.touch_id = None
+
+        self.keyboard = Window.request_keyboard(self.keyboard_closed, self)
+        self.keyboard.bind(on_key_down=self.on_key_down)
         
     def initialize(self, controller_layer):
         resource_manager = GameResourceManager.instance()
@@ -76,6 +78,24 @@ class DirectionController():
       
         self.bound.add_widget(self.button)
         controller_layer.add_widget(self.bound)
+
+    def close(self):
+        self.keyboard_closed()
+
+    def keyboard_closed(self):
+        self.keyboard.unbind(on_key_down=self.on_key_down)
+        self.keyboard = None
+
+    def on_key_down(self, keyboard, keycode, text, modifiers):
+        keycode_value = keycode[0]
+        if keycode_value == 97:
+            self.game_controller.pressed_direction(Vector(1, 0))
+        elif keycode_value == 100:
+            self.game_controller.pressed_direction(Vector(-1, 0))
+        elif keycode_value == 119:
+            self.game_controller.pressed_direction(Vector(0, 1))
+        elif keycode_value == 115:
+            self.game_controller.pressed_direction(Vector(0, -1))
         
     def on_touch_down(self, inst, touch):
         if self.touch_id is None and inst.collide_point(*touch.pos):
@@ -130,7 +150,7 @@ class GameController(SingletonInstance):
         self.app = app
         self.actor_manager = None
         self.level_manager = None
-        self.direction_controller = DirectionController(self)
+        self.direction_controller = DirectionController(app, self)
         
     def initialize(self, parent_widget, level_manager, actor_manager):
         self.level_manager = level_manager
@@ -149,6 +169,9 @@ class GameController(SingletonInstance):
         self.controller_layer.add_widget(btn)
         
         parent_widget.add_widget(self.controller_layer)
+
+    def close(self):
+        self.direction_controller.close()
     
     def pressed_direction(self, direction):
         self.actor_manager.callback_move(direction)

@@ -46,6 +46,9 @@ class LevelManager(SingletonInstance):
         self.scroll_view.add_widget(self.top_layer)
         parent_widget.add_widget(self.scroll_view)
         self.update_layer_size(self.top_layer.size)
+
+    def close(self):
+        pass
         
     def on_touch_down(self, inst, touch):
         if inst.collide_point(*touch.pos):

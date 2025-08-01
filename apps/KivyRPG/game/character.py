@@ -11,7 +11,7 @@ from .weapon import Weapon
 from .constant import *
 
 
-class Action():
+class Action:
     def __init__(self, action_data):
         self.action_data = action_data
         self.action_state = ActionState.IDLE
@@ -43,7 +43,7 @@ class Action():
                 self.set_action_state(ActionState.IDLE)
             self.action_time -= dt
         
-class CharacterProperties():
+class CharacterProperties:
     def __init__(self, property_data):
         self.hp = 100.0
         self.mp = 100.0

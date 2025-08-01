@@ -35,6 +35,9 @@ class ActorManager(SingletonInstance):
             level_manager=self.level_manager,
             effect_manager=GameEffectManager.instance()
         )
+
+    def close(self):
+        pass
         
     def get_player(self):
         return self.player
@@ -83,11 +86,12 @@ class ActorManager(SingletonInstance):
         return character
         
     def callback_touch(self, inst, touch):
-        actor = self.level_manager.get_collide_point(Vector(touch.pos))
+        touch_pos = Vector(touch.pos)
+        actor = self.level_manager.get_collide_point(touch_pos)
         if actor is not None:
             self.get_player().trace_actor(actor)
         else:
-            self.get_player().move_to(touch.pos)
+            self.get_player().move_to(touch_pos)
             
     def callback_move(self, direction):
         self.get_player().set_move_direction(direction)
