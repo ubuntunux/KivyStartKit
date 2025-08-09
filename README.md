@@ -11,6 +11,7 @@ python main.py
  
 
 ## Requirements
+* sudo apt install openjdk-11-jdk
 * numpy
 * kivy==2.3.0
   * Kivy 2.3.1 has an audio freezing bug, so you should install Kivy 2.3.0.

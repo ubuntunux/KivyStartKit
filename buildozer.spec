@@ -13,7 +13,7 @@ package.domain = com.ubuntunux
 source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
-source.include_exts = py,png,jpg,kv,atlas,ttf,wav,data,effect
+source.include_exts = py,png,jpg,kv,atlas,ttf,wav,data,effect,app
 
 # (list) List of inclusions using pattern matching
 #source.include_patterns = assets/*,images/*.png
