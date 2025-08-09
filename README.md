@@ -12,8 +12,10 @@ python main.py
 
 ## Requirements
 * numpy
-* kivy-2.3.0
+* kivy==2.3.0
   * Kivy 2.3.1 has an audio freezing bug, so you should install Kivy 2.3.0.
+* cython==3.0.12
+  * Remove python long to support Cython >= 3.1.x (#756)
 
 ## Built-in apps
 
