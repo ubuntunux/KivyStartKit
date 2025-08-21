@@ -1,0 +1,1 @@
+{'path': 'apps', 'module': 'Code Editor'}

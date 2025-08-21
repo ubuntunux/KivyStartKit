@@ -1,0 +1,1 @@
+{'path': '/storage/emulated/0/Workspace/KivyStartKit/apps', 'module': 'code_editor'}

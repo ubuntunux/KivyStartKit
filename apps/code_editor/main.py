@@ -1,26 +1,67 @@
 import configparser, tempfile, traceback
 from glob import glob
 from collections import OrderedDict
+import os
 
+import kivy
+from kivy.core.window import Window
+from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.codeinput import CodeInput
 from kivy.uix.textinput import TextInput
-from pygments.lexers import CythonLexer
+from kivy.uix.dropdown import DropDown
+from kivy.logger import Logger
+from kivy.uix.button import Button
+from kivy.uix.scrollview import ScrollView
+from core.base_app import BaseApp
 from utility.toast import toast
-from utility.singleton import SingletonInstance
+from pygments.lexers import CythonLexer
 
-class CodeEditorApp(SingletonInstance, CodeInput):
-    ui = None
-    run_on_enter = None
-    dirty = False
-    parent_tap = None
+directory = os.path.split(__file__)[0]
+configFile = os.path.join(directory, "pyinterpreter.cfg")
+tempDirectory = os.path.join(directory, "temp")
+pythonLogo = os.path.join(directory, "python_logo.png")
+defaultFont = kivy.resources.resource_find(os.path.join(directory, "fonts", "DroidSansMonoDotted.ttf"))
+tutorialDir = os.path.join(directory, "tutorials")
+
+topMargin = kivy.metrics.dp(35)
+min_space = kivy.metrics.dp(35)
+
+gray = [1, 1, 1, 1]
+brightBlue = [1.5, 1.5, 2.0, 2]
+darkGray = [0.4, 0.4, 0.4, 2]
+
+class CodeEditorApp(BaseApp):
+    app_name = "Code Editor"
+    orientation = "all" # all, landscape, portrait
+    allow_multiple_instance = False
     
+    def __init__(self):
+        super().__init__()
+        
+    def on_initialize(self):
+        self.editor = EditorLayout(self.get_screen())
+
+    def on_stop(self):
+        pass
+    
+    def on_back(self):
+        return False
+        
+    def on_resize(self, window, width, height):
+        pass
+        
+    def on_update(self, dt):
+        pass
+
+class Editor(CodeInput):
     def __init__(self, ui, parent_tap, *args, **kargs):
         CodeInput.__init__(self, *args, **kargs)
         self.ui = ui
         self.old_text = ""
         self.parent_tap = parent_tap
         self.filename = ""
-        
+        self.dirty = False
+
     def set_filename(self, filename):
         self.filename = filename
         if self.parent_tap:
@@ -105,13 +146,11 @@ class EditorLayout():
     text_inputs_scroll_view = None
     editor_input = None
     
-    def __init__(self, ui):
-        global gEditorLayout
-        gEditorLayout = self
-        self.ui = ui
+    def __init__(self, screen):
         self.reFocusInputText = False
-        self.screen = Screen(name = szEditor)
+        self.screen = screen 
         # document list
+        W, H = Window.size 
         height = kivy.metrics.dp(45)
         self.documentTitlescroll_view = ScrollView(size_hint=(None, None), size=(W, height), pos=(0, H-height))
         self.documentTitleLayout = BoxLayout(size_hint=(None, 1))
@@ -125,8 +164,9 @@ class EditorLayout():
         self.menuDropDown = DropDown(size=(0,0), auto_dismiss=True)
         btn_menu = Button(text="Menu", size_hint_y=None, height=height, background_color=darkGray)
         def menuOpen(inst):
-            self.inputBoxForceFocus(False)
-            self.menuDropDown.open(inst)
+            if not self.menuDropDown.parent:
+                self.inputBoxForceFocus(False)
+                self.menuDropDown.open(inst)
         btn_menu.bind(on_release = menuOpen)
         btn_new = Button(text="New", size_hint_y=None, height=height, background_color=darkGray)
         btn_new.bind(on_release = self.createdocument, on_press=self.menuDropDown.dismiss)
@@ -240,6 +280,7 @@ class EditorLayout():
                 parser.write(f)
         
     def createdocument(self, *args):
+        W, H = Window.size 
         # add docjment _tap
         font_size = kivy.metrics.dp(16)
         btn_tap = Button(text="Untitled", size_hint=(None,1), background_color = darkGray)
@@ -387,7 +428,8 @@ class EditorLayout():
         self.refreshLayout()
         
     def refreshLayout(self):
-        keyboardHeight = gMyRoot.getKeyboardHeight() if self.editor_input.focus else 0
+        W, H = Window.size 
+        keyboardHeight = 0 #gMyRoot.getKeyboardHeight() if self.editor_input.focus else 0
         height = H - (keyboardHeight + self.menuLayout.height + self.screenMenuLayout.height + self.documentTitlescroll_view.height + topMargin)
         self.documentTitlescroll_view.top = H - topMargin
         self.screenMenuLayout.pos = (0, keyboardHeight)
