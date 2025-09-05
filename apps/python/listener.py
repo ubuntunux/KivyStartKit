@@ -85,11 +85,11 @@ class Listener:
         self.root_layout.add_widget(self.input_layout)
         
         # undo
-        btn_undo = Button(size_hint=(None, 1), width=metrics.dp(40), text="<")
+        btn_undo = Button(size_hint=(None, 1), width=metrics.dp(60), text="Undo")
         btn_undo.bind(on_press=self.on_press_undo)
         
         # redo
-        btn_redo = Button(size_hint=(None, 1), width=metrics.dp(40), text=">")
+        btn_redo = Button(size_hint=(None, 1), width=metrics.dp(60), text="Redo")
         btn_redo.bind(on_press=self.on_press_redo)
 
         # input widget
@@ -142,6 +142,10 @@ class Listener:
         logo_image = Image(size_hint=(None, 1), source=ICON_FILE, fit_mode="contain", keep_ratio=True, allow_stretch=False)
         logo_image.bind(on_touch_down=toggle_commands)
         
+        # code editor
+        btn_editor = Button(size_hint=(1, 1), text="Editor", background_color=(0.6,0.6,0.6))
+        btn_editor.bind(on_press=self.on_press_editor)
+
         # prev
         btn_prev = Button(size_hint=(1, 1), text="<<", background_color=dark_gray)
         btn_prev.bind(on_press=self.on_press_prev)
@@ -171,6 +175,7 @@ class Listener:
         '''
         
         self.top_layout.add_widget(logo_image)
+        self.top_layout.add_widget(btn_editor)
         self.top_layout.add_widget(btn_prev)
         self.top_layout.add_widget(btn_next)
         self.top_layout.add_widget(btn_clear)
@@ -194,7 +199,7 @@ class Listener:
             self.command_list_vertical_layout.add_widget(btn)
             self.command_list_layout.height += text_height
 
-    def execute_command(self, text_input, is_force_run, instance):
+    def execute_command(self, text_input, is_force_run=False, inst=None):
         self.is_searching_history = False
         cmd = text_input.text.strip()
         if cmd:
@@ -257,11 +262,15 @@ class Listener:
             text_input.height = text_input.minimum_height
             #text_input.focus = True
     
+    def execute_code(self, code):
+        self.text_input.text = code 
+        self.text_input.height = self.text_input.minimum_height
+
     def on_key_down(self, keyboard, keycode, key, modifiers):
         if self.text_input.focus:
             key_name = keycode[1]
             if key_name == 'enter' or key_name == 'numpadenter':
-                self.execute_command(self.text_input, False, self.text_input)
+                self.execute_command(self.text_input, False)
             elif key_name == 'up':
                 self.on_press_prev(None)
             elif key_name == 'down':
@@ -298,6 +307,9 @@ class Listener:
         self.text_input.height = self.text_input.minimum_height
         self.is_indent_mode = self.text_input.text.find("\n") > -1
         
+    def on_press_editor(self, inst):
+        self.app.open_editor()
+
     def on_press_prev(self, inst):
         self.on_search_history(direction=-1)
             

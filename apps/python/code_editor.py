@@ -11,8 +11,13 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.dropdown import DropDown
 from kivy.logger import Logger
 from kivy.uix.button import Button
+from kivy.uix.relativelayout import RelativeLayout
+from kivy.uix.screenmanager import Screen
 from kivy.uix.scrollview import ScrollView
+from kivy.uix.widget import Widget
 from core.base_app import BaseApp
+from core import constants
+
 from utility.toast import toast
 from pygments.lexers import CythonLexer
 
@@ -29,29 +34,6 @@ min_space = kivy.metrics.dp(35)
 gray = [1, 1, 1, 1]
 brightBlue = [1.5, 1.5, 2.0, 2]
 darkGray = [0.4, 0.4, 0.4, 2]
-
-class CodeEditorApp(BaseApp):
-    app_name = "Code Editor"
-    orientation = "all" # all, landscape, portrait
-    allow_multiple_instance = False
-    
-    def __init__(self):
-        super().__init__()
-        
-    def on_initialize(self):
-        self.editor = EditorLayout(self.get_screen())
-
-    def on_stop(self):
-        pass
-    
-    def on_back(self):
-        return False
-        
-    def on_resize(self, window, width, height):
-        pass
-        
-    def on_update(self, dt):
-        pass
 
 class Editor(CodeInput):
     def __init__(self, ui, parent_tap, *args, **kargs):
@@ -146,21 +128,24 @@ class EditorLayout():
     text_inputs_scroll_view = None
     editor_input = None
     
-    def __init__(self, screen):
+    def __init__(self, app):
         self.reFocusInputText = False
-        self.screen = screen 
+        self.app = app
+
+    def build(self):
+        self.main_layout = RelativeLayout(size_hint=(1,1)) 
         # document list
         W, H = Window.size 
         height = kivy.metrics.dp(45)
         self.documentTitlescroll_view = ScrollView(size_hint=(None, None), size=(W, height), pos=(0, H-height))
         self.documentTitleLayout = BoxLayout(size_hint=(None, 1))
         self.documentTitlescroll_view.add_widget(self.documentTitleLayout)
-        self.screen.add_widget(self.documentTitlescroll_view)
+        self.main_layout.add_widget(self.documentTitlescroll_view)
         
         # menu layout
         height = kivy.metrics.dp(35)
         self.menuLayout = BoxLayout(size_hint=(1, None), height=height)
-        self.screen.add_widget(self.menuLayout)
+        self.main_layout.add_widget(self.menuLayout)
         self.menuDropDown = DropDown(size=(0,0), auto_dismiss=True)
         btn_menu = Button(text="Menu", size_hint_y=None, height=height, background_color=darkGray)
         def menuOpen(inst):
@@ -188,6 +173,10 @@ class EditorLayout():
         self.menuDropDown.add_widget(btn_delete)
         self.menuLayout.add_widget(self.menuDropDown)
         
+        btn_console = Button(text="Console", background_color=[1.5,0.8,0.8,2])
+        btn_console.bind(on_release=lambda inst:self.app.open_console())
+        self.menuLayout.add_widget(btn_console)
+
         btn_undo = Button(text="Undo", background_color=darkGray)
         btn_undo.bind(on_release=lambda inst:self.editor_input.do_undo())
         btn_redo = Button(text="Redo", background_color=darkGray)
@@ -199,17 +188,6 @@ class EditorLayout():
         self.menuLayout.add_widget(btn_redo)
         self.menuLayout.add_widget(btn_run)
         
-        # screen menu layout
-        self.screenMenuLayout = BoxLayout(orientation="horizontal", size_hint=(1, None), height="35dp")
-        btn_console = Button(text="Console", background_color=[1.5,0.8,0.8,2])
-        btn_editor = Button(text="Code Editor", background_color=[0.8,1.5,0.8,2])
-        btn_tutorial = Button(text="Python Tutorial", background_color=[0.8,0.8,1.5,2])
-        btn_console.bind(on_release=lambda inst:self.setMode(szConsole))
-        btn_tutorial.bind(on_release=lambda inst:self.setMode(szTutorial))
-        self.screenMenuLayout.add_widget(btn_console)
-        self.screenMenuLayout.add_widget(btn_editor)
-        self.screenMenuLayout.add_widget(btn_tutorial)
-        self.screen.add_widget(self.screenMenuLayout)
         
         # load last opened document
         self.load_config()
@@ -291,7 +269,7 @@ class EditorLayout():
         self.documentTitlescroll_view.scroll_x = 1
         
         # text input
-        editor_input = Editor(ui=self, parent_tap=btn_tap, text = "text", lexer=CythonLexer(), multiline=True, size_hint=(2, None), font_name=defaultFont, auto_indent = True,
+        editor_input = Editor(ui=self, parent_tap=btn_tap, text = "text", lexer=CythonLexer(), multiline=True, size_hint=(2, None), font_name=constants.DEFAULT_FONT_NAME, auto_indent = True,
             background_color=(.9, .9, .9, 1), font_size="14dp", padding_x="20dp", padding_y="15dp")    
         editor_input.height = editor_input.minimum_height
         editor_input.text = ""
@@ -302,11 +280,11 @@ class EditorLayout():
         editor_input.bind(focus = self.inputBoxFocus)
         
         # textinput scroll view
-        text_inputs_scroll_view = ScrollView(size_hint=(None, None), size = (W, editor_input.minimum_height))
-        text_inputs_scroll_view.add_widget(editor_input)
-        text_inputs_scroll_view.scroll_y = 0
+        self.text_inputs_scroll_view = ScrollView(size_hint=(None, None), size = (W, editor_input.minimum_height))
+        self.text_inputs_scroll_view.add_widget(editor_input)
+        self.text_inputs_scroll_view.scroll_y = 0
         # add to _map
-        self.document_map[btn_tap] = (text_inputs_scroll_view, editor_input)
+        self.document_map[btn_tap] = (self.text_inputs_scroll_view, editor_input)
         # show document
         self.change_document(btn_tap)
         
@@ -370,7 +348,7 @@ class EditorLayout():
             if self.text_inputs_scroll_view and self.text_inputs_scroll_view.parent:
                 self.text_inputs_scroll_view.parent.remove_widget(self.text_inputs_scroll_view)
             self.text_inputs_scroll_view, self.editor_input = self.document_map[inst]
-            self.screen.add_widget(self.text_inputs_scroll_view)
+            self.main_layout.add_widget(self.text_inputs_scroll_view)
             self.refreshLayout()
             
     def open_file(self, filename):
@@ -398,8 +376,7 @@ class EditorLayout():
         
     def runCode(self, inst):
         if self.editor_input.text.strip():
-            self.ui.onConsoleInput(self.editor_input, True)
-            self.setMode(szConsole)
+            self.app.open_console(self.editor_input.text)
         
     def touchPrev(self):
         if self.editor_input and self.editor_input.focus:
@@ -430,10 +407,9 @@ class EditorLayout():
     def refreshLayout(self):
         W, H = Window.size 
         keyboardHeight = 0 #gMyRoot.getKeyboardHeight() if self.editor_input.focus else 0
-        height = H - (keyboardHeight + self.menuLayout.height + self.screenMenuLayout.height + self.documentTitlescroll_view.height + topMargin)
+        height = H - (keyboardHeight + self.menuLayout.height + self.documentTitlescroll_view.height + topMargin)
         self.documentTitlescroll_view.top = H - topMargin
-        self.screenMenuLayout.pos = (0, keyboardHeight)
-        self.menuLayout.pos = (0, self.screenMenuLayout.top)
+        self.menuLayout.pos = (0, keyboardHeight)
         self.text_inputs_scroll_view.pos = (0, self.menuLayout.top)
         self.text_inputs_scroll_view.size = (W, height)
         self.editor_input.height = max(height, self.editor_input.minimum_height)

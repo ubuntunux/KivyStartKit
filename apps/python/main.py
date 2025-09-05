@@ -11,7 +11,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.textinput import TextInput
-
+from kivy.uix.widget import Widget
 from core.base_app import BaseApp
 from core import constants
 
@@ -21,7 +21,7 @@ from .constants import *
 from .evaluator import Evaluator
 from .listener import Listener
 from .memory import Memory
-
+from .code_editor import EditorLayout
 
 class JarvisApp(BaseApp):
     app_name = "Python"
@@ -46,8 +46,11 @@ class JarvisApp(BaseApp):
         self.output_line_index = 0
         self.output_layout = None
         self.output_scroll_view = None
+        self.main_layout = None 
         self.is_first_update = True
         self.save_text_list = []
+
+        self.code_editor = EditorLayout(self) 
       
         # # create
         # chairman_thread = Thread(target=chairman, args=[memory])
@@ -81,8 +84,13 @@ class JarvisApp(BaseApp):
         self.load_data()  
 
     def build(self):
+        self.build_console()
+        self.code_editor.build()
+        self.open_console()
+
+    def build_console(self):
         layout = BoxLayout(orientation='vertical', size=(1, 1))
-        self.add_widget(layout)
+        self.main_layout = layout
 
         self.output_scroll_view = ScrollView(size_hint=(1, None))
         self.output_layout = BoxLayout(size_hint=(None,None))
@@ -118,6 +126,19 @@ class JarvisApp(BaseApp):
     def on_resize(self, window, width, height):
         pass
         
+    def open_console(self, code=''):
+        if self.code_editor.main_layout.parent:
+            self.remove_widget(self.code_editor.main_layout)
+        if not self.main_layout.parent:
+            self.add_widget(self.main_layout)
+            self.listener.execute_code(code)
+
+    def open_editor(self):
+        if self.main_layout.parent:
+            self.remove_widget(self.main_layout) 
+        if not self.code_editor.main_layout.parent:
+          self.add_widget(self.code_editor.main_layout)
+
     def load_data(self):
         try:
             # load history
