@@ -105,7 +105,8 @@ class JarvisApp(BaseApp):
             size=(0,0),
             background_color=(1, 1, 1, 0),
             foreground_color=(1, 1, 1, 1),
-            do_wrap=False
+            do_wrap=False,
+            keyboard_mode="managed"
         )
         self.output_layout.add_widget(self.output)
         self.output_scroll_view.add_widget(self.output_layout)

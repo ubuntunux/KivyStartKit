@@ -57,7 +57,9 @@ class MainApp(App, SingletonInstance):
         self.root_widget = None
         self.screen_helper = None
         self.ui_manager = UIManager()
-        self.exit_popup = KivyPopup()
+        self.exit_popup = None
+        self.error_message = None
+        self.error_message_popup = None 
         self.key_press_time = {}
 
         self.bind(on_start=self.do_on_start)
@@ -90,11 +92,20 @@ class MainApp(App, SingletonInstance):
         btn_no = Button(text='No')
         btn_yes.bind(on_press=on_press_yes)
         btn_no.bind(on_press=lambda inst: self.exit_popup.dismiss())
+        self.exit_popup = KivyPopup()
         self.exit_popup.initialize_popup(
             title="Exit",
             content_widget=content_widget,
             buttons=[btn_no, btn_yes]
         )
+
+        self.error_message = Label(text="")
+        self.error_message_popup = KivyPopup()
+        self.error_message_popup.initialize_popup(
+            title="Error",
+            content_widget=self.error_message
+        )
+
         return self.root_widget
 
     def destroy(self):
@@ -245,8 +256,7 @@ class MainApp(App, SingletonInstance):
         except:
             error = traceback.format_exc()
             Logger.info(error)
-            # todo - popup message
-            toast(error)
+            self.error_message.text = error
             return
 
         if app is None or not isinstance(app, BaseApp):
@@ -262,8 +272,7 @@ class MainApp(App, SingletonInstance):
             except:
                 error = traceback.format_exc()
                 Logger.info(error)
-                # todo - popup message
-                toast(error)
+                self.error_message.text = error
                 return
 
             self.ui_manager.create_active_app_button(

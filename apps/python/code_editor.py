@@ -15,11 +15,12 @@ from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.screenmanager import Screen
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.widget import Widget
+from pygments.lexers import CythonLexer
+
 from core.base_app import BaseApp
 from core import constants
-
 from utility.toast import toast
-from pygments.lexers import CythonLexer
+from .file_browser import FileBrowser
 
 directory = os.path.split(__file__)[0]
 configFile = os.path.join(directory, "pyinterpreter.cfg")
@@ -38,11 +39,15 @@ darkGray = [0.4, 0.4, 0.4, 2]
 class Editor(CodeInput):
     def __init__(self, ui, parent_tap, *args, **kargs):
         CodeInput.__init__(self, *args, **kargs)
+        self.keyboard_mode = "auto" # auto, managed
+        self.text = ""
+        self.height = self.minimum_height
         self.ui = ui
         self.old_text = ""
         self.parent_tap = parent_tap
         self.filename = ""
         self.dirty = False
+        self.run_on_enter = None
 
     def set_filename(self, filename):
         self.filename = filename
@@ -130,10 +135,15 @@ class EditorLayout():
     
     def __init__(self, app):
         self.reFocusInputText = False
+        self.file_browser = FileBrowser()
         self.app = app
 
     def build(self):
-        self.main_layout = RelativeLayout(size_hint=(1,1)) 
+        self.build_editor_layout()
+        self.file_browser.build_file_browser()
+
+    def build_editor_layout(self):
+        self.main_layout = BoxLayout(orientation='vertical', size=(1, 1))
         # document list
         W, H = Window.size 
         height = kivy.metrics.dp(45)
@@ -142,6 +152,9 @@ class EditorLayout():
         self.documentTitlescroll_view.add_widget(self.documentTitleLayout)
         self.main_layout.add_widget(self.documentTitlescroll_view)
         
+        self.documentLayout = BoxLayout(size_hint=(None, 1))
+        self.main_layout.add_widget(self.documentLayout)
+
         # menu layout
         height = kivy.metrics.dp(35)
         self.menuLayout = BoxLayout(size_hint=(1, None), height=height)
@@ -156,7 +169,7 @@ class EditorLayout():
         btn_new = Button(text="New", size_hint_y=None, height=height, background_color=darkGray)
         btn_new.bind(on_release = self.createdocument, on_press=self.menuDropDown.dismiss)
         btn_open = Button(text="Open", size_hint_x=0.3, size_hint_y=None, height=height, background_color=darkGray)
-        btn_open.bind(on_release=lambda inst:self.setMode(szFileBrowserOpen), on_press=self.menuDropDown.dismiss)
+        btn_open.bind(on_release=lambda inst:self.file_browser.showOpenLayout(), on_press=self.menuDropDown.dismiss)
         btn_close = Button(text="Close", size_hint_y=None, height=height, background_color=darkGray)
         btn_close.bind(on_release=lambda inst:self.closedocument(self.editor_input), on_press=self.menuDropDown.dismiss)
         btn_delete = Button(text="Delete", size_hint_y=None, height=height, background_color=darkGray)
@@ -164,14 +177,14 @@ class EditorLayout():
         btn_save = Button(text="Save", size_hint_y=None, height=height, background_color=darkGray)
         btn_save.bind(on_release=lambda inst:self.editor_input.save_file(), on_press=self.menuDropDown.dismiss)
         btn_saveas = Button(text="Save As", size_hint_y=None, height=height, background_color=darkGray)
-        btn_saveas.bind(on_release=lambda inst:self.setMode(szFileBrowserSaveAs), on_press=self.menuDropDown.dismiss)
+        btn_saveas.bind(on_release=lambda inst:self.file_browser.showSaveAsLayout(), on_press=self.menuDropDown.dismiss)
         self.menuDropDown.add_widget(btn_new)
         self.menuDropDown.add_widget(btn_open)
         self.menuDropDown.add_widget(btn_close)
         self.menuDropDown.add_widget(btn_save)
         self.menuDropDown.add_widget(btn_saveas)
         self.menuDropDown.add_widget(btn_delete)
-        self.menuLayout.add_widget(self.menuDropDown)
+        #self.menuLayout.add_widget(self.menuDropDown)
         
         btn_console = Button(text="Console", background_color=[1.5,0.8,0.8,2])
         btn_console.bind(on_release=lambda inst:self.app.open_console())
@@ -181,13 +194,12 @@ class EditorLayout():
         btn_undo.bind(on_release=lambda inst:self.editor_input.do_undo())
         btn_redo = Button(text="Redo", background_color=darkGray)
         btn_redo.bind(on_release=lambda inst:self.editor_input.do_redo())
-        btn_run = Button(text="Run", background_color=darkGray)
+        btn_run = Button(text="Run", background_color=(1.3, 1.3, 2,2))
         btn_run.bind(on_release = self.runCode)
         self.menuLayout.add_widget(btn_menu)
         self.menuLayout.add_widget(btn_undo)
         self.menuLayout.add_widget(btn_redo)
         self.menuLayout.add_widget(btn_run)
-        
         
         # load last opened document
         self.load_config()
@@ -271,20 +283,13 @@ class EditorLayout():
         # text input
         editor_input = Editor(ui=self, parent_tap=btn_tap, text = "text", lexer=CythonLexer(), multiline=True, size_hint=(2, None), font_name=constants.DEFAULT_FONT_NAME, auto_indent = True,
             background_color=(.9, .9, .9, 1), font_size="14dp", padding_x="20dp", padding_y="15dp")    
-        editor_input.height = editor_input.minimum_height
-        editor_input.text = ""
-        def refresheditor_inputSize(*args):
-            if editor_input.size[1] != editor_input.minimum_height:
-                self.refreshLayout()
-        editor_input.run_on_enter = refresheditor_inputSize
-        editor_input.bind(focus = self.inputBoxFocus)
-        
+
         # textinput scroll view
-        self.text_inputs_scroll_view = ScrollView(size_hint=(None, None), size = (W, editor_input.minimum_height))
-        self.text_inputs_scroll_view.add_widget(editor_input)
-        self.text_inputs_scroll_view.scroll_y = 0
+        text_inputs_scroll_view = ScrollView(size_hint=(None, None), size = (W, editor_input.minimum_height))
+        text_inputs_scroll_view.add_widget(editor_input)
+        text_inputs_scroll_view.scroll_y = 0
         # add to _map
-        self.document_map[btn_tap] = (self.text_inputs_scroll_view, editor_input)
+        self.document_map[btn_tap] = (text_inputs_scroll_view, editor_input)
         # show document
         self.change_document(btn_tap)
         
@@ -348,7 +353,7 @@ class EditorLayout():
             if self.text_inputs_scroll_view and self.text_inputs_scroll_view.parent:
                 self.text_inputs_scroll_view.parent.remove_widget(self.text_inputs_scroll_view)
             self.text_inputs_scroll_view, self.editor_input = self.document_map[inst]
-            self.main_layout.add_widget(self.text_inputs_scroll_view)
+            self.documentLayout.add_widget(self.text_inputs_scroll_view)
             self.refreshLayout()
             
     def open_file(self, filename):
@@ -396,6 +401,7 @@ class EditorLayout():
             self.editor_input.focus = bFocus 
             
     def inputBoxFocus(self, inst, bFocus):
+        return
         bAlwaysPreserveFocus = True
         if not bFocus:
             if self.reFocusInputText:

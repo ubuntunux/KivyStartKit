@@ -1,10 +1,27 @@
+import os
 import traceback
 
-import Utility as Util
-from Utility import *
+import kivy
+from kivy.core.window import Window
+from kivy.uix.label import Label
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.textinput import TextInput
+from kivy.logger import Logger
+from kivy.uix.button import Button
+from kivy.uix.popup import Popup
+from kivy.uix.relativelayout import RelativeLayout
+from kivy.uix.scrollview import ScrollView
+from kivy.uix.widget import Widget
 
-from .Constants import *
+from utility.toast import toast
+from utility.kivy_helper import *
+from utility.kivy_widgets import *
 
+directory = os.path.split(__file__)[0]
+configFile = os.path.join(directory, "pyinterpreter.cfg")
+tempDirectory = os.path.join(directory, "temp")
+pythonLogo = os.path.join(directory, "python_logo.png")
+defaultFont = kivy.resources.resource_find(os.path.join(directory, "fonts", "DroidSansMonoDotted.ttf"))
 
 global gFileBrowser
 
@@ -32,24 +49,27 @@ class TouchableLabel(Label):
 #---------------------#
 # CLASS : FileBrowser
 #---------------------#    
-class FileBrowser(Singleton):
-  def __init__(self, ui):
+class FileBrowser:
+  def __init__(self):
     global gFileBrowser
     gFileBrowser = self
-    self.ui = ui
     self.lastDir = os.path.abspath("/")
-    self.mode = ""
+    self.is_file_open = False
+
+  def build_file_browser(self):
+    W, H = Window.size 
+
     # filename input layout
     self.filenameLayout = BoxLayout(orientation = "horizontal", size_hint=(1, None))
-    self.filenameInput = TextInput(text="input filename", multiline = False, padding_y="15dp", font_name=defaultFont, size_hint=(1,None))
+    self.filenameInput = TextInput(text="input filename", multiline = False, padding_y="15dp", size_hint=(1,None))
     self.filenameInput.height = self.filenameInput.minimum_height
     self.filenameLayout.height = self.filenameInput.height
     self.filenameInput.bind(focus=self.inputBoxFocus)
     self.btn_ok = Button(text="Ok", size_hint=(0.2,1), background_color=[1,1,1,2])
     def func_ok(inst):
-      if self.mode == szFileBrowserOpen:
+      if self.is_file_open:
         self.open_file()
-      elif self.mode == szFileBrowserSaveAs:
+      else:
         self.save_as()
     self.btn_ok.bind(on_release = func_ok)
     self.filenameLayout.add_widget(self.filenameInput)
@@ -75,7 +95,7 @@ class FileBrowser(Singleton):
     try:
       lastDir, dirList, fileList = os.walk(absPath).next()
     except:
-      log(traceback.format_exc())
+      Logger.info(traceback.format_exc())
       toast("Cannot open directory")
       return False
     self.lastDir = absPath
@@ -115,14 +135,14 @@ class FileBrowser(Singleton):
     self.filenameInput.text = filename
       
   def showOpenLayout(self):
-    self.mode = szFileBrowserOpen
+    self.is_file_open = True
     self.btn_ok.text = "Open"
     self.filenameInput.text = ""
     self.popup.open()
     self.open_directory(self.lastDir)
   
   def showSaveAsLayout(self):
-    self.mode = szFileBrowserSaveAs
+    self.is_file_open = False
     self.btn_ok.text = "Save"
     self.filenameInput.text = ""
     self.popup.open()

@@ -79,7 +79,7 @@ class Listener:
         px = metrics.dp(20)
         self.input_layout = BoxLayout(
             orientation='horizontal',
-            size_hint=(1.0, 1.0),
+            size_hint=(1.0, None),
             height=text_height
         )
         self.root_layout.add_widget(self.input_layout)
@@ -216,6 +216,7 @@ class Listener:
                 if not run_code and (not is_cursor_at_end or lastline[-1] in ("\\", ":") or self.is_indent_mode):
                     self.is_indent_mode = True
                     text_input.height = text_input.minimum_height
+                    self.input_layout.height = text_input.height
                     return
 
             # prepare running command
@@ -260,20 +261,25 @@ class Listener:
             sys.stdout = prev_stdout
             text_input.text = ''
             text_input.height = text_input.minimum_height
+            self.input_layout.height = text_input.height
             #text_input.focus = True
     
     def execute_code(self, code):
-        self.text_input.text = code 
-        self.text_input.height = self.text_input.minimum_height
+        code = code.strip()
+        if code:
+            self.text_input.text = code 
+            self.text_input.height = self.text_input.minimum_height
+            self.input_layout.height = self.text_input.height
+            self.execute_command(self.text_input, True)
 
     def on_key_down(self, keyboard, keycode, key, modifiers):
         if self.text_input.focus:
             key_name = keycode[1]
             if key_name == 'enter' or key_name == 'numpadenter':
                 self.execute_command(self.text_input, False)
-            elif key_name == 'up':
+            elif key_name == 'up' and '\n' not in self.text_input.text:
                 self.on_press_prev(None)
-            elif key_name == 'down':
+            elif key_name == 'down' and '\n' not in self.text_input.text:
                 self.on_press_next(None)
 
     def keyboard_closed(self, *args):
@@ -305,6 +311,7 @@ class Listener:
         
         self.text_input.text = self.history[self.history_index]
         self.text_input.height = self.text_input.minimum_height
+        self.input_layout.height = self.text_input.height
         self.is_indent_mode = self.text_input.text.find("\n") > -1
         
     def on_press_editor(self, inst):
