@@ -264,13 +264,15 @@ class Listener:
             self.input_layout.height = text_input.height
             #text_input.focus = True
     
-    def execute_code(self, code):
+    def execute_external_code(self, code):
         code = code.strip()
         if code:
+            backup = self.text_input.text
             self.text_input.text = code 
+            self.execute_command(self.text_input, True)
+            self.text_input.text = backup
             self.text_input.height = self.text_input.minimum_height
             self.input_layout.height = self.text_input.height
-            self.execute_command(self.text_input, True)
 
     def on_key_down(self, keyboard, keycode, key, modifiers):
         if self.text_input.focus:
@@ -281,6 +283,8 @@ class Listener:
                 self.on_press_prev(None)
             elif key_name == 'down' and '\n' not in self.text_input.text:
                 self.on_press_next(None)
+            self.text_input.height = self.text_input.minimum_height
+            self.input_layout.height = self.text_input.height
 
     def keyboard_closed(self, *args):
         pass

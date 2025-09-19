@@ -66,9 +66,10 @@ class MainApp(App, SingletonInstance):
 
     def build(self):
         #Window.maximize()
-        Window.softinput_mode = 'below_target'
-        # keyboard_mode: '', 'system', 'dock', 'multi', 'systemanddock', 'systemandmulti'
-        Config.set('kivy', 'keyboard_mode', 'system')
+        softinput_modes = ['pan', 'below_target', 'resize', 'scale']
+        Window.softinput_mode = softinput_modes[0]
+        keyboard_modes = ['', 'system', 'dock', 'multi', 'systemanddock', 'systemandmulti']
+        Config.set('kivy', 'keyboard_mode', keyboard_modes[1])
         Window.configure_keyboards()
         Window.bind(on_resize=self.on_resize)
         Window.bind(on_key_up=self.on_key_up)

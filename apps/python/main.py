@@ -132,7 +132,7 @@ class JarvisApp(BaseApp):
             self.remove_widget(self.code_editor.main_layout)
         if not self.main_layout.parent:
             self.add_widget(self.main_layout)
-            self.listener.execute_code(code)
+            self.listener.execute_external_code(code)
 
     def open_editor(self):
         if self.main_layout.parent:
