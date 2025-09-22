@@ -143,7 +143,7 @@ class EditorLayout():
         self.file_browser.build_file_browser()
 
     def build_editor_layout(self):
-        self.main_layout = BoxLayout(orientation='vertical', size=(1, 1))
+        self.main_layout = BoxLayout(orientation='vertical', size_hint=(1, None))
         # document list
         W, H = Window.size 
         height = kivy.metrics.dp(45)
@@ -152,7 +152,7 @@ class EditorLayout():
         self.documentTitlescroll_view.add_widget(self.documentTitleLayout)
         self.main_layout.add_widget(self.documentTitlescroll_view)
         
-        self.documentLayout = BoxLayout(size_hint=(1, 1))
+        self.documentLayout = BoxLayout(size_hint=(1, None))
         self.main_layout.add_widget(self.documentLayout)
 
         # menu layout
@@ -271,11 +271,14 @@ class EditorLayout():
 
     def on_key_down(self, keyboard, keycode, key, modifiers):
         if self.editor_input.focus:
-            self.refreshLayout()
+          self.refreshLayout(True)
 
     def keyboard_closed(self, *args):
-        pass
-        
+        self.refreshLayout(False)
+    
+    def on_focus_document(self, inst, focus):
+        self.refreshLayout(focus)
+
     def createdocument(self, *args):
         W, H = Window.size 
         # add docjment _tap
@@ -362,6 +365,8 @@ class EditorLayout():
             
     def change_document(self, inst):
         if inst in self.document_map and inst != self.current_document_tap:
+            if self.editor_input:
+                self.editor_input.bind(on_focus=None)
             # old _tap restore color
             if self.current_document_tap:
                 self.current_document_tap.background_color = darkGray
@@ -377,7 +382,7 @@ class EditorLayout():
             keyboard.bind(on_key_down=self.on_key_down)
             Window.release_keyboard()
             self.editor_input.keyboard_mode = "auto" # auto, managed
-
+            self.editor_input.bind(focus=self.on_focus_document)
             self.refreshLayout()
             
     def open_file(self, filename):
@@ -404,14 +409,14 @@ class EditorLayout():
         self.editor_input.save_as_file(filename)
         
     def runCode(self, inst):
-        self.editor_input.text += str(Window.height)
-        
         if self.editor_input.text.strip():
             self.app.open_console(self.editor_input.text)
 
-    def refreshLayout(self):
-        #self.editor_input.text += str(Window.height)
-        #self.text_inputs_scroll_view.y = self.editor_input.y
-        self.editor_input.height = self.editor_input.minimum_height
-        self.text_inputs_scroll_view.height = self.editor_input.height
-        #self.documentLayout.height = self.editor_input.height
+    def refreshLayout(self, is_keyboard_open=False):
+        if is_keyboard_open:
+            self.documentLayout.height = Window.height * 0.5
+        else: 
+            self.documentLayout.height = Window.height - self.documentTitlescroll_view.height - self.menuLayout.height
+        self.editor_input.height = max(self.documentLayout.height, self.editor_input.minimum_height)
+        #self.text_inputs_scroll_view.height = self.editor_input.height
+
