@@ -1,7 +1,7 @@
 {
 "emitter_data": {
     "sound_file":"hits/clap_hi",
-    "particle_count": 10
+    "particle_count": 20
 },
 "particle_data": {
     "is_world_space":True,

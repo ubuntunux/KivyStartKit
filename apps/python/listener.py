@@ -85,12 +85,12 @@ class Listener:
         self.root_layout.add_widget(self.input_layout)
         
         # undo
-        btn_undo = Button(size_hint=(None, 1), width=metrics.dp(60), text="Undo")
-        btn_undo.bind(on_press=self.on_press_undo)
-        
+        btn_prev = Button(size_hint=(None, 1), width=metrics.dp(60), text="Prev")
+        btn_prev.bind(on_press=self.on_press_prev)
+       
         # redo
-        btn_redo = Button(size_hint=(None, 1), width=metrics.dp(60), text="Redo")
-        btn_redo.bind(on_press=self.on_press_redo)
+        btn_next = Button(size_hint=(None, 1), width=metrics.dp(60), text="Next")
+        btn_next.bind(on_press=self.on_press_next)
 
         # input widget
         px = metrics.dp(10)
@@ -111,9 +111,9 @@ class Listener:
         Window.release_keyboard()
         self.text_input.keyboard_mode = "auto" # auto, managed
         
-        self.input_layout.add_widget(btn_undo)
+        self.input_layout.add_widget(btn_prev)
         self.input_layout.add_widget(self.text_input)
-        self.input_layout.add_widget(btn_redo)
+        self.input_layout.add_widget(btn_next)
         
         # auto complete
         self.command_list_layout = ScatterLayout(
@@ -146,14 +146,14 @@ class Listener:
         btn_editor = Button(size_hint=(1, 1), text="Editor", background_color=(0.6,0.6,0.6))
         btn_editor.bind(on_press=self.on_press_editor)
 
-        # prev
-        btn_prev = Button(size_hint=(1, 1), text="<<", background_color=dark_gray)
-        btn_prev.bind(on_press=self.on_press_prev)
+        # undo
+        btn_undo = Button(size_hint=(1, 1), text="Undo", background_color=dark_gray)
+        btn_undo.bind(on_press=self.on_press_undo)
 
         # next
-        btn_next = Button(size_hint=(1, 1), text=">>", background_color=dark_gray)
-        btn_next.bind(on_press=self.on_press_next)
-        
+        btn_redo = Button(size_hint=(1, 1), text="Redo", background_color=dark_gray)
+        btn_redo.bind(on_press=self.on_press_redo)
+
         # clear
         def on_clear(*args):
             self.app.clear_output()
@@ -175,10 +175,10 @@ class Listener:
         '''
         
         self.top_layout.add_widget(logo_image)
-        self.top_layout.add_widget(btn_editor)
-        self.top_layout.add_widget(btn_prev)
-        self.top_layout.add_widget(btn_next)
         self.top_layout.add_widget(btn_clear)
+        self.top_layout.add_widget(btn_undo)
+        self.top_layout.add_widget(btn_redo)
+        self.top_layout.add_widget(btn_editor)
         self.top_layout.add_widget(btn_enter)
         
         self.on_resize(Window, Window.width, Window.height)

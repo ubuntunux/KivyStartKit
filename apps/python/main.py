@@ -125,7 +125,7 @@ class JarvisApp(BaseApp):
         return False
     
     def on_resize(self, window, width, height):
-        pass
+        self.code_editor.on_resize(window, width, height)
         
     def open_console(self, code=''):
         if self.code_editor.main_layout.parent:

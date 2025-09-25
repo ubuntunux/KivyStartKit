@@ -155,7 +155,6 @@ class DirectionController:
             mag_x = min(1, max(0, abs(diff[0]) - self.dead_zone_size))
             mag_y = min(1, max(0, abs(diff[1]) - self.dead_zone_size))
             direction = Vector(diff[0] * mag_x, diff[1] * mag_y).normalize()
-            MOVEMENT_1D = True
             if MOVEMENT_1D:
                 dir_x = sign(direction.x)
                 dir_y = sign(direction.y)

@@ -137,6 +137,7 @@ class EditorLayout():
         self.reFocusInputText = False
         self.file_browser = FileBrowser()
         self.app = app
+        self. is_keyboard_open = False
 
     def build(self):
         self.build_editor_layout()
@@ -159,13 +160,9 @@ class EditorLayout():
         height = kivy.metrics.dp(35)
         self.menuLayout = BoxLayout(size_hint=(1, None), height=height)
         self.main_layout.add_widget(self.menuLayout)
-        self.menuDropDown = DropDown(size=(0,0), auto_dismiss=True)
+        self.menuDropDown = DropDown(size_hint=(1,1), auto_dismiss=True)
         btn_menu = Button(text="Menu", size_hint_y=None, height=height, background_color=darkGray)
-        def menuOpen(inst):
-            if not self.menuDropDown.parent:
-                self.inputBoxForceFocus(False)
-                self.menuDropDown.open(inst)
-        btn_menu.bind(on_release = menuOpen)
+        btn_menu.bind(on_release = lambda inst:self.menuDropDown.open(inst))
         btn_new = Button(text="New", size_hint_y=None, height=height, background_color=darkGray)
         btn_new.bind(on_release = self.createdocument, on_press=self.menuDropDown.dismiss)
         btn_open = Button(text="Open", size_hint_x=0.3, size_hint_y=None, height=height, background_color=darkGray)
@@ -184,12 +181,9 @@ class EditorLayout():
         self.menuDropDown.add_widget(btn_save)
         self.menuDropDown.add_widget(btn_saveas)
         self.menuDropDown.add_widget(btn_delete)
-        self.menuLayout.add_widget(self.menuDropDown)
         
         btn_console = Button(text="Console", background_color=[1.5,0.8,0.8,2])
         btn_console.bind(on_release=lambda inst:self.app.open_console())
-        self.menuLayout.add_widget(btn_console)
-
         btn_undo = Button(text="Undo", background_color=darkGray)
         btn_undo.bind(on_release=lambda inst:self.editor_input.do_undo())
         btn_redo = Button(text="Redo", background_color=darkGray)
@@ -199,8 +193,26 @@ class EditorLayout():
         self.menuLayout.add_widget(btn_menu)
         self.menuLayout.add_widget(btn_undo)
         self.menuLayout.add_widget(btn_redo)
+        self.menuLayout.add_widget(btn_console)
         self.menuLayout.add_widget(btn_run)
         
+        # popup close document
+        self.popup_content_widget = Label(text="Do you really want to quit?")
+        self.popup_func_yes = None
+        def on_press_yes(inst):
+            self.stop()
+            self.exit_popup.dismiss()
+        btn_yes = Button(text='Yes')
+        btn_no = Button(text='No')
+        btn_yes.bind(on_press=on_press_yes)
+        btn_no.bind(on_press=lambda inst: self.exit_popup.dismiss())
+        self.popup = KivyPopup()
+        self.popup.initialize_popup(
+            title="Exit",
+            content_widget=content_widget,
+            buttons=[btn_no, btn_yes]
+        )
+
         # load last opened document
         self.load_config()
         
@@ -319,26 +331,27 @@ class EditorLayout():
         
     def closedocument(self, editor_input, force = False):
         if editor_input:
-            _tap = editor_input.parent_tap
-            if _tap in self.document_map:
+            tap = editor_input.parent_tap
+            if tap in self.document_map:
                 def close():
-                    _tapIndex = self.document_map.keys().index(_tap)
-                    scrollView = self.document_map.pop(_tap)[0]
-                    if _tap in self.documentTitleLayout.children:
-                        self.documentTitleLayout.remove_widget(_tap)
-                        self.documentTitleLayout.width -= _tap.width
+                    tapIndex = list(self.document_map.keys()).index(tap)
+                    scrollView = self.document_map.pop(tap)[0]
+                    if tap in self.documentTitleLayout.children:
+                        self.documentTitleLayout.remove_widget(tap)
+                        self.documentTitleLayout.width -= tap.width
                     if scrollView.parent:
                         scrollView.parent.remove_widget(scrollView)
                     if len(self.document_map) == 0:
                         self.createdocument()
                     # if current doc, select next document
                     elif self.editor_input == editor_input:
-                        _tapIndex = min(_tapIndex, len(self.document_map) -1)
-                        self.change_document(self.document_map.keys()[_tapIndex])
+                        tapIndex = min(tapIndex, len(self.document_map) -1)
+                        self.change_document(list(self.document_map.keys())[tapIndex])
                 # do close
                 if force or not editor_input.dirty:
                     close()
                 elif editor_input.dirty:
+                    
                     gMyRoot.popup("File has unsaved changes.", "Really close file?", close, None)    
     
     def closeSamedocument(self, editor_input):
@@ -365,8 +378,6 @@ class EditorLayout():
             
     def change_document(self, inst):
         if inst in self.document_map and inst != self.current_document_tap:
-            if self.editor_input:
-                self.editor_input.bind(on_focus=None)
             # old _tap restore color
             if self.current_document_tap:
                 self.current_document_tap.background_color = darkGray
@@ -413,6 +424,7 @@ class EditorLayout():
             self.app.open_console(self.editor_input.text)
 
     def refreshLayout(self, is_keyboard_open=False):
+        self. is_keyboard_open = is_keyboard_open
         if is_keyboard_open:
             self.documentLayout.height = Window.height * 0.5
         else: 
