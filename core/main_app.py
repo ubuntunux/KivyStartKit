@@ -100,11 +100,15 @@ class MainApp(App, SingletonInstance):
             buttons=[btn_no, btn_yes]
         )
 
-        self.error_message = Label(text="")
         self.error_message_popup = KivyPopup()
+        self.error_message = Label(text="")
+        btn_close = Button(text='Close')
+        btn_close.bind(on_press=lambda inst: self.error_message_popup.dismiss())
         self.error_message_popup.initialize_popup(
             title="Error",
-            content_widget=self.error_message
+            content_widget=self.error_message,
+            buttons=[btn_close],
+            size_hint=(1,1)
         )
 
         return self.root_widget
@@ -124,6 +128,14 @@ class MainApp(App, SingletonInstance):
 
     def set_orientation(self, orientation="all"):
         self.platform_api.set_orientation(orientation)
+
+    def on_error(self, message):
+        if message:
+            message = str(message)
+            self.error_message.text = message
+            if not self.error_message_popup.is_opened():
+                 self.error_message_popup.open()
+            Logger.error(message)
 
     def do_on_start(self, ev):
         self.register_modules()
@@ -194,7 +206,7 @@ class MainApp(App, SingletonInstance):
                 with open(filename, "r") as f:
                     app_info = eval(f.read())
             except:
-                Logger.error(traceback.format_exc())
+                self.on_error(traceback.format_exc())
             self.register_module_info(app_info)
         self.ui_manager.arrange_icons()
 
@@ -212,7 +224,7 @@ class MainApp(App, SingletonInstance):
                 loaded_module = sys.modules.get(module_name)
                 result = self.register_module(loaded_module)
             except:
-                Logger.error(traceback.format_exc())
+                self.on_error(traceback.format_exc())
         return result
 
     def register_module(self, module):
@@ -271,9 +283,7 @@ class MainApp(App, SingletonInstance):
             try:
                 app.initialize(display_name=display_name)
             except:
-                error = traceback.format_exc()
-                Logger.info(error)
-                self.error_message.text = error
+                self.on_error(traceback.format_exc())
                 return
 
             self.ui_manager.create_active_app_button(

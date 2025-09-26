@@ -5,12 +5,13 @@ import os
 
 import kivy
 from kivy.core.window import Window
+from kivy.logger import Logger
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.codeinput import CodeInput
 from kivy.uix.textinput import TextInput
 from kivy.uix.dropdown import DropDown
-from kivy.logger import Logger
 from kivy.uix.button import Button
+from kivy.uix.label import Label
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.screenmanager import Screen
 from kivy.uix.scrollview import ScrollView
@@ -20,6 +21,7 @@ from pygments.lexers import CythonLexer
 from core.base_app import BaseApp
 from core import constants
 from utility.toast import toast
+from utility.kivy_widgets import *
 from .file_browser import FileBrowser
 
 directory = os.path.split(__file__)[0]
