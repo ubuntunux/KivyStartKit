@@ -247,7 +247,7 @@ class MainApp(App, SingletonInstance):
         self.ui_manager.create_app_icon(
             module_path=module.__file__,
             icon_name=app_class.get_app_name(),
-            icon_file=LOGO_FILE,
+            icon_file=app_class.get_app_icon_file(),
             on_press=partial(create_app, module),
             on_long_press=partial(delete_app, module)
         )

@@ -5,6 +5,7 @@ from utility.singleton import SingletonInstance
 
 class BaseApp(SingletonInstance):
     app_name = "App"
+    app_icon_file = ""
     orientation = "all"
     allow_multiple_instance = False 
     
@@ -54,6 +55,10 @@ class BaseApp(SingletonInstance):
     def get_app_name(cls):
         return cls.app_name
     
+    @ classmethod
+    def get_app_icon_file(cls):
+        return cls.app_icon_file
+   
     @ classmethod
     def get_orientation(cls):
         return cls.orientation

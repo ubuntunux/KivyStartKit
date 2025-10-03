@@ -2,6 +2,7 @@ import configparser, tempfile, traceback
 from glob import glob
 from collections import OrderedDict
 import os
+from functools import partial
 
 import kivy
 from kivy.core.window import Window
@@ -84,7 +85,7 @@ class Editor(CodeInput):
             toast("Loaded : " + self.parent_tap.text)
         except:
             toast("Failed to load the file : " + os.path.split(filename)[1])
-            log(traceback.format_exc())
+            Logger.error(traceback.format_exc())
             return False
         return True
             
@@ -97,22 +98,20 @@ class Editor(CodeInput):
                     f.close()
                     self.set_dirty(False)
                     # check already opened document then close
-                    gEditorLayout.closeSamedocument(self)
+                    self.ui.closeSamedocument(self)
+                    self.set_filename(self.filename)
                     toast("Saved : " + self.parent_tap.text)
                 except:
-                    toast("Failed to save the file : " + os.path.split(filename)[1])
-                    log(traceback.format_exc())
-            else:
-                # untitled.document
-                gEditorLayout.setMode(szFileBrowserSaveAs)
-    
+                    toast("Failed to save the file : " + os.path.split(self.filename)[1])
+                    Logger.error(traceback.format_exc())
+   
     def save_as_file(self, filename):
-        def do_save():
+        def do_save(*args):
             self.filename = filename
             self.save_file(force = True)
         # check overwrite
         if self.filename != filename and os.path.isfile(filename):
-            gMyRoot.popup("File already exists. Overwrite?", os.path.split(filename)[1], do_save, None)
+            self.ui.open_popup("File already exists. Overwrite?", os.path.split(filename)[1], do_save, None)
         else:
             do_save()
     
@@ -137,13 +136,16 @@ class EditorLayout():
     
     def __init__(self, app):
         self.reFocusInputText = False
-        self.file_browser = FileBrowser()
+        self.file_browser = FileBrowser(self)
         self.app = app
         self. is_keyboard_open = False
 
     def build(self):
         self.build_editor_layout()
         self.file_browser.build_file_browser()
+    
+    def on_resize(self, *args):
+        pass
 
     def build_editor_layout(self):
         self.main_layout = BoxLayout(orientation='vertical', size_hint=(1, None))
@@ -174,9 +176,16 @@ class EditorLayout():
         btn_delete = Button(text="Delete", size_hint_y=None, height=height, background_color=darkGray)
         btn_delete.bind(on_release=lambda inst:self.deletedocument(self.editor_input), on_press=self.menuDropDown.dismiss)
         btn_save = Button(text="Save", size_hint_y=None, height=height, background_color=darkGray)
-        btn_save.bind(on_release=lambda inst:self.editor_input.save_file(), on_press=self.menuDropDown.dismiss)
+        def save_document(inst):
+            if self.editor_input.filename:
+                self.editor_input.save_file()
+            else:
+                self.file_browser.showSaveAsLayout(self.editor_input.filename)
+        btn_save.bind(on_release=save_document, on_press=self.menuDropDown.dismiss)
         btn_saveas = Button(text="Save As", size_hint_y=None, height=height, background_color=darkGray)
-        btn_saveas.bind(on_release=lambda inst:self.file_browser.showSaveAsLayout(), on_press=self.menuDropDown.dismiss)
+        def save_as_document(inst):
+            self.file_browser.showSaveAsLayout(self.editor_input.filename)
+        btn_saveas.bind(on_release=save_as_document, on_press=self.menuDropDown.dismiss)
         self.menuDropDown.add_widget(btn_new)
         self.menuDropDown.add_widget(btn_open)
         self.menuDropDown.add_widget(btn_close)
@@ -198,21 +207,15 @@ class EditorLayout():
         self.menuLayout.add_widget(btn_console)
         self.menuLayout.add_widget(btn_run)
         
-        # popup close document
-        self.popup_content_widget = Label(text="Do you really want to quit?")
-        self.popup_func_yes = None
-        def on_press_yes(inst):
-            self.stop()
-            self.exit_popup.dismiss()
-        btn_yes = Button(text='Yes')
-        btn_no = Button(text='No')
-        btn_yes.bind(on_press=on_press_yes)
-        btn_no.bind(on_press=lambda inst: self.exit_popup.dismiss())
+        # popup
+        self.popup_content = Label(text="content")
+        self.popup_btn_yes = Button(text='Yes')
+        self.popup_btn_no = Button(text='No')
         self.popup = KivyPopup()
         self.popup.initialize_popup(
-            title="Exit",
-            content_widget=content_widget,
-            buttons=[btn_no, btn_yes]
+            title="Title",
+            content_widget=self.popup_content,
+            buttons=[self.popup_btn_no, self.popup_btn_yes]
         )
 
         # load last opened document
@@ -255,7 +258,7 @@ class EditorLayout():
                 try:
                     os.remove(filename)
                 except:
-                    log(traceback.format_exc())
+                    Logger.error(traceback.format_exc())
         
     def save_config(self):
         # make section
@@ -276,13 +279,28 @@ class EditorLayout():
                         parser.set(doc_section, 'filename%d' % i, f.name)
                         parser.set(temp_section, f.name, editor_input.filename)
                     except:
-                        log(traceback.format_exc())
+                        Logger.error(traceback.format_exc())
                 else:
                     parser.set(doc_section, 'filename%d' % i, editor_input.filename)
             # save config file 
             with open(configFile, 'w') as f:
                 parser.write(f)
 
+    def open_popup(self, title, content, on_press_yes, on_press_no):
+        self.popup.dismiss()
+        self.popup.set_title(title)
+        self.popup_content.text = content
+        def nothing(*args):
+            pass
+        self.popup_btn_yes.bind(on_press=on_press_yes or nothing)
+        self.popup_btn_yes.bind(on_release=self.close_popup)
+        self.popup_btn_no.bind(on_press=on_press_no or nothing)
+        self.popup_btn_no.bind(on_release=self.close_popup)
+        self.popup.open()
+        
+    def close_popup(self, inst=None):
+        self.popup.dismiss()
+    
     def on_key_down(self, keyboard, keycode, key, modifiers):
         if self.editor_input.focus:
           self.refreshLayout(True)
@@ -311,6 +329,7 @@ class EditorLayout():
             text = "text",
             lexer=CythonLexer(),
             multiline=True,
+            do_wrap=True,
             size_hint=(1, None),
             font_name=constants.DEFAULT_FONT_NAME, 
             auto_indent = True,
@@ -335,7 +354,9 @@ class EditorLayout():
         if editor_input:
             tap = editor_input.parent_tap
             if tap in self.document_map:
-                def close():
+                def close(tap, inst):
+                    if tap not in self.document_map:
+                        return
                     tapIndex = list(self.document_map.keys()).index(tap)
                     scrollView = self.document_map.pop(tap)[0]
                     if tap in self.documentTitleLayout.children:
@@ -349,12 +370,12 @@ class EditorLayout():
                     elif self.editor_input == editor_input:
                         tapIndex = min(tapIndex, len(self.document_map) -1)
                         self.change_document(list(self.document_map.keys())[tapIndex])
+                    self.close_popup()
                 # do close
                 if force or not editor_input.dirty:
-                    close()
+                    close(tap, None)
                 elif editor_input.dirty:
-                    
-                    gMyRoot.popup("File has unsaved changes.", "Really close file?", close, None)    
+                    self.open_popup("File has unsaved changes.", "Really close file?", partial(close, tap), None)    
     
     def closeSamedocument(self, editor_input):
         for file_tap in self.document_map:
@@ -368,15 +389,16 @@ class EditorLayout():
             return 
         filename = os.path.split(editor_input.filename)[1]
         # delete file
-        def deleteFile():
+        def deleteFile(*args):
             try:
                 self.closedocument(editor_input)
-                os.remove(editor_input.filename)
-                toast("Delete the file : " + filename)
+                if os.path.isfile(editor_input.filename):
+                    os.remove(editor_input.filename)
+                    toast("Delete the file : " + filename)
             except:
-                log(traceback.format_exc())
+                Logger.error(traceback.format_exc())
         # ask delete?
-        gMyRoot.popup("Delete selected file?", filename, deleteFile, None)
+        self.open_popup("Delete selected file?", filename, deleteFile, None)
             
     def change_document(self, inst):
         if inst in self.document_map and inst != self.current_document_tap:
@@ -410,13 +432,13 @@ class EditorLayout():
                 if editor_input.filename == filename:
                     self.change_document(file_tap)
                     if editor_input.dirty:
-                        gMyRoot.popup("File has unsaved changes.", "Really open file?", load_file, None)
+                        self.open_popup("File has unsaved changes.", "Really open file?", load_file, None)
                     break
             else:
                 self.createdocument()
                 load_file() 
         except:
-            log("open file error")    
+            Logger.error("open file error")    
     
     def save_as(self, filename):
         self.editor_input.save_as_file(filename)

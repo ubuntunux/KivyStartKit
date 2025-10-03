@@ -25,6 +25,7 @@ from .code_editor import EditorLayout
 
 class JarvisApp(BaseApp):
     app_name = "Python"
+    app_icon_file = 'data/icons/icon.png'
     orientation = "all" # all, landscape, portrait
     allow_multiple_instance = False
     

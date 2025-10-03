@@ -1,5 +1,6 @@
 import os
 import traceback
+from pathlib import Path
 
 import kivy
 from kivy.core.window import Window
@@ -50,11 +51,12 @@ class TouchableLabel(Label):
 # CLASS : FileBrowser
 #---------------------#    
 class FileBrowser:
-  def __init__(self):
+  def __init__(self, code_editor):
     global gFileBrowser
     gFileBrowser = self
-    self.lastDir = os.path.abspath("/")
+    self.lastDir = os.path.abspath(".")
     self.is_file_open = False
+    self.code_editor = code_editor
 
   def build_file_browser(self):
     W, H = Window.size 
@@ -62,7 +64,7 @@ class FileBrowser:
     # filename input layout
     self.filenameLayout = BoxLayout(orientation = "horizontal", size_hint=(1, None))
     self.filenameInput = TextInput(text="input filename", multiline = False, padding_y="15dp", size_hint=(1,None))
-    self.filenameInput.height = self.filenameInput.minimum_height
+    self.filenameInput.height = kivy.metrics.dp(50)
     self.filenameLayout.height = self.filenameInput.height
     self.filenameInput.bind(focus=self.inputBoxFocus)
     self.btn_ok = Button(text="Ok", size_hint=(0.2,1), background_color=[1,1,1,2])
@@ -83,20 +85,27 @@ class FileBrowser:
     # current directory
     self.curDir = Label(text="", text_size=(W * 0.9, None), size_hint_y=None, height=kivy.metrics.dp(50))
     
-    #  rowser layout
+    # browser layout
     self.browserLayout = BoxLayout(orientation="vertical", pos_hint={"top":1}, size_hint=(1,1))
     self.browserLayout.add_widget(self.curDir)
     self.browserLayout.add_widget(self.fileSV)
     self.browserLayout.add_widget(self.filenameLayout)
-    self.popup = Popup(title = "File Browser", content=self.browserLayout, auto_dismiss=False, size_hint=(1, 0.8)) 
-  
+    
+    self.popup = KivyPopup()
+    self.popup.initialize_popup(
+        title="File Browser",
+        content_widget=self.browserLayout,
+        auto_dismiss=True,
+        size_hint=(1, 1)
+    )
   def open_directory(self, lastDir):
+    W, H = (Window.width, Window.height)
     absPath = os.path.abspath(lastDir)
     try:
-      lastDir, dirList, fileList = os.walk(absPath).next()
+      lastDir, dirList, fileList = list(os.walk(absPath))[0]
     except:
       Logger.info(traceback.format_exc())
-      toast("Cannot open directory")
+      toast(f"Cannot open directory: {absPath}")
       return False
     self.lastDir = absPath
     self.curDir.text = self.lastDir
@@ -113,18 +122,18 @@ class FileBrowser:
       label.setType(os.path.isdir(absFilename))
       self.fileLayout.add_widget(label)
     self.fileLayout.height = labelHeight * len(self.fileLayout.children)
-  
+
   def open_file(self):
     self.close()
     if self.filenameInput.text:
       filename = os.path.join(self.lastDir, self.filenameInput.text)
-      self.ui.editorLayout.open_file(filename)
+      self.code_editor.open_file(filename)
     
   def save_as(self):
+    self.close()
     if self.filenameInput.text:
       filename = os.path.join(self.lastDir, self.filenameInput.text)
-      self.ui.editorLayout.save_as(filename)
-    self.close()
+      self.code_editor.save_as(filename)
     
   def select_file(self, selectfile):
     # lastdir
@@ -133,6 +142,8 @@ class FileBrowser:
       self.lastDir = os.path.abspath(".")
     # set filename
     self.filenameInput.text = filename
+    if self.is_file_open:
+        self.open_file()
       
   def showOpenLayout(self):
     self.is_file_open = True
@@ -141,17 +152,21 @@ class FileBrowser:
     self.popup.open()
     self.open_directory(self.lastDir)
   
-  def showSaveAsLayout(self):
+  def showSaveAsLayout(self, filepath):
+    filepath = Path(filepath)
+    if filepath.is_file():
+        self.filenameInput.text = filepath.name
+        self.lastDir = filepath.parent
+    else:
+        self.filenameInput.text = ""
     self.is_file_open = False
     self.btn_ok.text = "Save"
-    self.filenameInput.text = ""
     self.popup.open()
     self.open_directory(self.lastDir)
      
   def close(self):
     self.inputBoxForceFocus(False)
     self.popup.dismiss()
-    self.ui.setMode(szEditor)
      
   def touchPrev(self):
     if self.filenameInput.focus:
@@ -165,22 +180,7 @@ class FileBrowser:
       self.filenameInput.focus = bFocus 
       
   def inputBoxFocus(self, inst, bFocus):
-    bAlwaysPreserveFocus = False
-    if not bFocus:
-      if self.reFocusInputText:
-        self.reFocusInputText = bAlwaysPreserveFocus
-        inst.focus = True
-    self.reFocusInputText = bAlwaysPreserveFocus
-    self.refreshLayout()
+    self.refreshLayout(bFocus)
     
-  def refreshLayout(self):
-    if self.browserLayout.size_hint_y != None:
-      self.browserLayout.size_hint_y = None
-      self.browserLayout_height = self.browserLayout.height
-    
-    if self.filenameInput.focus: 
-      offset = gMyRoot.getKeyboardHeight() - self.browserLayout.pos[1]
-      self.browserLayout.height = self.browserLayout_height - offset
-    else:
-      self.browserLayout.height = self.browserLayout_height
-    
+  def refreshLayout(self, is_keyboard_open=False):
+    return

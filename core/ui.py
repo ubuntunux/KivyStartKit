@@ -115,6 +115,9 @@ class UIManager(BaseApp):
             size_hint=(None, None),
             size=add(self.icon_size, (0, self.icon_font_height))
         )
+        if not os.path.isfile(icon_file):
+            icon_file = LOGO_FILE
+
         icon_btn = Image(
             size_hint=(None, None),
             size=self.icon_size,

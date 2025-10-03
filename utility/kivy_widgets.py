@@ -68,6 +68,8 @@ class KivyPopup:
         self.is_popup = False
         self.popup_layout = None
         self.content_widget = None
+        self.btn_layout = None
+        self.initial_size = (100, 100)
 
     def initialize_popup(
         self,
@@ -84,30 +86,28 @@ class KivyPopup:
         if self.is_popup:
             self.dismiss()
             
-        layout_width = width
-        layout_height = height
-        content = BoxLayout(orientation="vertical", size_hint=(1, 1))
-        self.popup_layout = Popup(title=title, content=content, auto_dismiss=auto_dismiss, size_hint=size_hint, size=(layout_width, layout_height))
+        self.initial_size = (width, height)
+        
+        content_layout = BoxLayout(orientation="vertical", size_hint=(1, 1))
+        self.popup_layout = Popup(title=title, content=content_layout, auto_dismiss=auto_dismiss, size_hint=size_hint, size=(width, height))
         
         if content_widget:
             content_widget.height = max(DP(50), content_widget.height)
-            layout_height += content_widget.height
+            #layout_height += content_widget.height
 
             scroll_view = ScrollView(size_hint=(1, 1))
             scroll_view.add_widget(content_widget)
-            content.add_widget(scroll_view)
+            content_layout.add_widget(scroll_view)
             self.content_widget = content_widget
 
         if buttons:
             max_button_height = DP(50)
-            btn_layout = BoxLayout(orientation="horizontal", size_hint=(1, None), spacing=DP(5))
-            content.add_widget(btn_layout)
+            self.btn_layout = BoxLayout(orientation="horizontal", size_hint=(1, None), spacing=DP(5))
+            content_layout.add_widget(self.btn_layout)
             for button in buttons:
                 max_button_height = max(max_button_height, button.height)
-                btn_layout.add_widget(button)
-            btn_layout.height = max_button_height
-            content.height += max_button_height
-            layout_height += max_button_height
+                self.btn_layout.add_widget(button)
+            self.btn_layout.height = max_button_height
                 
         def on_open(inst):
             if KivyPopup.opened_popup is None:
@@ -122,11 +122,21 @@ class KivyPopup:
             if callback_close:
                 callback_close()
             self.is_popup = False
-
-        self.popup_layout.height = layout_height
+ 
         self.popup_layout.bind(on_open=on_open)
         self.popup_layout.bind(on_dismiss=on_dismiss)
-        
+        self.update_layout()
+    
+    def set_title(self, title):
+        self.popup_layout.title = title
+
+    def update_layout(self):
+        self.popup_layout.size = self.initial_size
+        if self.content_widget:
+            self.popup_layout.height += self.content_widget.height
+        if self.btn_layout:
+            self.popup_layout.height += self.btn_layout.height
+
     def open(self):
         if not KivyPopup.opened_popup:
             self.popup_layout.open() 
