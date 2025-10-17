@@ -8,6 +8,7 @@
     "behavior_class": "Monster",
     "properties": {
         "walk_speed": 100.0,
+        "max_sp": 100.0,
         "max_hp": 100.0,
         "max_mp": 100.0
     },

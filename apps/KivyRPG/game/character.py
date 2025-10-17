@@ -1,9 +1,11 @@
 from kivy.graphics.transformation import Matrix
+from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.image import Image
 from kivy.uix.scatter import Scatter
 from kivy.uix.widget import Widget
 from kivy.vector import Vector
+from kivy.metrics import dp
 from utility.kivy_helper import *
 from .transform_component import TransformComponent
 from .character_data import *
@@ -44,22 +46,54 @@ class Action:
             self.action_time -= dt
         
 class CharacterProperties:
-    def __init__(self, property_data):
+    def __init__(self, owner, property_data):
+        self.owner = owner
         self.hp = 100.0
         self.mp = 100.0
+        self.sp = 100.0
         self.move_speed = 1.0
         self.property_data = property_data
-    
+
+        self.ui_layout = BoxLayout(
+            size_hint=(None, None),
+            size=(dp(50), dp(6)),
+            padding=dp(1)
+        )
+        create_dynamic_rect(self.ui_layout, (0,0,0,1))
+        owner.add_widget(self.ui_layout)
+
+        self.ui_width = dp(48)
+        self.ui_hp = Widget(
+            pos_hint={'x': 0}, 
+            size_hint=(None, 1),
+            width=self.ui_width
+        )
+        create_dynamic_rect(self.ui_hp, (1,0,0,1))
+        self.ui_layout.add_widget(self.ui_hp)
+
     def reset_properties(self):
+        self.sp = self.property_data.max_sp
         self.hp = self.property_data.max_hp
         self.mp = self.property_data.max_mp
     
+    def get_max_sp(self):
+        return self.property_data.max_sp
+        
+    def get_max_hp(self):
+        return self.property_data.max_hp
+
+    def get_max_mp(self):
+        return self.property_data.max_mp
+
     def get_hp(self):
         return self.hp
     
     def get_mp(self):
         return self.mp
     
+    def get_sp(self):
+        return self.sp
+
     def get_walk_speed(self):
         return self.property_data.walk_speed * self.move_speed
     
@@ -68,6 +102,9 @@ class CharacterProperties:
         
     def set_move_speed(self, move_speed):
         self.move_speed = move_speed
+
+    def update_property(self, dt):
+        self.ui_hp.width = self.ui_width * (self.get_hp() / self.get_max_hp())
 
 
 class Character(Scatter):
@@ -88,7 +125,7 @@ class Character(Scatter):
         self.image.texture = self.action.get_current_texture()
         self.add_widget(self.image)
         
-        self.properties = CharacterProperties(character_data.property_data)
+        self.properties = CharacterProperties(self, character_data.property_data)
         self.behavior = character_data.behavior_class(self)
         self.transform_component = TransformComponent(self, pos, self.properties)
         self.center = self.transform_component.get_pos()
@@ -133,6 +170,9 @@ class Character(Scatter):
         return self.updated_transform
         
     # Properties
+    def get_properties(self):
+        return self.properties
+
     def is_alive(self):
         return 0 < self.properties.get_hp()
     
@@ -177,4 +217,4 @@ class Character(Scatter):
             curr_front_x = sign(self.transform_component.front.x)
             if 0 != curr_front_x and prev_direction_x != curr_front_x:
                 self.flip_widget()
-            
+        self.properties.update_property(dt) 

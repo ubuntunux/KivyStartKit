@@ -8,22 +8,74 @@ from kivy.uix.widget import Widget
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.textinput import TextInput
+from kivy.metrics import dp as DP
 from kivy.utils import platform 
 from utility.singleton import SingletonInstance
 from .game_resource import GameResourceManager
 from .constant import *
 
+class QuickSlotUI:
+    def __init__(self, app, game_controller):
+        self.app = app
+        self.game_controller = game_controller
+        self.actor_manager = None
 
-class DirectionController:
+    def initialize(self, actor_manager, parent_layer):
+        self.actor_manager = actor_manager
+        button_count = 5
+        button_size = DP(50)
+        layout = BoxLayout(
+            orientation="horizontal",
+            pos_hint={'center_x': 0.5},
+            y=0,
+            size_hint=(None, None),
+            size=(button_size * button_count, button_size)
+        )
+        
+        for i in range(button_count):
+            button = Button(
+                size_hint=(None, None), 
+                size=(button_size, button_size)
+            )
+            layout.add_widget(button)
+
+        parent_layer.add_widget(layout)
+
+    def update(self, dt):
+        player = self.actor_manager.get_player()
+
+
+class PlayerPropertyUI:
+    def __init__(self, app, game_controller):
+        self.app = app
+        self.game_controller = game_controller
+        self.actor_manager = None
+
+    def initialize(self, actor_manager, parent_layer):
+        self.actor_manager = actor_manager
+        layout = BoxLayout(
+            orientation="horizontal",
+            pos_hint={'center_x': 0.5},
+            y=0,
+            size_hint=(None, None),
+            size=(DP(50), DP(50))
+        )
+        
+        parent_layer.add_widget(layout)
+    def update(self, dt):
+        player = self.actor_manager.get_player()
+
+
+class PlayerController:
     def __init__(self, app, game_controller):
         self.app = app
         self.game_controller = game_controller
         self.button_active_opacity = 0.5
         self.button_deactive_opacity = 0.2
-        self.button_size = 200
-        self.bound_size = self.button_size + 200
-        self.bound_offset = 20
-        self.dead_zone_size = 20
+        self.button_size = DP(70)
+        self.bound_size = self.button_size * 2.0
+        self.bound_offset = DP(30)
+        self.dead_zone_size = DP(10)
         self.button_neutral_pos = (
             self.bound_offset + self.bound_size * 0.5,
             self.bound_offset + self.bound_size * 0.5
@@ -75,7 +127,7 @@ class DirectionController:
             Rectangle(size=self.button.size)
         
         # button image
-        add_image = False
+        add_image = True
         if add_image:
             point = resource_manager.get_image("point")
             img_pos = mul(self.button.size, -0.5)
@@ -179,18 +231,24 @@ class GameController(SingletonInstance):
         self.app = app
         self.actor_manager = None
         self.level_manager = None
-        self.direction_controller = DirectionController(app, self)
+        self.player_controller = PlayerController(app, self)
+        self.quick_slot = QuickSlotUI(app, self)
+        self.player_property_ui = PlayerPropertyUI(app, self) 
         
     def initialize(self, parent_widget, level_manager, actor_manager):
         self.level_manager = level_manager
         self.actor_manager = actor_manager
         self.controller_layer = FloatLayout(size_hint=(1,1))        
-        self.direction_controller.initialize(self.controller_layer)
+        self.player_controller.initialize(self.controller_layer)
+        self.quick_slot.initialize(actor_manager, self.controller_layer)
+        self.player_property_ui.initialize(actor_manager, self.controller_layer)
         
         # attack button
-        btn = Button(text="Attack", pos_hint={"right":1}, size_hint=(None, None), size=(300, 300), opacity=0.5)
+        layout = BoxLayout(pos_hint={"right":1}, size_hint=(None, None), size=(DP(180), DP(180)), padding=DP(30)) 
+        btn = Button(text="Attack", size_hint=(1,1), opacity=0.5)
         btn.bind(on_press=actor_manager.callback_attack)
-        self.controller_layer.add_widget(btn)
+        layout.add_widget(btn)
+        self.controller_layer.add_widget(layout)
         
         # reset level
         btn = Button(text="Reset Level", pos_hint={"right":1, "top":1}, size_hint=(None, None), size=(300, 150), opacity=0.5)
@@ -200,13 +258,16 @@ class GameController(SingletonInstance):
         parent_widget.add_widget(self.controller_layer)
 
     def close(self):
-        self.direction_controller.close()
+        self.player_controller.close()
     
     def pressed_direction(self, direction):
         self.actor_manager.callback_move(direction)
     
     def update(self, dt):
-        self.direction_controller.update(dt)
+        self.player_controller.update(dt)
+        self.player_property_ui.update(dt)
+        self.quick_slot.update(dt)
+
         
         
     

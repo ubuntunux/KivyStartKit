@@ -20,6 +20,7 @@ class CharacterPropertyData():
         self.walk_speed = 100.0
         self.max_hp = 100.0
         self.max_mp = 100.0
+        self.max_sp = 100.0
         for (key, value) in property_data.items():
             if hasattr(self, key):
                 setattr(self, key, value)

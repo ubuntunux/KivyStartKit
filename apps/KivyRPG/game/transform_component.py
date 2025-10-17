@@ -30,6 +30,8 @@ class TransformComponent():
         self.pos = Vector(pos)
     
     def set_move_direction(self, direction):
+        self.target_actor = None
+        self.move_to_target = False
         self.move_direction = direction
         self.set_front(direction)
     
