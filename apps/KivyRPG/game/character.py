@@ -179,9 +179,11 @@ class Character(Scatter):
     def get_damage(self):
         return self.weapon.get_damage()
     
-    def set_damage(self, damage):
+    def set_damage(self, damage, attack_force=None):
         self.properties.set_damage(damage)
-        
+        if attack_force:
+            self.transform_component.set_attack_force(attack_force)
+
     def set_move_speed(self, move_speed):
         self.properties.set_move_speed(move_speed)
         
@@ -204,7 +206,8 @@ class Character(Scatter):
             target = self.level_manager.get_collide_point(self.get_attack_pos(), 100.0, [self])
             if target and target is not self:
                 damage = self.get_damage()
-                self.actor_manager.regist_attack_info(self, target, damage)
+                force = (target.get_pos() - self.get_pos()).normalize() * 1000.0
+                self.actor_manager.regist_attack_info(self, target, damage, force)
     
     def update(self, dt):
         self.behavior.update_behavior(dt)

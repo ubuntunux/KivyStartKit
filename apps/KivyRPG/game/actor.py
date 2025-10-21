@@ -10,10 +10,11 @@ from .constant import *
 
 
 class AttackInfo():
-    def __init__(self, actor, target, damage):
+    def __init__(self, actor, target, damage, force):
         self.actor = actor
         self.target = target
         self.damage = damage
+        self.force = force
         
     
 class ActorManager(SingletonInstance):
@@ -99,8 +100,8 @@ class ActorManager(SingletonInstance):
     def callback_attack(self, inst):
         self.get_player().set_attack()   
         
-    def regist_attack_info(self, actor, target, damage):
-        self.attack_infos.append(AttackInfo(actor, target, damage))
+    def regist_attack_info(self, actor, target, damage, force):
+        self.attack_infos.append(AttackInfo(actor, target, damage, force))
     
     def update(self, dt):
         self.spawn_timer -= dt
@@ -125,7 +126,7 @@ class ActorManager(SingletonInstance):
             if attack_info.target and \
                attack_info.target.is_alive() and \
                attack_info.target.is_player != attack_info.actor.is_player:
-                attack_info.target.set_damage(attack_info.damage)
+                attack_info.target.set_damage(attack_info.damage, attack_info.force)
                 effect_manager.create_effect(
                     effect_name="hit",
                     attach_to=attack_info.target

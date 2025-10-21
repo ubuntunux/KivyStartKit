@@ -129,7 +129,7 @@ class PlayerController:
         # button image
         add_image = True
         if add_image:
-            point = resource_manager.get_image("point")
+            point = resource_manager.get_image("ui/point")
             img_pos = mul(self.button.size, -0.5)
             img_size = mul(self.button.size, 2.0)
             img = Image(texture=point.texture, pos=img_pos, size=img_size, keep_ratio=False, allow_stretch=True)

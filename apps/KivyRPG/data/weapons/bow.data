@@ -1,5 +1,5 @@
 {
-    "image_file": "weapons",
+    "image_file": "weapons/weapons",
     "texture_region": (8/11, 4/5, 1/11, 1/5),
     "attack_effect": "swish",
     "flip_horizontal": True,

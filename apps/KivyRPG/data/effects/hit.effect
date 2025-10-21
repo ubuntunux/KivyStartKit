@@ -8,7 +8,7 @@
     "elastin":0.8, 
     "collision":False, 
     "size":[100,100], 
-    "image_file":"explosion",
+    "image_file":"fx/explosion",
     "loop":1, 
     "fade":1.0,
     "sequence":[4,4], 

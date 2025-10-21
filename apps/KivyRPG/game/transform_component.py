@@ -16,7 +16,8 @@ class TransformComponent():
         self.front = Vector(1, 0)
         self.move_direction = Vector(0,0)
         self.properties = properties
-        
+        self.attack_force = Vector(0,0)        
+    
     def get_pos(self):
         return self.pos
         
@@ -42,7 +43,10 @@ class TransformComponent():
             self.front = Vector(0, dir_y)
         else:
             self.front = Vector(dir_x, 0)
-        
+    
+    def set_attack_force(self, attack_force):
+        self.attack_force = attack_force
+    
     def trace_actor(self, level_manager, actor):
         if actor:
             self.move_to(actor.get_pos())
@@ -78,4 +82,8 @@ class TransformComponent():
         self.move_direction = Vector(0,0) # reset
         self.prev_pos = Vector(self.pos)
         self.pos = pos
+        if self.attack_force.x != 0 or self.attack_force.y != 0:
+            self.pos += self.attack_force * dt
+            f = max(0, self.attack_force.length() - 2500.0 * dt)
+            self.attack_force = self.attack_force.normalize() * f
         return self.prev_pos != self.pos

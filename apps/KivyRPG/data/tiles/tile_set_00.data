@@ -1,5 +1,5 @@
 {
-    "source": "tiles_00",
+    "source": "tiles/tiles_00",
     "tile_data": {
         "grass": {
             "region": (1/16, 4/16, 1/16, 1/16)

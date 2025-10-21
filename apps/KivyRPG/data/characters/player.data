@@ -1,5 +1,5 @@
 {
-    "source": "rpg_sprites_10",
+    "source": "characters/rpg_sprites_10",
     "actions": {
         "idle": {
             "region": (0, 0, 1/4, 1/2)
