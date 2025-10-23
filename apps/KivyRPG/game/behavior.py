@@ -1,7 +1,7 @@
 from enum import Enum
 import random
 from kivy.vector import Vector
-
+from .character_data import ActorType 
 
 class BehaviorState(Enum):
     IDLE = 0
@@ -10,6 +10,19 @@ class BehaviorState(Enum):
 
 
 class Behavior:
+    @staticmethod
+    def get_behavior_class(actor_type):
+        if actor_type == ActorType.PLAYER:
+            return BehaviorPlayer
+        elif actor_type == ActorType.MONSTER:
+            return BehaviorMonster
+        return BehaviorMonster
+
+    @classmethod
+    def create_behavior(cls, owner, actor_type):
+        behavior_class = cls.get_behavior_class(actor_type)
+        return behavior_class(owner)
+
     def __init__(self, actor):
         self.actor = actor
         self.behavior_state = BehaviorState.IDLE
@@ -30,11 +43,11 @@ class Behavior:
             self.behavior_time -= dt
 
 
-class Player(Behavior):
+class BehaviorPlayer(Behavior):
     pass
 
 
-class Monster(Behavior):
+class BehaviorMonster(Behavior):
     def __init__(self, actor):
         super().__init__(actor)
         self.attack_time = 1.0
