@@ -28,7 +28,7 @@ class Action:
     def get_current_texture(self):
         action_data = self.action_data.get("idle")
         if action_data:
-             return action_data.texture
+            return action_data.texture
         return None
         
     def update_action(self, dt):

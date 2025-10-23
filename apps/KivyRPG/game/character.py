@@ -31,25 +31,26 @@ class Character(Scatter):
         super().__init__(size=size)
         actor_type = character_data.actor_type
         action = Action(character_data.action_data)
-        properties = CharacterProperties(self, character_data.property_data)
+        character_property = CharacterProperty(self, character_data.property_data)
         behavior = Behavior.create_behavior(self, actor_type) 
-        weapon = Weapon(self, character_data.weapon_data)
        
         self.action = action
         self.image = Image(size=size, fit_mode="fill")
         self.image.texture = action.get_current_texture()
         self.add_widget(self.image)
         
-        self.properties = properties
+        self.property = character_property
         self.behavior = behavior
-        self.transform_component = TransformComponent(self, pos, self.properties)
-        self.center = self.transform_component.get_pos()
+        self.transform_component = TransformComponent(self, pos, self.property)
+        self.center = Vector(pos)
         self.radius = math.sqrt(sum([x*x for x in size])) * 0.5
         self.updated_transform = True
         self.is_player = actor_type is ActorType.PLAYER
         
-        self.weapon = weapon
-        self.add_widget(self.weapon)
+        self.weapon = None
+        if character_data.weapon_data:
+            self.weapon = Weapon(self, character_data.weapon_data)
+            self.add_widget(self.weapon)
     
     def on_touch_down(inst, touch):
         # do nothing
@@ -84,23 +85,23 @@ class Character(Scatter):
     def get_updated_transform(self):
         return self.updated_transform
         
-    # Properties
-    def get_properties(self):
-        return self.properties
+    # Property
+    def get_property(self):
+        return self.property
 
     def is_alive(self):
-        return 0 < self.properties.get_hp()
+        return 0 < self.property.get_hp()
     
     def get_damage(self):
         return self.weapon.get_damage()
     
     def set_damage(self, damage, attack_force=None):
-        self.properties.set_damage(damage)
+        self.property.set_damage(damage)
         if attack_force:
             self.transform_component.set_attack_force(attack_force)
 
     def set_move_speed(self, move_speed):
-        self.properties.set_move_speed(move_speed)
+        self.property.set_move_speed(move_speed)
         
     # Transform
     def move_to(self, pos):
@@ -115,7 +116,7 @@ class Character(Scatter):
 
     # Actions    
     def set_attack(self):
-        if not self.action.is_action_state(ActionState.ATTACK):
+        if self.weapon and not self.action.is_action_state(ActionState.ATTACK):
             self.action.set_action_state(ActionState.ATTACK)
             self.weapon.set_attack(self.get_front())
             target = self.level_manager.get_collide_point(self.get_attack_pos(), 100.0, [self])
@@ -127,12 +128,16 @@ class Character(Scatter):
     def update(self, dt):
         self.behavior.update_behavior(dt)
         self.action.update_action(dt)
-        self.weapon.update_weapon(dt, self.get_front())
-        self.updated_transform = self.transform_component.update_transform(dt)
-        if self.updated_transform:
-            self.center = self.transform_component.get_pos()
-            prev_direction_x = self.get_direction_x()
-            curr_front_x = sign(self.transform_component.front.x)
-            if 0 != curr_front_x and prev_direction_x != curr_front_x:
-                self.flip_widget()
-        self.properties.update_property(dt) 
+        
+        if self.weapon:
+            self.weapon.update_weapon(dt, self.get_front())
+
+        if self.property.has_walk_property():
+            self.updated_transform = self.transform_component.update_transform(dt)
+            if self.updated_transform:
+                self.center = self.transform_component.get_pos()
+                prev_direction_x = self.get_direction_x()
+                curr_front_x = sign(self.transform_component.front.x)
+                if 0 != curr_front_x and prev_direction_x != curr_front_x:
+                    self.flip_widget()
+        self.property.update_property(dt) 

@@ -107,7 +107,7 @@ class ActorManager(SingletonInstance):
         self.spawn_timer -= dt
         if self.spawn_timer < 0.0 and len(self.actors) < self.limit_actors:
             pos = self.level_manager.get_random_pos()
-            self.spawn_actor("monster", pos)
+            self.spawn_actor("spawner", pos)
             self.spawn_timer = self.spawn_term
         effect_manager = GameEffectManager.instance()
         # dead
