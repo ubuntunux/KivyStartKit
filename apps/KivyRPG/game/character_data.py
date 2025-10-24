@@ -1,5 +1,7 @@
 import os
 from enum import Enum
+from kivy.metrics import dp
+
 from .constant import *
 from utility.kivy_helper import *
 

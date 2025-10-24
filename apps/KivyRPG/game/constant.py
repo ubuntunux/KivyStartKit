@@ -1,5 +1,6 @@
 from kivy.logger import Logger
 from kivy.vector import Vector
+from kivy.metrics import dp
 from utility.kivy_helper import *
 
 TILE_WIDTH = 128

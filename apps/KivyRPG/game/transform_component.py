@@ -13,6 +13,9 @@ class TransformComponent():
         self.move_to_target = False
         self.pos = Vector(pos)
         self.prev_pos = Vector(pos)
+        self.size = Vector(actor.size)
+        self.bound_min = Vector(pos) - self.size * 0.5
+        self.bound_max = Vector(pos) + self.size * 0.5
         self.front = Vector(1, 0)
         self.move_direction = Vector(0,0)
         self.properties = properties
@@ -52,6 +55,15 @@ class TransformComponent():
             self.move_to(actor.get_pos())
         self.target_actor = actor
             
+    def collide_actor(self, actor):
+        other = actor.transform_component
+        if other.bound_max.x < self.bound_min.x or \
+            other.bound_max.y < self.bound_min.y or \
+            self.bound_max.x < other.bound_min.x or \
+            self.bound_max.y < other.bound_min.y:
+            return False
+        return True
+
     def move_to(self, target_pos):
         self.target_actor = None
         self.target_pos = target_pos
@@ -82,6 +94,8 @@ class TransformComponent():
         self.move_direction = Vector(0,0) # reset
         self.prev_pos = Vector(self.pos)
         self.pos = pos
+        self.bound_min = pos - self.size * 0.5
+        self.bound_max = pos + self.size * 0.5
         if self.attack_force.x != 0 or self.attack_force.y != 0:
             self.pos += self.attack_force * dt
             f = max(0, self.attack_force.length() - 2500.0 * dt)

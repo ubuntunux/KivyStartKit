@@ -98,11 +98,21 @@ class LevelManager(SingletonInstance):
         actor = self.get_actor(pos)
         return actor is not filter_actor and actor is not None
     
+    def get_collide_actor(self, actor):
+        targets = []
+        for target in self.actor_manager.get_actors():
+            if target and target is not actor:
+                if actor.collide_actor(target):
+                    targets.append(target)
+        return targets
+
     def get_collide_point(self, point, radius=0.0, filters=[]):
+        targets = []
         for actor in self.actor_manager.get_actors():
             if actor and actor not in filters:
                 if (radius + actor.get_radius()) >= (point.distance(actor.get_pos())):
-                    return actor
+                    targets.append(actor)
+        return targets
                 
     def pop_actor(self, actor):
         if actor and actor.parent is self.character_layer:

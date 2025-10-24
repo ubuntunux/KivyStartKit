@@ -117,16 +117,21 @@ class Character(Scatter):
     def trace_actor(self, actor):
         self.transform_component.trace_actor(self.level_manager, actor)
 
+    def collide_actor(self, other):
+        return self.transform_component.collide_actor(other)
+
     # Actions    
     def set_attack(self):
         if self.weapon and not self.action.is_action_state(ActionState.ATTACK):
             self.action.set_action_state(ActionState.ATTACK)
             self.weapon.set_attack(self.get_front())
-            target = self.level_manager.get_collide_point(self.get_attack_pos(), 100.0, [self])
-            if target and target is not self and target.is_attackable():
-                damage = self.get_damage()
-                force = (target.get_pos() - self.get_pos()).normalize() * 1000.0
-                self.actor_manager.regist_attack_info(self, target, damage, force)
+            targets = self.level_manager.get_collide_actor(self)
+            #targets = self.level_manager.get_collide_point(self.get_attack_pos(), 100.0, [self])
+            for target in targets:
+                if target and target is not self and target.is_attackable():
+                    damage = self.get_damage()
+                    force = (target.get_pos() - self.get_pos()).normalize() * 1000.0
+                    self.actor_manager.regist_attack_info(self, target, damage, force)
     
     def update(self, dt):
         self.behavior.update_behavior(dt)
