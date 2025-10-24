@@ -25,7 +25,7 @@ from .game.game_resource import GameResourceManager
 
 class KivyRPGApp(BaseApp):
     app_name = "Kivy RPG"
-    orientation = "landscape" # all, landscape, portrait
+    orientation = "all" # all, landscape, portrait
     allow_multiple_instance = False
 
     def __init__(self):

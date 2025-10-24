@@ -12,7 +12,7 @@ class App(BaseApp):
         super().__init__()
         
     def on_initialize(self):
-        btn = Button(text="Hello, world!", size_hint=(1, 1))
+        btn = Button(text="Hello, kivy!", size_hint=(1, 1))
         self.add_widget(btn)
     
     def on_stop(self):

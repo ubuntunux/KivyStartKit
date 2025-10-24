@@ -79,18 +79,18 @@ class Listener:
         px = metrics.dp(20)
         self.input_layout = BoxLayout(
             orientation='horizontal',
-            size_hint=(1.0, 1.0),
+            size_hint=(1.0, None),
             height=text_height
         )
         self.root_layout.add_widget(self.input_layout)
         
         # undo
-        btn_undo = Button(size_hint=(None, 1), width=metrics.dp(40), text="<")
-        btn_undo.bind(on_press=self.on_press_undo)
-        
+        btn_prev = Button(size_hint=(None, 1), width=metrics.dp(60), text="Prev")
+        btn_prev.bind(on_press=self.on_press_prev)
+       
         # redo
-        btn_redo = Button(size_hint=(None, 1), width=metrics.dp(40), text=">")
-        btn_redo.bind(on_press=self.on_press_redo)
+        btn_next = Button(size_hint=(None, 1), width=metrics.dp(60), text="Next")
+        btn_next.bind(on_press=self.on_press_next)
 
         # input widget
         px = metrics.dp(10)
@@ -111,9 +111,9 @@ class Listener:
         Window.release_keyboard()
         self.text_input.keyboard_mode = "auto" # auto, managed
         
-        self.input_layout.add_widget(btn_undo)
+        self.input_layout.add_widget(btn_prev)
         self.input_layout.add_widget(self.text_input)
-        self.input_layout.add_widget(btn_redo)
+        self.input_layout.add_widget(btn_next)
         
         # auto complete
         self.command_list_layout = ScatterLayout(
@@ -142,14 +142,18 @@ class Listener:
         logo_image = Image(size_hint=(None, 1), source=ICON_FILE, fit_mode="contain", keep_ratio=True, allow_stretch=False)
         logo_image.bind(on_touch_down=toggle_commands)
         
-        # prev
-        btn_prev = Button(size_hint=(1, 1), text="<<", background_color=dark_gray)
-        btn_prev.bind(on_press=self.on_press_prev)
+        # code editor
+        btn_editor = Button(size_hint=(1, 1), text="Editor", background_color=(0.6,0.6,0.6))
+        btn_editor.bind(on_press=self.on_press_editor)
+
+        # undo
+        btn_undo = Button(size_hint=(1, 1), text="Undo", background_color=dark_gray)
+        btn_undo.bind(on_press=self.on_press_undo)
 
         # next
-        btn_next = Button(size_hint=(1, 1), text=">>", background_color=dark_gray)
-        btn_next.bind(on_press=self.on_press_next)
-        
+        btn_redo = Button(size_hint=(1, 1), text="Redo", background_color=dark_gray)
+        btn_redo.bind(on_press=self.on_press_redo)
+
         # clear
         def on_clear(*args):
             self.app.clear_output()
@@ -171,9 +175,10 @@ class Listener:
         '''
         
         self.top_layout.add_widget(logo_image)
-        self.top_layout.add_widget(btn_prev)
-        self.top_layout.add_widget(btn_next)
         self.top_layout.add_widget(btn_clear)
+        self.top_layout.add_widget(btn_undo)
+        self.top_layout.add_widget(btn_redo)
+        self.top_layout.add_widget(btn_editor)
         self.top_layout.add_widget(btn_enter)
         
         self.on_resize(Window, Window.width, Window.height)
@@ -194,7 +199,7 @@ class Listener:
             self.command_list_vertical_layout.add_widget(btn)
             self.command_list_layout.height += text_height
 
-    def execute_command(self, text_input, is_force_run, instance):
+    def execute_command(self, text_input, is_force_run=False, inst=None):
         self.is_searching_history = False
         cmd = text_input.text.strip()
         if cmd:
@@ -211,6 +216,7 @@ class Listener:
                 if not run_code and (not is_cursor_at_end or lastline[-1] in ("\\", ":") or self.is_indent_mode):
                     self.is_indent_mode = True
                     text_input.height = text_input.minimum_height
+                    self.input_layout.height = text_input.height
                     return
 
             # prepare running command
@@ -255,17 +261,30 @@ class Listener:
             sys.stdout = prev_stdout
             text_input.text = ''
             text_input.height = text_input.minimum_height
+            self.input_layout.height = text_input.height
             #text_input.focus = True
     
+    def execute_external_code(self, code):
+        code = code.strip()
+        if code:
+            backup = self.text_input.text
+            self.text_input.text = code 
+            self.execute_command(self.text_input, True)
+            self.text_input.text = backup
+            self.text_input.height = self.text_input.minimum_height
+            self.input_layout.height = self.text_input.height
+
     def on_key_down(self, keyboard, keycode, key, modifiers):
         if self.text_input.focus:
             key_name = keycode[1]
             if key_name == 'enter' or key_name == 'numpadenter':
-                self.execute_command(self.text_input, False, self.text_input)
-            elif key_name == 'up':
+                self.execute_command(self.text_input, False)
+            elif key_name == 'up' and '\n' not in self.text_input.text:
                 self.on_press_prev(None)
-            elif key_name == 'down':
+            elif key_name == 'down' and '\n' not in self.text_input.text:
                 self.on_press_next(None)
+            self.text_input.height = self.text_input.minimum_height
+            self.input_layout.height = self.text_input.height
 
     def keyboard_closed(self, *args):
         pass
@@ -296,8 +315,12 @@ class Listener:
         
         self.text_input.text = self.history[self.history_index]
         self.text_input.height = self.text_input.minimum_height
+        self.input_layout.height = self.text_input.height
         self.is_indent_mode = self.text_input.text.find("\n") > -1
         
+    def on_press_editor(self, inst):
+        self.app.open_editor()
+
     def on_press_prev(self, inst):
         self.on_search_history(direction=-1)
             

@@ -1,13 +1,14 @@
 {
-    "source": "rpg_sprites_10",
+    "actor_type": "PLAYER",
+    "source": "characters/rpg_sprites_10",
     "actions": {
         "idle": {
             "region": (0, 0, 1/4, 1/2)
         }
     },
-    "behavior_class": "Player",
-    "properties": {
+    "property": {
         "walk_speed": 500.0,
+        "max_sp": 100.0,
         "max_hp": 100.0,
         "max_mp": 100.0
     },

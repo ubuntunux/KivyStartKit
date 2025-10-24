@@ -1,12 +1,16 @@
 import os
 from enum import Enum
-from .behavior import *
 from .constant import *
 from utility.kivy_helper import *
 
-class ActionState(Enum):
-    IDLE = 0
-    ATTACK = 1
+class ActorType(Enum):
+    PLAYER = 0
+    PATROLLER = 1
+    GUARDIAN = 2
+    STALKER = 3
+    INVADER = 4
+    # props
+    DUNGEON = 5
 
 
 class ActionData():
@@ -15,23 +19,44 @@ class ActionData():
         self.name = action_name
         self.texture = get_texture_atlas(texture, region)
 
-class CharacterPropertyData():
+class DungeonPropertyData:
     def __init__(self, property_data):
-        self.walk_speed = 100.0
-        self.max_hp = 100.0
-        self.max_mp = 100.0
+        self.spawn_data = []
+        self.spawn_term = 3.0
+        self.limit_spawn_count = 5
         for (key, value) in property_data.items():
             if hasattr(self, key):
                 setattr(self, key, value)
 
+class CharacterPropertyData():
+    def __init__(self, actor_type, property_data):
+        self.walk_speed = 0
+        self.max_hp = 0
+        self.max_mp = 0
+        self.max_sp = 0
+        for (key, value) in property_data.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
+        self.extra_property_data = None
+        extra_property_data = property_data.get('extra_property', {})
+        if actor_type == ActorType.DUNGEON:
+            self.extra_property_data = DungeonPropertyData(extra_property_data) 
+
 
 class CharacterData():
-    def __init__(self, resource_manager, name, character_data_info):
-        src_image = resource_manager.get_image(character_data_info["source"])
-        action_data_infos = character_data_info.get("actions")      
-        
+    def __init__(self, resource_manager, name, character_data_info):       
         self.name = name
+        self.size = tuple(character_data_info.get("size", TILE_SIZE))
+        self.actor_type = getattr(ActorType, character_data_info.get("actor_type"))
         self.action_data = {}
+        self.weapon_data = None
+        self.property_data = None
+
+        src_image = resource_manager.get_image(character_data_info["source"])
+        default_action = {'idle': {'region': (0,0,1,1)}}
+        action_data_infos = character_data_info.get("actions", default_action)      
+        
         for (action_name, action_data_info) in action_data_infos.items():
             self.action_data[action_name] = ActionData(
                 name,
@@ -39,6 +64,7 @@ class CharacterData():
                 src_image.texture,
                 action_data_info["region"]
             )
-        self.behavior_class = eval(character_data_info.get("behavior_class"))
-        self.property_data = CharacterPropertyData(character_data_info.get("properties", {}))
-        self.weapon_data = resource_manager.get_weapon_data(character_data_info.get("weapon"))
+        self.property_data = CharacterPropertyData(self.actor_type, character_data_info.get("property", {}))
+        weapon_data = character_data_info.get("weapon", {})
+        if weapon_data:
+            self.weapon_data = resource_manager.get_weapon_data(weapon_data)

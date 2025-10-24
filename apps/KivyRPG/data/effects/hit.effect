@@ -1,14 +1,14 @@
 {
 "emitter_data": {
     "sound_file":"hits/clap_hi",
-    "particle_count": 10
+    "particle_count": 20
 },
 "particle_data": {
     "is_world_space":True,
     "elastin":0.8, 
     "collision":False, 
     "size":[100,100], 
-    "image_file":"explosion",
+    "image_file":"fx/explosion",
     "loop":1, 
     "fade":1.0,
     "sequence":[4,4], 

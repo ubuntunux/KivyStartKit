@@ -57,16 +57,19 @@ class MainApp(App, SingletonInstance):
         self.root_widget = None
         self.screen_helper = None
         self.ui_manager = UIManager()
-        self.exit_popup = KivyPopup()
+        self.exit_popup = None
+        self.error_message = None
+        self.error_message_popup = None 
         self.key_press_time = {}
 
         self.bind(on_start=self.do_on_start)
 
     def build(self):
         #Window.maximize()
-        Window.softinput_mode = 'below_target'
-        # keyboard_mode: '', 'system', 'dock', 'multi', 'systemanddock', 'systemandmulti'
-        Config.set('kivy', 'keyboard_mode', 'system')
+        softinput_modes = ['pan', 'below_target', 'resize', 'scale']
+        Window.softinput_mode = softinput_modes[0]
+        keyboard_modes = ['', 'system', 'dock', 'multi', 'systemanddock', 'systemandmulti']
+        Config.set('kivy', 'keyboard_mode', keyboard_modes[1])
         Window.configure_keyboards()
         Window.bind(on_resize=self.on_resize)
         Window.bind(on_key_up=self.on_key_up)
@@ -90,11 +93,24 @@ class MainApp(App, SingletonInstance):
         btn_no = Button(text='No')
         btn_yes.bind(on_press=on_press_yes)
         btn_no.bind(on_press=lambda inst: self.exit_popup.dismiss())
+        self.exit_popup = KivyPopup()
         self.exit_popup.initialize_popup(
             title="Exit",
             content_widget=content_widget,
             buttons=[btn_no, btn_yes]
         )
+
+        self.error_message_popup = KivyPopup()
+        self.error_message = Label(text="")
+        btn_close = Button(text='Close')
+        btn_close.bind(on_press=lambda inst: self.error_message_popup.dismiss())
+        self.error_message_popup.initialize_popup(
+            title="Error",
+            content_widget=self.error_message,
+            buttons=[btn_close],
+            size_hint=(1,1)
+        )
+
         return self.root_widget
 
     def destroy(self):
@@ -112,6 +128,14 @@ class MainApp(App, SingletonInstance):
 
     def set_orientation(self, orientation="all"):
         self.platform_api.set_orientation(orientation)
+
+    def on_error(self, message):
+        if message:
+            message = str(message)
+            self.error_message.text = message
+            if not self.error_message_popup.is_opened():
+                 self.error_message_popup.open()
+            Logger.error(message)
 
     def do_on_start(self, ev):
         self.register_modules()
@@ -182,12 +206,11 @@ class MainApp(App, SingletonInstance):
                 with open(filename, "r") as f:
                     app_info = eval(f.read())
             except:
-                Logger.error(traceback.format_exc())
+                self.on_error(traceback.format_exc())
             self.register_module_info(app_info)
         self.ui_manager.arrange_icons()
 
     def register_module_info(self, app_info):
-        print(app_info)
         module_dirname = app_info.get("path", "")
         module_name = app_info.get("module", "")
         module_path = os.path.join(module_dirname, module_name)
@@ -197,10 +220,11 @@ class MainApp(App, SingletonInstance):
                 sys.path.append(module_dirname)
             try:
                 exec(f"import {module_name}")
+                #exec(f"importlib.reload({module_name})")
                 loaded_module = sys.modules.get(module_name)
                 result = self.register_module(loaded_module)
             except:
-                Logger.error(traceback.format_exc())
+                self.on_error(traceback.format_exc())
         return result
 
     def register_module(self, module):
@@ -223,7 +247,7 @@ class MainApp(App, SingletonInstance):
         self.ui_manager.create_app_icon(
             module_path=module.__file__,
             icon_name=app_class.get_app_name(),
-            icon_file=LOGO_FILE,
+            icon_file=app_class.get_app_icon_file(),
             on_press=partial(create_app, module),
             on_long_press=partial(delete_app, module)
         )
@@ -245,8 +269,7 @@ class MainApp(App, SingletonInstance):
         except:
             error = traceback.format_exc()
             Logger.info(error)
-            # todo - popup message
-            toast(error)
+            self.error_message.text = error
             return
 
         if app is None or not isinstance(app, BaseApp):
@@ -260,10 +283,7 @@ class MainApp(App, SingletonInstance):
             try:
                 app.initialize(display_name=display_name)
             except:
-                error = traceback.format_exc()
-                Logger.info(error)
-                # todo - popup message
-                toast(error)
+                self.on_error(traceback.format_exc())
                 return
 
             self.ui_manager.create_active_app_button(

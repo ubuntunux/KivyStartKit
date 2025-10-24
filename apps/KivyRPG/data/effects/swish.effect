@@ -8,7 +8,7 @@
     "elastin":0.0, 
     "collision":False, 
     "size":[100,100], 
-    "image_file":"swish",
+    "image_file":"fx/swish",
     "loop":1, 
     "fade":1.0,
     "sequence":[1,1], 
