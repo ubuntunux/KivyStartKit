@@ -68,7 +68,7 @@ orientation = landscape, portrait
 osx.python_version = 3
 
 # Kivy version to use
-osx.kivy_version = 1.9.1
+osx.kivy_version = 2.3.0
 
 #
 # Android specific
@@ -85,7 +85,7 @@ fullscreen = 0
 #android.presplash_color = #FFFFFF
 
 # (int) Android API to use
-#android.api = 30
+android.api = 31
 
 # (int) Minimum API required
 #android.minapi = 30
@@ -180,7 +180,7 @@ android.manifest.launch_mode = standard
 #android.copy_libs = 1
 
 # (str) The Android arch to build for, choices: armeabi-v7a, arm64-v8a, x86
-android.arch = armeabi-v7a
+android.archs = arm64-v8a
 
 #
 # Python for android (p4a) specific
