@@ -27,15 +27,15 @@ class Character(Scatter):
         cls.level_manager = level_manager
         cls.effect_manager = effect_manager
     
-    def __init__(self, character_data, pos, size):
-        super().__init__(size=size)
+    def __init__(self, character_data, pos):
+        super().__init__(size=character_data.size)
         actor_type = character_data.actor_type
         action = Action(character_data.action_data)
         character_property = CharacterProperty(self, character_data.property_data)
         behavior = Behavior.create_behavior(self, actor_type) 
        
         self.action = action
-        self.image = Image(size=size, fit_mode="fill")
+        self.image = Image(size=character_data.size, fit_mode="fill")
         self.image.texture = action.get_current_texture()
         self.add_widget(self.image)
         
@@ -43,7 +43,7 @@ class Character(Scatter):
         self.behavior = behavior
         self.transform_component = TransformComponent(self, pos, self.property)
         self.center = Vector(pos)
-        self.radius = math.sqrt(sum([x*x for x in size])) * 0.5
+        self.radius = math.sqrt(sum([x*x for x in self.size])) * 0.5
         self.updated_transform = True
         self.is_player = actor_type is ActorType.PLAYER
         
@@ -89,8 +89,11 @@ class Character(Scatter):
     def get_property(self):
         return self.property
 
+    def is_attackable(self):
+        return self.property.has_hp_property()
+
     def is_alive(self):
-        return 0 < self.property.get_hp()
+        return self.property.is_alive()
     
     def get_damage(self):
         return self.weapon.get_damage()
@@ -120,7 +123,7 @@ class Character(Scatter):
             self.action.set_action_state(ActionState.ATTACK)
             self.weapon.set_attack(self.get_front())
             target = self.level_manager.get_collide_point(self.get_attack_pos(), 100.0, [self])
-            if target and target is not self:
+            if target and target is not self and target.is_attackable():
                 damage = self.get_damage()
                 force = (target.get_pos() - self.get_pos()).normalize() * 1000.0
                 self.actor_manager.regist_attack_info(self, target, damage, force)

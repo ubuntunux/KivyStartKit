@@ -5,8 +5,13 @@ from utility.kivy_helper import *
 
 class ActorType(Enum):
     PLAYER = 0
-    MONSTER = 1
-    SPAWNER = 2
+    PATROLLER = 1
+    GUARDIAN = 2
+    STALKER = 3
+    INVADER = 4
+    # props
+    DUNGEON = 5
+
 
 class ActionData():
     def __init__(self, character_name, action_name, texture, region):
@@ -14,8 +19,8 @@ class ActionData():
         self.name = action_name
         self.texture = get_texture_atlas(texture, region)
 
-class SpawnerPropertyData:
-    def __init__(self, resource_manager, property_data):
+class DungeonPropertyData:
+    def __init__(self, property_data):
         self.spawn_data = []
         self.spawn_term = 3.0
         self.limit_spawn_count = 5
@@ -24,22 +29,25 @@ class SpawnerPropertyData:
                 setattr(self, key, value)
 
 class CharacterPropertyData():
-    def __init__(self, resource_manager, property_data):
+    def __init__(self, actor_type, property_data):
         self.walk_speed = 0
         self.max_hp = 0
         self.max_mp = 0
         self.max_sp = 0
-        self.spawner_property_data = None
         for (key, value) in property_data.items():
             if hasattr(self, key):
                 setattr(self, key, value)
-            elif key == 'spawner_property':
-                self.spawner_property_data = SpawnerPropertyData(resource_manager, value) 
+
+        self.extra_property_data = None
+        extra_property_data = property_data.get('extra_property', {})
+        if actor_type == ActorType.DUNGEON:
+            self.extra_property_data = DungeonPropertyData(extra_property_data) 
 
 
 class CharacterData():
     def __init__(self, resource_manager, name, character_data_info):       
         self.name = name
+        self.size = tuple(character_data_info.get("size", TILE_SIZE))
         self.actor_type = getattr(ActorType, character_data_info.get("actor_type"))
         self.action_data = {}
         self.weapon_data = None
@@ -56,7 +64,7 @@ class CharacterData():
                 src_image.texture,
                 action_data_info["region"]
             )
-        self.property_data = CharacterPropertyData(resource_manager, character_data_info.get("property", {}))
+        self.property_data = CharacterPropertyData(self.actor_type, character_data_info.get("property", {}))
         weapon_data = character_data_info.get("weapon", {})
         if weapon_data:
             self.weapon_data = resource_manager.get_weapon_data(weapon_data)

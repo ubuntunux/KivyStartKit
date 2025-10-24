@@ -1,10 +1,10 @@
 {
-    "actor_type": "SPAWNER",
+    "actor_type": "DUNGEON",
     "source": "props/dungeon",
+    "size": (200, 200),
     "property": {
-        "max_hp": 100.0,
-        "spawner_property": {
-            "spawn_data": ["monster"],
+        "extra_property": {
+            "spawn_data": ["patroller"],
             "spawn_term": 5.0,
             "limit_spawn_count": 3
         }

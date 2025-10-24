@@ -75,11 +75,7 @@ class ActorManager(SingletonInstance):
         if pos is None:
             pos = self.level_manager.get_random_pos()
         character_data = GameResourceManager.instance().get_character_data(actor_data_name)  
-        character = Character(
-            character_data=character_data,
-            pos=pos,
-            size=TILE_SIZE,
-        )
+        character = Character(character_data=character_data, pos=pos)
         self.actors.append(character)
         if character.is_player:
             self.player = character
@@ -107,7 +103,7 @@ class ActorManager(SingletonInstance):
         self.spawn_timer -= dt
         if self.spawn_timer < 0.0 and len(self.actors) < self.limit_actors:
             pos = self.level_manager.get_random_pos()
-            self.spawn_actor("spawner", pos)
+            self.spawn_actor("dungeon", pos)
             self.spawn_timer = self.spawn_term
         effect_manager = GameEffectManager.instance()
         # dead

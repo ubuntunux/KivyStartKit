@@ -1,0 +1,16 @@
+{
+    "actor_type": "GUARDIAN",
+    "source": "characters/rpg_sprites_10",
+    "actions": {
+        "idle": {
+            "region": (1/4, 0, 2/4, 1/2)
+        }
+    },
+    "property": {
+        "walk_speed": 100.0,
+        "max_sp": 100.0,
+        "max_hp": 100.0,
+        "max_mp": 100.0
+    },
+    "weapon":"bow"
+}

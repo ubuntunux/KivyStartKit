@@ -7,6 +7,7 @@ from kivy.uix.widget import Widget
 from kivy.vector import Vector
 from kivy.metrics import dp
 from utility.kivy_helper import *
+from .character_data import *
 from .constant import *
 
 class BaseProperty:
@@ -19,7 +20,7 @@ class BaseProperty:
     def update_property(self, dt):
         pass
 
-class SpawnerProperty(BaseProperty):
+class DungeonProperty(BaseProperty):
     def __init__(self, owner, property_data):
         super().__init__(owner)
         self.property_data = property_data
@@ -44,14 +45,16 @@ class CharacterProperty(BaseProperty):
         self.mp = 0.0
         self.sp = 0.0
         self.move_speed = 1.0
-        self.spawner_property = None
+        self.extra_property = None
         self.property_data = property_data
         self.ui_width = dp(48)
         self.ui_layout = None
         self.ui_hp = None
+        self.alive = True 
 
-        if property_data.spawner_property_data:
-            self.spawner_property = SpawnerProperty(owner, property_data.spawner_property_data)
+        extra_property_data = property_data.extra_property_data
+        if isinstance(extra_property_data, DungeonPropertyData):
+            self.extra_property = DungeonProperty(owner, extra_property_data)
 
         self.reset_property()
         self.build_ui()
@@ -79,12 +82,16 @@ class CharacterProperty(BaseProperty):
             self.ui_layout.add_widget(self.ui_hp)
 
     def reset_property(self):
-        if self.spawner_property:
-            self.spawner_property.reset_property()
+        if self.extra_property:
+            self.extra_property.reset_property()
         self.sp = self.property_data.max_sp
         self.hp = self.property_data.max_hp
         self.mp = self.property_data.max_mp
+        self.alive = True 
     
+    def is_alive(self):
+        return self.alive
+
     def has_sp_property(self):
         return 0 <self.property_data.max_sp
 
@@ -128,14 +135,20 @@ class CharacterProperty(BaseProperty):
         return self.property_data.walk_speed * self.move_speed
     
     def set_damage(self, damage):
-        self.hp -= damage
-        
+        if self.is_alive() and self.has_hp_property():
+            self.hp -= damage
+            if self.hp <= 0:
+                self.set_dead()
+
+    def set_dead(self):
+        self.alive = False
+
     def set_move_speed(self, move_speed):
         self.move_speed = move_speed
 
     def update_property(self, dt):
-        if self.spawner_property:
-            self.spawner_property.update_property(dt)
+        if self.extra_property:
+            self.extra_property.update_property(dt)
         if self.has_hp_property():
             self.ui_hp.width = self.ui_width * (self.get_hp() / self.get_max_hp())
 
