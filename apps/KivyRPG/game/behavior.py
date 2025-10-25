@@ -19,6 +19,7 @@ class Behavior:
             return BehaviorMonster
         elif actor_type == ActorType.DUNGEON:
             return BehaviorDungeon
+        return BehaviorMonster
         assert False, "not implemented"
 
     @classmethod

@@ -3,7 +3,7 @@
     "source": "characters/rpg_sprites_10",
     "actions": {
         "idle": {
-            "region": (3/4, 0, 4/4, 1/2)
+            "region": (3/4, 0, 1/4, 1/2)
         }
     },
     "property": {

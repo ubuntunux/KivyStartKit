@@ -29,9 +29,7 @@ class ActorManager(SingletonInstance):
         self.dead_characters = []
         self.attack_infos = []
         self.player = None
-        self.spawn_term = 3.0
-        self.spawn_timer = 0.0
-        self.limit_actors = 15
+        self.test = True
              
     def initialize(self, level_manager):
         self.level_manager = level_manager
@@ -60,7 +58,8 @@ class ActorManager(SingletonInstance):
         self.spawn_timer = 0.0
         self.clear_actors()
         self.spawn_player()
-    
+        self.test = True 
+        
     def spawn_player(self):
         if not self.player:
             pos = self.level_manager.get_random_pos()
@@ -100,12 +99,29 @@ class ActorManager(SingletonInstance):
         self.attack_infos.append(AttackInfo(actor, target, damage, force))
     
     def update(self, dt):
-        self.spawn_timer -= dt
-        if self.spawn_timer < 0.0 and len(self.actors) < self.limit_actors:
-            pos = self.level_manager.get_random_pos()
-            self.spawn_actor("dungeon", pos)
-            self.spawn_timer = self.spawn_term
         effect_manager = GameEffectManager.instance()
+
+        # spawn test
+        if self.test:
+            data = [
+                'patroller',
+                'guardian',
+                'stalker',
+                'invader',
+                'guard',
+                'carpenter',
+                'merchant',
+                'miner',
+                'farmer',
+                'civilian',
+                'castle',
+                'dungeon'
+            ]
+            for data_name in data:
+                pos = self.level_manager.get_random_pos()
+                self.spawn_actor(data_name, pos)
+            self.test = False
+
         # dead
         for actor in self.dead_characters:
             self.remove_actor(actor)

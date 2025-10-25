@@ -11,8 +11,16 @@ class ActorType(Enum):
     GUARDIAN = 2
     STALKER = 3
     INVADER = 4
+    # npc
+    GUARD = 1000
+    CARPENTER = 1001
+    CIVILIAN = 1002
+    MERCHANT = 1003
+    MINER = 1004
+    FARMER = 1005
     # props
-    DUNGEON = 5
+    CASTLE = 2000
+    DUNGEON = 2001
 
 
 class ActionData():
