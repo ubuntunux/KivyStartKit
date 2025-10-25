@@ -31,7 +31,8 @@ class ActorManager(SingletonInstance):
         self.player = None
         self.test = True
              
-    def initialize(self, level_manager):
+    def initialize(self, game_controller, level_manager):
+        self.game_controller = game_controller
         self.level_manager = level_manager
         Character.set_managers(
             actor_manager=self, 
@@ -144,6 +145,8 @@ class ActorManager(SingletonInstance):
                     effect_name="hit",
                     attach_to=attack_info.target
                 )
+                if not attack_info.target.is_player:
+                    self.game_controller.set_target(attack_info.target)
                 if not attack_info.target.is_alive():
                     self.dead_characters.append(attack_info.target)
         self.attack_infos = []

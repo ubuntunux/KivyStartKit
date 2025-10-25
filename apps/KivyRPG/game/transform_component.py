@@ -5,7 +5,7 @@ from .constant import *
 from .level import LevelManager
     
 class TransformComponent():
-    def __init__(self, actor, pos, properties):
+    def __init__(self, actor, pos, property):
         self.level_manager = LevelManager.instance()
         self.actor = actor
         self.target_actor = None
@@ -18,7 +18,7 @@ class TransformComponent():
         self.bound_max = Vector(pos) + self.size * 0.5
         self.front = Vector(1, 0)
         self.move_direction = Vector(0,0)
-        self.properties = properties
+        self.property = property
         self.attack_force = Vector(0,0)        
     
     def get_pos(self):
@@ -72,7 +72,7 @@ class TransformComponent():
     def update_transform(self, dt):
         level_manager = self.actor.level_manager  
         pos = Vector(self.get_pos())
-        move_dist = self.properties.get_walk_speed() * dt
+        move_dist = self.property.get_walk_speed() * dt
         if self.move_to_target:
             if self.target_actor:
                 self.target_pos = self.target_actor.get_pos()

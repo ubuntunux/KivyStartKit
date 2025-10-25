@@ -2,6 +2,7 @@ from kivy.graphics.transformation import Matrix
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.image import Image
+from kivy.uix.label import Label
 from kivy.uix.scatter import Scatter
 from kivy.uix.widget import Widget
 from kivy.vector import Vector
@@ -29,29 +30,31 @@ class Character(Scatter):
     
     def __init__(self, character_data, pos):
         super().__init__(size=character_data.size)
-        actor_type = character_data.actor_type
-        action = Action(character_data.action_data)
-        character_property = CharacterProperty(self, character_data.property_data)
-        behavior = Behavior.create_behavior(self, actor_type) 
-       
-        self.action = action
-        self.image = Image(size=character_data.size, fit_mode="fill")
-        self.image.texture = action.get_current_texture()
-        self.add_widget(self.image)
-        
-        self.property = character_property
-        self.behavior = behavior
-        self.transform_component = TransformComponent(self, pos, self.property)
+        actor_type = character_data.actor_type       
+        self.action = None
+        self.actor_type = actor_type       
+        self.property = None
+        self.behavior = None
         self.center = Vector(pos)
         self.radius = math.sqrt(sum([x*x for x in self.size])) * 0.5
         self.updated_transform = True
         self.is_player = actor_type is ActorType.PLAYER
         
+        self.action = Action(character_data.action_data)
+        self.property = CharacterProperty(self, character_data.property_data)
+        self.behavior = Behavior.create_behavior(self, actor_type) 
+        self.image = Image(size=character_data.size, fit_mode="fill")
+        self.image.texture = self.action.get_current_texture()
+        self.add_widget(self.image)
+        self.transform_component = TransformComponent(self, pos, self.property)
         self.weapon = None
         if character_data.weapon_data:
             self.weapon = Weapon(self, character_data.weapon_data)
             self.add_widget(self.weapon)
-    
+ 
+    def get_is_player(self):
+        return self.is_player
+
     def on_touch_down(inst, touch):
         # do nothing
         return False

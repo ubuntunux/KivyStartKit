@@ -57,7 +57,8 @@ class CharacterProperty(BaseProperty):
             self.extra_property = DungeonProperty(owner, extra_property_data)
 
         self.reset_property()
-        self.build_ui()
+        if owner.get_is_player():
+            self.build_ui()
 
     def build_ui(self):
         if not self.has_sp_property() and not self.has_hp_property() and not self.has_mp_property():
@@ -149,7 +150,7 @@ class CharacterProperty(BaseProperty):
     def update_property(self, dt):
         if self.extra_property:
             self.extra_property.update_property(dt)
-        if self.has_hp_property():
+        if self.owner.get_is_player() and self.has_hp_property():
             self.ui_hp.width = self.ui_width * (self.get_hp() / self.get_max_hp())
 
 

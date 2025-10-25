@@ -59,7 +59,7 @@ class KivyRPGApp(BaseApp):
     def on_initialize(self):
         self.resource_manager.initialize()
         self.level_manager.initialize(self, self.actor_manager, self.effect_manager)
-        self.actor_manager.initialize(self.level_manager)
+        self.actor_manager.initialize(self.game_controller, self.level_manager)
         self.effect_manager.initialize(self.level_manager, self.level_manager.get_effect_layout())
         self.game_controller.initialize(self, self.level_manager, self.actor_manager)
         self.build()
