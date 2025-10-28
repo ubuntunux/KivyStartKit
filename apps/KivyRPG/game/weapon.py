@@ -48,7 +48,7 @@ class Weapon(Scatter):
             size=(100, 100)
             is_actor_flip_x = self.actor.get_direction_x() < 0
             is_dir_vertical = abs(attack_dir.x) < abs(attack_dir.y)
-            offset = 50.0
+            offset = 0.0
             
             # adjust offset
             if is_dir_vertical:

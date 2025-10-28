@@ -85,6 +85,12 @@ class Character(Scatter):
     def get_prev_pos(self):
         return self.transform_component.get_prev_pos()
     
+    def get_bound_min(self):
+        return self.transform_component.bound_min 
+
+    def get_bound_max(self):
+        return self.transform_component.bound_max
+
     def get_updated_transform(self):
         return self.updated_transform
         

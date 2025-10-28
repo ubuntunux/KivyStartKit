@@ -42,6 +42,9 @@ class QuickSlotUI:
 
         parent_layer.add_widget(layout)
 
+    def on_resize(self, window, width, height):
+        pass
+
     def update(self, dt):
         player = self.actor_manager.get_player()
 
@@ -49,35 +52,30 @@ class QuickSlotUI:
 class TargetPropertyUI:
     def __init__(self):
         self.ui_width = dp(200)
+        self.ui_height = dp(30)
         self.ui_hp = None
         self.ui_text = None
         self.ui_layout = None
+        self.ui_text_layout = None
         self.target = None
         self.target_time = 0.0
 
     def initialize(self, parent_layer):
         self.ui_width = Window.width * 0.8
-        ui_height = dp(30)
         self.ui_layout = BoxLayout(
             orientation='vertical',
-            y=Window.height - ui_height * 2.0,
             pos_hint={'center_x': 0.5},
             size_hint=(None, None),
-            size=(self.ui_width, ui_height),
             padding=dp(4)
         )
         create_dynamic_rect(self.ui_layout, (0,0,0,1))
         parent_layer.add_widget(self.ui_layout)
 
-        self.ui_hp = Widget(
-            pos_hint={'x': 0}, 
-            size_hint=(1.0, 1),
-            width=self.ui_width
-        )
+        self.ui_hp = Widget(pos_hint={'x': 0}, size_hint=(1, 1))
         create_dynamic_rect(self.ui_hp, (1,0,0,1))
         self.ui_layout.add_widget(self.ui_hp)
 
-        layout = BoxLayout(
+        self.ui_text_layout = BoxLayout(
             orientation='vertical',
             y=self.ui_layout.y,
             pos_hint={'center_x': 0.5},
@@ -89,10 +87,18 @@ class TargetPropertyUI:
             text='TARGET',
             font_size=dp(20)
         )
-        layout.add_widget(self.ui_text)
-        parent_layer.add_widget(layout)
+        self.ui_text_layout.add_widget(self.ui_text)
+        parent_layer.add_widget(self.ui_text_layout)
+        self.on_resize(Window, Window.width, Window.height)
         self.set_target(None)
-    
+
+    def on_resize(self, window, width, height):
+        self.ui_width = window.width * 0.8
+        self.ui_layout.y = window.height - self.ui_height * 2.0
+        self.ui_layout.size = (self.ui_width, self.ui_height)
+        self.ui_text_layout.y = self.ui_layout.y
+        self.ui_text_layout.size = self.ui_layout.size
+
     def set_target(self, target):
         self.target_time = 3.0
         self.target = target
@@ -133,6 +139,10 @@ class PlayerPropertyUI:
         )
         
         parent_layer.add_widget(layout)
+    
+    def on_resize(self, window, width, height):
+        pass
+
     def update(self, dt):
         player = self.actor_manager.get_player()
 
@@ -211,6 +221,9 @@ class PlayerController:
 
     def close(self):
         self.keyboard_closed()
+
+    def on_resize(self, window, width, height):
+        pass
 
     def keyboard_closed(self):
         if platform != 'android':
@@ -332,7 +345,13 @@ class GameController(SingletonInstance):
 
     def close(self):
         self.player_controller.close()
-    
+
+    def on_resize(self, window, width, height):
+        self.player_controller.on_resize(window, width, height)
+        self.quick_slot.on_resize(window, width, height)
+        self.player_property_ui.on_resize(window, width, height)
+        self.target_property_ui.on_resize(window, width, height)
+     
     def set_target(self, target):
         self.target_property_ui.set_target(target)
 

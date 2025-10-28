@@ -88,11 +88,17 @@ class LevelManager(SingletonInstance):
     def get_random_pos(self):
         return self.tile_to_pos(self.get_random_tile_pos())
         
+    def clamp_pos_to_level_bound(self, actor):
+        return 0 <= actor.get_bound_min().x and \
+            actor.get_bound_max().x < self.tile_map_widget.width and \
+            0 <= actor.get_bound_min().y and \
+            actor.get_bound_max().y < self.tile_map_widget.height
+
     def is_in_level(self, actor):
-        return 0 <= actor.pos[0] and \
-            actor.pos[0] + actor.width < self.tile_map_widget.width and \
-            0 <= actor.pos[1] and \
-            actor.pos[1] + actor.height < self.tile_map_widget.height
+        return 0 <= actor.get_bound_min().x and \
+            actor.get_bound_max().x < self.tile_map_widget.width and \
+            0 <= actor.get_bound_min().y and \
+            actor.get_bound_max().y < self.tile_map_widget.height
         
     def is_blocked(self, pos, filter_actor=None):
         actor = self.get_actor(pos)

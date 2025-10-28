@@ -77,7 +77,7 @@ class KivyRPGApp(BaseApp):
         pass
         
     def on_resize(self, window, width, height):
-        pass
+        self.game_controller.on_resize(window, width, height)
         
     def on_update(self, dt):
         self.debug_label.update(dt)
