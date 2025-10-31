@@ -40,7 +40,6 @@ from .constants import *
 from .base_app import BaseApp
 from .ui import UIManager
 
-
 class MainApp(App, SingletonInstance):
     app_name = "Kivy Start Kit"
     app_directory = "apps"
@@ -101,7 +100,10 @@ class MainApp(App, SingletonInstance):
         )
 
         self.error_message_popup = KivyPopup()
-        self.error_message = Label(text="")
+        self.error_message = Label(text="", size_hint=(None, None))
+        def update_text_size(inst, value):
+            inst.size = value
+        self.error_message.bind(texture_size=update_text_size)
         btn_close = Button(text='Close')
         btn_close.bind(on_press=lambda inst: self.error_message_popup.dismiss())
         self.error_message_popup.initialize_popup(
@@ -269,7 +271,7 @@ class MainApp(App, SingletonInstance):
         except:
             error = traceback.format_exc()
             Logger.info(error)
-            self.error_message.text = error
+            self.on_error(error)
             return
 
         if app is None or not isinstance(app, BaseApp):

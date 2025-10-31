@@ -329,8 +329,9 @@ class EditorLayout():
             text = "text",
             lexer=CythonLexer(),
             multiline=True,
-            do_wrap=True,
-            size_hint=(1, None),
+            do_wrap=False,
+            size_hint=(None, None),
+            width=Window.width,
             font_name=constants.DEFAULT_FONT_NAME, 
             auto_indent = True,
             background_color=(.9, .9, .9, 1), 
@@ -339,6 +340,18 @@ class EditorLayout():
             padding_y="15dp"
         )    
 
+        def update_text_size(inst, value):
+            inst.size_hint_x = None
+            max_width = 0
+            for line in inst.text.splitlines():
+                line_width = inst._get_text_width(line, inst.tab_width, None)
+                if line_width > max_width:
+                    max_width = line_width
+            total_padding_width = inst.padding[0] + inst.padding[2]
+            new_width = max_width + total_padding_width
+            inst.width = max(Window.width, new_width)
+        editor_input.bind(text=update_text_size)
+ 
         # textinput scroll view
         text_inputs_scroll_view = ScrollView(
             size_hint=(1, 1) 
