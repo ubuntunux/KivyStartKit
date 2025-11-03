@@ -21,6 +21,9 @@ class TransformComponent():
         self.property = property
         self.attack_force = Vector(0,0)        
     
+    def get_size(self):
+        return self.size
+
     def get_pos(self):
         return self.pos
         
@@ -32,6 +35,8 @@ class TransformComponent():
         
     def set_pos(self, pos):
         self.pos = Vector(pos)
+        self.bound_min = self.pos - self.size * 0.5
+        self.bound_max = self.pos + self.size * 0.5
     
     def set_move_direction(self, direction):
         self.target_actor = None
@@ -55,12 +60,11 @@ class TransformComponent():
             self.move_to(actor.get_pos())
         self.target_actor = actor
             
-    def collide_actor(self, actor):
-        other = actor.transform_component
-        if other.bound_max.x < self.bound_min.x or \
-            other.bound_max.y < self.bound_min.y or \
-            self.bound_max.x < other.bound_min.x or \
-            self.bound_max.y < other.bound_min.y:
+    def collide_actor(self, bound_min, bound_max):
+        if bound_max.x < self.bound_min.x or \
+            bound_max.y < self.bound_min.y or \
+            self.bound_max.x < bound_min.x or \
+            self.bound_max.y < bound_min.y:
             return False
         return True
 
@@ -93,9 +97,10 @@ class TransformComponent():
             pos.y += self.move_direction.y * move_dist 
         self.move_direction = Vector(0,0) # reset
         self.prev_pos = Vector(self.pos)
-        self.pos = pos
-        self.bound_min = pos - self.size * 0.5
-        self.bound_max = pos + self.size * 0.5
+        bound_min = pos - self.size * 0.5
+        bound_max = pos + self.size * 0.5
+        pos = level_manager.clamp_pos_to_level_bound(pos, bound_min, bound_max)
+        self.set_pos(pos)
         if self.attack_force.x != 0 or self.attack_force.y != 0:
             self.pos += self.attack_force * dt
             f = max(0, self.attack_force.length() - 2500.0 * dt)

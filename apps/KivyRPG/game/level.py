@@ -88,11 +88,16 @@ class LevelManager(SingletonInstance):
     def get_random_pos(self):
         return self.tile_to_pos(self.get_random_tile_pos())
         
-    def clamp_pos_to_level_bound(self, actor):
-        return 0 <= actor.get_bound_min().x and \
-            actor.get_bound_max().x < self.tile_map_widget.width and \
-            0 <= actor.get_bound_min().y and \
-            actor.get_bound_max().y < self.tile_map_widget.height
+    def clamp_pos_to_level_bound(self, pos, bound_min, bound_max):
+        if bound_min.x < 0:
+           pos.x -= bound_min.x
+        elif self.tile_map_widget.width < bound_max.x:
+           pos.x += self.tile_map_widget.width - bound_max.x 
+        if bound_min.y < 0:
+           pos.y -= bound_min.y
+        elif self.tile_map_widget.height < bound_max.y:
+           pos.y += self.tile_map_widget.height - bound_max.y
+        return pos
 
     def is_in_level(self, actor):
         return 0 <= actor.get_bound_min().x and \
@@ -104,11 +109,11 @@ class LevelManager(SingletonInstance):
         actor = self.get_actor(pos)
         return actor is not filter_actor and actor is not None
     
-    def get_collide_actor(self, actor):
+    def get_collide_actor(self, bound_min, bound_max, filter=None):
         targets = []
         for target in self.actor_manager.get_actors():
-            if target and target is not actor:
-                if actor.collide_actor(target):
+            if target and target is not filter:
+                if target.collide_actor(bound_min, bound_max):
                     targets.append(target)
         return targets
 

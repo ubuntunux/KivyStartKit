@@ -78,10 +78,16 @@ class Character(Scatter):
     
     def get_radius(self):
         return self.radius
+
+    def get_size(self):
+        return self.transform_component.get_size()
     
     def get_pos(self):
         return self.transform_component.get_pos()
     
+    def set_pos(self, pos):
+        self.transform_component.set_pos(pos)
+
     def get_prev_pos(self):
         return self.transform_component.get_prev_pos()
     
@@ -126,20 +132,23 @@ class Character(Scatter):
     def trace_actor(self, actor):
         self.transform_component.trace_actor(self.level_manager, actor)
 
-    def collide_actor(self, other):
-        return self.transform_component.collide_actor(other)
+    def collide_actor(self, bound_min, bound_max):
+        return self.transform_component.collide_actor(bound_min, bound_max)
 
     # Actions    
     def set_attack(self):
         if self.weapon and not self.action.is_action_state(ActionState.ATTACK):
             self.action.set_action_state(ActionState.ATTACK)
-            self.weapon.set_attack(self.get_front())
-            targets = self.level_manager.get_collide_actor(self)
-            #targets = self.level_manager.get_collide_point(self.get_attack_pos(), 100.0, [self])
+            front = self.get_front()
+            self.weapon.set_attack(front)
+            attack_bound = self.get_size() * front
+            attack_bound_min = self.get_bound_min() + attack_bound
+            attack_bound_max = self.get_bound_max() + attack_bound
+            targets = self.level_manager.get_collide_actor(attack_bound_min, attack_bound_max, filter=self)
             for target in targets:
                 if target and target is not self and target.is_attackable():
                     damage = self.get_damage()
-                    force = (target.get_pos() - self.get_pos()).normalize() * 1000.0
+                    force = (target.get_pos() - self.get_pos()).normalize() * ATTACK_FORCE
                     self.actor_manager.regist_attack_info(self, target, damage, force)
     
     def update(self, dt):

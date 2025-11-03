@@ -16,10 +16,10 @@ class Behavior:
         if actor_type == ActorType.PLAYER:
             return BehaviorPlayer
         elif actor_type == ActorType.PATROLLER:
-            return BehaviorMonster
+            return BehaviorPatroller
         elif actor_type == ActorType.DUNGEON:
             return BehaviorDungeon
-        return BehaviorMonster
+        return BehaviorPatroller
         assert False, "not implemented"
 
     @classmethod
@@ -51,16 +51,18 @@ class BehaviorPlayer(Behavior):
     pass
 
 
-class BehaviorMonster(Behavior):
+class BehaviorPatroller(Behavior):
     def __init__(self, actor):
         super().__init__(actor)
         self.attack_time = 1.0
+        self.attack_range = 400.0
+        self.tracing_start_radius = 600.0
+        self.tracing_end_radius = 1200.0
+        self.patroll_radius = 500.0
+        self.move_speed = 1.0
+        self.tracing_speed = 3.0
         self.spawn_pos = Vector(0,0) 
-
-    def check_near_by_player(self, player):
-        tracing_radius = 600.0
-        return player.is_alive() and player.get_pos().distance(self.actor.get_pos()) < tracing_radius
-    
+   
     def set_behavior_state(self, behavior_state, behavior_time=1.0):
         super().set_behavior_state(behavior_state, behavior_time)
         actor_manager = self.actor.actor_manager
@@ -68,19 +70,27 @@ class BehaviorMonster(Behavior):
         player = actor_manager.get_player()
         if behavior_state == BehaviorState.ROAMING:
             pos = Vector(random.random() - 0.5, random.random() - 0.5).normalize()
-            pos = self.spawn_pos + pos * self.actor.get_radius() * 5.0
+            pos = self.spawn_pos + pos * self.patroll_radius 
+            bound_min = pos - self.actor.get_size()
+            bound_max = pos + self.actor.get_size()
+            pos = level_manager.clamp_pos_to_level_bound(pos, bound_min, bound_max)
             self.actor.move_to(pos)
-            self.actor.set_move_speed(1.0)
+            distance = self.spawn_pos.distance(self.actor.get_pos())
+            if distance > self.patroll_radius: 
+                self.actor.set_move_speed(self.tracing_speed)
+            else:
+                self.actor.set_move_speed(self.move_speed)
         elif behavior_state == BehaviorState.TRACE_TARGET:
             self.actor.trace_actor(player)
-            self.actor.set_move_speed(2.0)
+            self.actor.set_move_speed(self.tracing_speed)
                
     def update_behavior(self, dt):
         super().update_behavior(dt)
         actor_manager = self.actor.actor_manager
         level_manager = self.actor.level_manager
         player = actor_manager.get_player()
-        is_near_by_player = self.check_near_by_player(player)
+        player_distance = player.get_pos().distance(self.actor.get_pos())
+        is_near_by_player = player.is_alive() and player_distance < self.tracing_start_radius 
         is_behavior_done = self.behavior_time < 0
 
         if self.is_behavior_state(BehaviorState.NONE):
@@ -98,14 +108,13 @@ class BehaviorMonster(Behavior):
                 self.set_behavior_state(BehaviorState.IDLE)
         elif self.is_behavior_state(BehaviorState.TRACE_TARGET):        
             target_dist = player.get_pos().distance(self.actor.get_pos())
-            attack_range = 400.0
-            if self.attack_time < 0 and target_dist < attack_range:
+            if self.attack_time < 0 and target_dist < self.attack_range:
                 self.actor.set_attack()
                 self.attack_time = 1.0
             else:
                 self.attack_time -= dt
             
-            if not player.is_alive():
+            if not player.is_alive() or self.tracing_end_radius <= player_distance:
                 self.set_behavior_state(BehaviorState.ROAMING)
         
 class BehaviorDungeon(Behavior):
