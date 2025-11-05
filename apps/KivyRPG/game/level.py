@@ -129,9 +129,9 @@ class LevelManager(SingletonInstance):
         if actor and actor.parent is self.character_layer:
             self.character_layer.remove_widget(actor)
     
-    def add_actor(self, actor):
+    def add_actor(self, actor, layer_index=0):
         if actor and actor.parent is not self.character_layer:
-            self.character_layer.add_widget(actor)
+            self.character_layer.add_widget(actor, layer_index)
             
     def update_layer_size(self, layer_size):
         self.top_layer.size = layer_size

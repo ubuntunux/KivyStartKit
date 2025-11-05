@@ -1,0 +1,8 @@
+{
+    "actor_type": "INN",
+    "source": "props/building",
+    "size": (300, 300),
+    "property": {
+        "max_hp": 1000.0,
+    },
+}

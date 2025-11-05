@@ -18,9 +18,14 @@ class ActorType(Enum):
     MERCHANT = 1003
     MINER = 1004
     FARMER = 1005
-    # props
+    # buildings
     CASTLE = 2000
     DUNGEON = 2001
+    INN = 2002
+    # resources
+    FOREST = 3000
+    FARM = 3001
+    MINE = 3002
 
 
 class ActionData():

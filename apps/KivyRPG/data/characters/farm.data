@@ -1,0 +1,8 @@
+{
+    "actor_type": "FARM",
+    "source": "props/road",
+    "size": (200, 200),
+    "property": {
+        "max_hp": 100.0,
+    },
+}

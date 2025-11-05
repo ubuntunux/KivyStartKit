@@ -2,7 +2,7 @@ import random
 from kivy.vector import Vector
 from .behavior import *
 
-class BehaviorPatroller(Behavior):
+class BehaviorCivilian(Behavior):
     def __init__(self, actor):
         super().__init__(actor)
         self.attack_time = 1.0
@@ -19,7 +19,7 @@ class BehaviorPatroller(Behavior):
         super().set_behavior_state(behavior_state, behavior_time)
         actor_manager = self.actor.actor_manager
         level_manager = self.actor.level_manager
-        target = actor_manager.get_player()
+        target = None #actor_manager.get_player()
         self.target = target
         if behavior_state == BehaviorState.ROAMING:
             pos = Vector(random.random() - 0.5, random.random() - 0.5).normalize()
@@ -46,7 +46,7 @@ class BehaviorPatroller(Behavior):
         is_near_by_target = False
         if target and target.is_alive():
             target_distance = target.get_pos().distance(self.actor.get_pos())
-            is_near_by_target = target_distance < self.tracing_start_radius 
+            is_near_by_target = target_distance < self.tracing_start_radius
         is_behavior_done = self.behavior_time < 0
 
         if self.is_behavior_state(BehaviorState.NONE):

@@ -77,9 +77,11 @@ class ActorManager(SingletonInstance):
         character_data = GameResourceManager.instance().get_character_data(actor_data_name)  
         character = Character(character_data=character_data, pos=pos)
         self.actors.append(character)
+        layer_index = 1 if character.property.has_walk_property() else 2
         if character.is_player:
             self.player = character
-        self.level_manager.add_actor(character)
+            layer_index = 0
+        self.level_manager.add_actor(character, layer_index)
         return character
         
     def callback_touch(self, inst, touch):
@@ -116,7 +118,11 @@ class ActorManager(SingletonInstance):
                 'farmer',
                 'civilian',
                 'castle',
-                'dungeon'
+                'dungeon',
+                'inn',
+                'forest',
+                'farm',
+                'mine',
             ]
             for data_name in data:
                 pos = self.level_manager.get_random_pos()
