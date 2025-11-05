@@ -42,7 +42,7 @@ class Character(Scatter):
         
         self.action = Action(character_data.action_data)
         self.property = CharacterProperty(self, character_data.property_data)
-        self.behavior = Behavior.create_behavior(self, actor_type) 
+        self.behavior = create_behavior(self, actor_type) 
         self.image = Image(size=character_data.size, fit_mode="fill")
         self.image.texture = self.action.get_current_texture()
         self.add_widget(self.image)

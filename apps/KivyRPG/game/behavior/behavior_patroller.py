@@ -1,55 +1,7 @@
 from enum import Enum
 import random
 from kivy.vector import Vector
-from .character_data import ActorType 
-
-class BehaviorState(Enum):
-    NONE = 0
-    IDLE = 1
-    ROAMING = 2
-    TRACE_TARGET = 3
-
-
-class Behavior:
-    @staticmethod
-    def get_behavior_class(actor_type):
-        if actor_type == ActorType.PLAYER:
-            return BehaviorPlayer
-        elif actor_type == ActorType.PATROLLER:
-            return BehaviorPatroller
-        elif actor_type == ActorType.DUNGEON:
-            return BehaviorDungeon
-        return BehaviorPatroller
-        assert False, "not implemented"
-
-    @classmethod
-    def create_behavior(cls, owner, actor_type):
-        behavior_class = cls.get_behavior_class(actor_type)
-        return behavior_class(owner)
-
-    def __init__(self, actor):
-        self.actor = actor
-        self.behavior_state = BehaviorState.NONE
-        self.behavior_time = -1
-        
-    def is_behavior_state(self, behavior_state):
-        return behavior_state == self.behavior_state
-    
-    def get_behavior_state(self):
-        return self.behavior_state
-    
-    def set_behavior_state(self, behavior_state, behavior_time=3.0):
-        self.behavior_state = behavior_state
-        self.behavior_time = 1.0 + behavior_time * random.random()
-    
-    def update_behavior(self, dt):
-        if 0 < self.behavior_time:
-            self.behavior_time -= dt
-
-
-class BehaviorPlayer(Behavior):
-    pass
-
+from .behavior import *
 
 class BehaviorPatroller(Behavior):
     def __init__(self, actor):
@@ -71,8 +23,8 @@ class BehaviorPatroller(Behavior):
         if behavior_state == BehaviorState.ROAMING:
             pos = Vector(random.random() - 0.5, random.random() - 0.5).normalize()
             pos = self.spawn_pos + pos * self.patroll_radius 
-            bound_min = pos - self.actor.get_size()
-            bound_max = pos + self.actor.get_size()
+            bound_min = pos - self.actor.get_size() * 2.0
+            bound_max = pos + self.actor.get_size() * 2.0
             pos = level_manager.clamp_pos_to_level_bound(pos, bound_min, bound_max)
             self.actor.move_to(pos)
             distance = self.spawn_pos.distance(self.actor.get_pos())
@@ -116,23 +68,4 @@ class BehaviorPatroller(Behavior):
             
             if not player.is_alive() or self.tracing_end_radius <= player_distance:
                 self.set_behavior_state(BehaviorState.ROAMING)
-        
-class BehaviorDungeon(Behavior):
-    def __init__(self, actor):
-        super().__init__(actor)
-        self.spawn_time = 0.0
-        self.spawn_count = 0
-
-    def update_behavior(self, dt):
-        super().update_behavior(dt)
-        actor_manager = self.actor.actor_manager
-        extra_property = self.actor.property.extra_property
-        if self.spawn_count < extra_property.get_limit_spawn_count() and extra_property.get_spawn_data():
-            if self.spawn_time < 0.0:
-                self.spawn_count += 1 
-                self.spawn_time = max(1, extra_property.get_spawn_term())
-                spawn_data_name = random.choice(extra_property.get_spawn_data())
-                pos = Vector(random.random() - 0.5, random.random() - 0.5).normalize()
-                pos = pos * self.actor.get_radius() * 2.0 + self.actor.get_pos()
-                actor_manager.spawn_actor(spawn_data_name, pos)
-            self.spawn_time -= dt
+ 
