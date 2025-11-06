@@ -80,7 +80,10 @@ class App(BaseApp):
         content_height = DP(40)
         
         platform_api = platform.get_platform_api()
-        self.filechooser = FileChooserListView(size_hint=(1, None), path=platform_api.get_home_directory())
+        initial_path = '.' #platform_api.get_home_directory()
+        self.filechooser = FileChooserListView(
+            size_hint=(1, None), 
+            path=initial_path)
         def on_submit(*args, **kwargs):
             title.text = self.filechooser.path
         self.filechooser.bind(on_entries_cleared=on_submit)
