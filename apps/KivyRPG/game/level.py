@@ -189,23 +189,12 @@ class LevelManager(SingletonInstance):
     def open_level(self, level_name):
         self.close_level()
         self.generate_tile_map(level_name)
-        self.actor_manager.reset_actors()
         
     def close_level(self):
-        self.clear_level_actors()
+        self.character_layer.clear_widgets()
         self.tiles.clear()
         self.tile_map_widget.clear_widgets()
-        self.actor_manager.clear_actors()
-
-    def clear_level_actors(self):
-        self.character_layer.clear_widgets()
-    
-    def reset_level(self):
-        self.actor_manager.reset_actors()
-        
-    def callback_reset_level(self, inst):
-        self.reset_level()
-        
+ 
     def update(self, dt):
         player = self.actor_manager.get_player()
         if player and player.is_alive():

@@ -13,6 +13,7 @@ from kivy.metrics import dp
 from kivy.utils import platform 
 from utility.singleton import SingletonInstance
 from .game_resource import GameResourceManager
+from .ui.game_info_ui import GameInfoUI
 from .ui.target_property_ui import TargetPropertyUI
 from .ui.player_property_ui import PlayerPropertyUI
 from .ui.quick_slot_ui import QuickSlotUI
@@ -190,8 +191,9 @@ class GameController(SingletonInstance):
         self.quick_slot = QuickSlotUI(app, self)
         self.player_property_ui = PlayerPropertyUI(app, self) 
         self.target_property_ui = TargetPropertyUI()
+        self.game_info_ui = GameInfoUI()
         
-    def initialize(self, parent_widget, level_manager, actor_manager):
+    def initialize(self, parent_widget, game_manager, level_manager, actor_manager):
         self.level_manager = level_manager
         self.actor_manager = actor_manager
         self.controller_layer = FloatLayout(size_hint=(1,1))        
@@ -199,7 +201,8 @@ class GameController(SingletonInstance):
         self.quick_slot.initialize(actor_manager, self.controller_layer)
         self.player_property_ui.initialize(actor_manager, self.controller_layer)
         self.target_property_ui.initialize(self.controller_layer)
-        
+        self.game_info_ui.initialize(actor_manager, level_manager, self.controller_layer)
+
         # attack button
         layout = BoxLayout(pos_hint={"right":1}, size_hint=(None, None), size=(dp(180), dp(180)), padding=dp(30)) 
         btn = Button(text="Attack", size_hint=(1,1), opacity=0.5)
@@ -208,8 +211,8 @@ class GameController(SingletonInstance):
         self.controller_layer.add_widget(layout)
         
         # reset level
-        btn = Button(text="Reset Level", pos_hint={"right":1, "top":1}, size_hint=(None, None), size=(300, 150), opacity=0.5)
-        btn.bind(on_press=level_manager.callback_reset_level)
+        btn = Button(text="Reset", pos_hint={"right":1, "top":1}, size_hint=(None, None), size=(300, 150), opacity=0.5)
+        btn.bind(on_press=game_manager.callback_reset)
         self.controller_layer.add_widget(btn)
         
         parent_widget.add_widget(self.controller_layer)
@@ -222,6 +225,7 @@ class GameController(SingletonInstance):
         self.quick_slot.on_resize(window, width, height)
         self.player_property_ui.on_resize(window, width, height)
         self.target_property_ui.on_resize(window, width, height)
+        self.game_info_ui.on_resize(window, width, height)
      
     def set_target(self, target):
         self.target_property_ui.set_target(target)
@@ -234,6 +238,7 @@ class GameController(SingletonInstance):
         self.player_property_ui.update(dt)
         self.quick_slot.update(dt)
         self.target_property_ui.update(dt)
+        self.game_info_ui.update(dt)
         
         
     

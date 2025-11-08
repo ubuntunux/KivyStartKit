@@ -4,9 +4,16 @@ from kivy.logger import Logger
 from kivy.metrics import dp as DP
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
+from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.textinput import TextInput
 from kivy.uix.scrollview import ScrollView
+
+class AutoLabel(Label):
+    def __init__(self, *args, **kargs):
+        super().__init__(*args, **kargs)
+        self.size_hint=(None, None)
+        self.bind(texture_size=self.setter('size'))
 
 class KivyLabel(TextInput):
     def __init__(

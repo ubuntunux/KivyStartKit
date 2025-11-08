@@ -18,7 +18,6 @@ class TargetPropertyUI:
         self.target_time = 0.0
 
     def initialize(self, parent_layer):
-        self.ui_width = Window.width * 0.8
         self.ui_layout = BoxLayout(
             orientation='vertical',
             pos_hint={'center_x': 0.5},
@@ -42,7 +41,7 @@ class TargetPropertyUI:
         )
         self.ui_text = Label(
             text='TARGET',
-            font_size=dp(20)
+            font_size=dp(16)
         )
         self.ui_text_layout.add_widget(self.ui_text)
         parent_layer.add_widget(self.ui_text_layout)
@@ -50,8 +49,9 @@ class TargetPropertyUI:
         self.set_target(None)
 
     def on_resize(self, window, width, height):
-        self.ui_width = window.width * 0.8
-        self.ui_layout.y = window.height - self.ui_height * 2.0
+        self.ui_width = window.width * 0.5
+        self.ui_height = dp(20)
+        self.ui_layout.y = window.height - (self.ui_height + dp(10)) 
         self.ui_layout.size = (self.ui_width, self.ui_height)
         self.ui_text_layout.y = self.ui_layout.y
         self.ui_text_layout.size = self.ui_layout.size

@@ -29,7 +29,6 @@ class ActorManager(SingletonInstance):
         self.dead_characters = []
         self.attack_infos = []
         self.player = None
-        self.test = True
              
     def initialize(self, game_controller, level_manager):
         self.game_controller = game_controller
@@ -54,12 +53,6 @@ class ActorManager(SingletonInstance):
             self.level_manager.pop_actor(actor)
         self.player = None
         self.actors.clear()
-        
-    def reset_actors(self):
-        self.spawn_timer = 0.0
-        self.clear_actors()
-        self.spawn_player()
-        self.test = True 
         
     def spawn_player(self):
         if not self.player:
@@ -87,47 +80,25 @@ class ActorManager(SingletonInstance):
     def callback_touch(self, inst, touch):
         touch_pos = Vector(touch.pos)
         actor = self.level_manager.get_collide_point(touch_pos)
-        if actor is not None:
-            self.get_player().trace_actor(actor)
-        else:
-            self.get_player().move_to(touch_pos)
-            
+        if self.player and self.player.is_alive():
+            if actor is not None:
+                self.get_player().trace_actor(actor)
+            else:
+                self.get_player().move_to(touch_pos)
+                
     def callback_move(self, direction):
-        self.get_player().set_move_direction(direction)
+        if self.player:
+            self.player.set_move_direction(direction)
         
     def callback_attack(self, inst):
-        self.get_player().set_attack()   
+        if self.player:
+            self.player.set_attack()   
         
     def regist_attack_info(self, actor, target, damage, force):
         self.attack_infos.append(AttackInfo(actor, target, damage, force))
     
     def update(self, dt):
         effect_manager = GameEffectManager.instance()
-
-        # spawn test
-        if self.test:
-            data = [
-                'patroller',
-                'guardian',
-                'stalker',
-                'invader',
-                'guard',
-                'carpenter',
-                'merchant',
-                'miner',
-                'farmer',
-                'civilian',
-                'castle',
-                'dungeon',
-                'inn',
-                'forest',
-                'farm',
-                'mine',
-            ]
-            for data_name in data:
-                pos = self.level_manager.get_random_pos()
-                self.spawn_actor(data_name, pos)
-            self.test = False
 
         # dead
         for actor in self.dead_characters:

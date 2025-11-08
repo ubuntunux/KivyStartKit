@@ -138,7 +138,7 @@ class EditorLayout():
         self.reFocusInputText = False
         self.file_browser = FileBrowser(self)
         self.app = app
-        self. is_keyboard_open = False
+        self.is_keyboard_open = False
 
     def build(self):
         self.build_editor_layout()
