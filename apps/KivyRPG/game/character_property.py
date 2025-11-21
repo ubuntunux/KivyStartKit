@@ -67,7 +67,7 @@ class CharacterProperty(BaseProperty):
         self.ui_layout = BoxLayout(
             orientation='vertical',
             size_hint=(None, None),
-            size=(self.ui_width + 2, dp(6)),
+            size=(self.ui_width + dp(2), dp(6)),
             padding=dp(1)
         )
         create_dynamic_rect(self.ui_layout, (0,0,0,1))

@@ -1,3 +1,4 @@
+import math
 from kivy.graphics.transformation import Matrix
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
@@ -28,9 +29,10 @@ class Character(Scatter):
         cls.level_manager = level_manager
         cls.effect_manager = effect_manager
     
-    def __init__(self, character_data, pos):
+    def __init__(self, name, character_data, pos):
         super().__init__(size=character_data.size)
         actor_type = character_data.actor_type       
+        self.name = name
         self.action = None
         self.actor_type = actor_type       
         self.property = None
@@ -39,7 +41,8 @@ class Character(Scatter):
         self.radius = math.sqrt(sum([x*x for x in self.size])) * 0.5
         self.updated_transform = True
         self.is_player = actor_type is ActorType.PLAYER
-        
+        self.update_term = 1.0 / 60.0        
+        self.update_time = 0.0
         self.action = Action(character_data.action_data)
         self.property = CharacterProperty(self, character_data.property_data)
         self.behavior = create_behavior(self, actor_type) 
@@ -86,7 +89,10 @@ class Character(Scatter):
         return self.transform_component.get_pos()
     
     def set_pos(self, pos):
+        self.updated_transform = self.updated_transform or (pos != self.get_pos())
         self.transform_component.set_pos(pos)
+        if self.updated_transform:
+            self.level_manager.update_actor_on_tile(self)
 
     def get_prev_pos(self):
         return self.transform_component.get_prev_pos()
@@ -151,19 +157,32 @@ class Character(Scatter):
                     force = (target.get_pos() - self.get_pos()).normalize() * ATTACK_FORCE
                     self.actor_manager.regist_attack_info(self, target, damage, force)
     
-    def update(self, dt):
+    def update(self, player_pos, dt):
+        if not self.is_player:
+            self.update_time += dt
+            if self.update_time < self.update_term:
+                return
+            else:
+                dt = self.update_time
+                self.update_time = 0.0
+            distance = player_pos.distance(self.get_pos())
+            self.update_term = 1.0 - math.exp((distance - 1000.0) * -0.001) 
+
         self.behavior.update_behavior(dt)
         self.action.update_action(dt)
         
         if self.weapon:
             self.weapon.update_weapon(dt, self.get_front())
 
-        if self.property.has_walk_property():
-            self.updated_transform = self.transform_component.update_transform(dt)
+        if self.updated_transform or self.property.has_walk_property():
+            self.updated_transform = self.transform_component.update_transform(dt) or self.updated_transform
             if self.updated_transform:
                 self.center = self.transform_component.get_pos()
                 prev_direction_x = self.get_direction_x()
                 curr_front_x = sign(self.transform_component.front.x)
                 if 0 != curr_front_x and prev_direction_x != curr_front_x:
                     self.flip_widget()
+                self.level_manager.update_actor_on_tile(self)
+        self.updated_transform = False
         self.property.update_property(dt) 
+

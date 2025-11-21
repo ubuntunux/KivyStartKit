@@ -98,11 +98,30 @@ class TransformComponent():
         self.move_direction = Vector(0,0) # reset
         self.prev_pos = Vector(self.pos)
         bound_min = pos - self.size * 0.5
-        bound_max = pos + self.size * 0.5
-        pos = level_manager.clamp_pos_to_level_bound(pos, bound_min, bound_max)
-        self.set_pos(pos)
+        bound_max = pos + self.size * 0.5 
+        collide_actors = level_manager.get_actors_on_tiles(bound_min, bound_max, filters=[self.actor])
+        if collide_actors:
+            for actor in collide_actors:
+                if not actor.collide_actor(bound_min, bound_max):
+                    continue
+                dx_l = actor.get_bound_max().x - bound_min.x 
+                dx_r = actor.get_bound_min().x - bound_max.x 
+                dy_b = actor.get_bound_max().y - bound_min.y 
+                dy_t = actor.get_bound_min().y - bound_max.y
+                if min(abs(dx_l), abs(dx_r)) < min(abs(dy_b), abs(dy_t)):
+                    dx = dx_l if abs(dx_l) < abs(dx_r) else dx_r
+                    bound_min.x += dx
+                    bound_max.x += dx
+                else:
+                    dy = dy_b if abs(dy_b) < abs(dy_t) else dy_t
+                    bound_min.y += dy
+                    bound_max.y += dy
+            pos = (bound_min + bound_max) * 0.5 
         if self.attack_force.x != 0 or self.attack_force.y != 0:
-            self.pos += self.attack_force * dt
+            pos += self.attack_force * dt * 0.0001
             f = max(0, self.attack_force.length() - 2500.0 * dt)
             self.attack_force = self.attack_force.normalize() * f
+        pos = level_manager.clamp_pos_to_level_bound(pos, bound_min, bound_max)
+        self.set_pos(pos)
+        level_manager.update_actor_on_tile(self.actor)
         return self.prev_pos != self.pos

@@ -22,9 +22,12 @@ class Behavior:
     def get_behavior_state(self):
         return self.behavior_state
     
-    def set_behavior_state(self, behavior_state, behavior_time=3.0):
+    def set_behavior_state(self, behavior_state, behavior_time=1.0, random_time=3.0):
         self.behavior_state = behavior_state
-        self.behavior_time = 1.0 + behavior_time * random.random()
+        self.set_behavior_time(behavior_time, random_time)
+
+    def set_behavior_time(self, behavior_time, random_time=0.0):
+        self.behavior_time = behavior_time + random_time * random.random()
     
     def update_behavior(self, dt):
         if 0 < self.behavior_time:

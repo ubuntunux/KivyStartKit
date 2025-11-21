@@ -26,6 +26,7 @@ class ActorManager(SingletonInstance):
         self.app = app
         self.level_manager = None
         self.actors = []
+        self.actor_type_map = {}
         self.dead_characters = []
         self.attack_infos = []
         self.player = None
@@ -47,36 +48,73 @@ class ActorManager(SingletonInstance):
         
     def get_actors(self):
         return self.actors
+
+    def get_actors_by_type(self, actor_type):
+        return self.actor_type_map.get(actor_type, [])
         
     def clear_actors(self):
         for actor in self.actors:
             self.level_manager.pop_actor(actor)
         self.player = None
         self.actors.clear()
-        
-    def spawn_player(self):
-        if not self.player:
-            pos = self.level_manager.get_random_pos()
-            return self.spawn_actor("player", pos)
-       
+        self.actor_type_map.clear()
+
     def remove_actor(self, actor):
         self.level_manager.pop_actor(actor)
         if actor in self.actors:
             self.actors.remove(actor)
+        actors_by_type = self.get_actors_by_type(actor.actor_type)
+        if actor in actors_by_type:
+            actors_by_type.remove(actor)
 
-    def spawn_actor(self, actor_data_name, pos=None):
+    def spawn_actor(self, actor_data_name, pos=None, name=''):
         if pos is None:
             pos = self.level_manager.get_random_pos()
+        if not name:
+            name = actor_data_name
         character_data = GameResourceManager.instance().get_character_data(actor_data_name)  
-        character = Character(character_data=character_data, pos=pos)
+
+        character = Character(character_data=character_data, pos=pos, name=name)
         self.actors.append(character)
+        if character.actor_type not in self.actor_type_map:
+            self.actor_type_map[character.actor_type] = []
+        self.actor_type_map[character.actor_type].append(character)
+
         layer_index = 1 if character.property.has_walk_property() else 2
         if character.is_player:
             self.player = character
             layer_index = 0
         self.level_manager.add_actor(character, layer_index)
         return character
-        
+
+    def spawn_around_actor_type(self, actor_data_name, target_actor_type, radius_min, radius_max):
+        target_actors = self.get_actors_by_type(target_actor_type)
+        if target_actors:
+            return self.spawn_around_actor(target_actors[0])
+        return None
+
+    def spawn_around_actor(self, actor_data_name, target_actor, radius_min, radius_max):
+        actor = self.spawn_actor(actor_data_name)
+        NUM_TRY = 10
+        for i in range(NUM_TRY):
+            x = random.random() * 2.0 - 1.0
+            y = random.random() * 2.0 - 1.0
+            t = random.random()
+            offset = radius_min * (1.0 - t) + radius_max * t
+            size = (target_actor.get_size() + actor.get_size()) * 0.5 + Vector(offset, offset) 
+            if abs(x) < abs(y):
+                x = target_actor.center[0] + size[0] * x
+                y = target_actor.center[1] + size[1] * (1 if 0 < y else -1)  
+            else:
+                x = target_actor.center[0] + size[0] * (1 if 0 < x else -1)
+                y = target_actor.center[1] + size[1] * y  
+            pos = Vector(x,y)
+            actor.set_pos(pos) 
+            if not self.level_manager.get_actors_on_tiles_with_actor(actor):
+                break
+        #self.app.debug_print(f'try: {i}')
+        return actor
+
     def callback_touch(self, inst, touch):
         touch_pos = Vector(touch.pos)
         actor = self.level_manager.get_collide_point(touch_pos)
@@ -91,6 +129,9 @@ class ActorManager(SingletonInstance):
             self.player.set_move_direction(direction)
         
     def callback_attack(self, inst):
+        actors = self.level_manager.actors
+        n=sum([len(x) for x in actors])
+
         if self.player:
             self.player.set_attack()   
         
@@ -106,9 +147,10 @@ class ActorManager(SingletonInstance):
         self.dead_characters = []
 
         # update
+        player_pos = self.player.get_pos() if self.player else Vector(0.0, 0.0)
         for actor in self.actors:
             if actor.is_alive():
-                actor.update(dt)
+                actor.update(player_pos, dt)
             else:
                self.dead_characters.append(actor)
         

@@ -15,7 +15,7 @@ class BehaviorCivilian(Behavior):
         self.spawn_pos = Vector(0,0) 
         self.target = None
    
-    def set_behavior_state(self, behavior_state, behavior_time=1.0):
+    def set_behavior_state(self, behavior_state, behavior_time=1.0, random_time=3.0):
         super().set_behavior_state(behavior_state, behavior_time)
         actor_manager = self.actor.actor_manager
         level_manager = self.actor.level_manager

@@ -24,6 +24,8 @@ class LevelManager(SingletonInstance):
         self.goal_scroll_x = -1
         self.goal_scroll_y = -1
         self.tiles = []
+        self.actors = []
+        self.actor_tile_map = {}
         self.app = app
         self.actor_manager = None
         self.num_x = 8
@@ -64,12 +66,15 @@ class LevelManager(SingletonInstance):
         
     def pos_to_tile(self, pos):
         tile_pos = Vector(pos) / TILE_SIZE
-        tile_pos.x = int(tile_pos.x)
-        tile_pos.y = int(tile_pos.y)
+        tile_pos.x = max(0, min(self.num_x - 1, int(tile_pos[0])))
+        tile_pos.y = max(0, min(self.num_y - 1, int(tile_pos[1])))
         return tile_pos
     
     def tile_to_pos(self, tile_pos):
-        pos = Vector(tile_pos) * TILE_SIZE
+        pos = Vector(
+            max(0, min(self.num_x - 1, int(tile_pos[0]))),
+            max(0, min(self.num_y - 1, int(tile_pos[1])))
+        ) * TILE_SIZE
         pos.x += TILE_WIDTH * 0.5
         pos.y += TILE_HEIGHT * 0.5
         return pos
@@ -87,17 +92,21 @@ class LevelManager(SingletonInstance):
     
     def get_random_pos(self):
         return self.tile_to_pos(self.get_random_tile_pos())
+
+    def get_level_center(self):
+        return Vector(self.tile_map_widget.center)
         
     def clamp_pos_to_level_bound(self, pos, bound_min, bound_max):
+        offset = Vector(0,0)
         if bound_min.x < 0:
-           pos.x -= bound_min.x
+           offset.x = -bound_min.x
         elif self.tile_map_widget.width < bound_max.x:
-           pos.x += self.tile_map_widget.width - bound_max.x 
+           offset.x = self.tile_map_widget.width - bound_max.x 
         if bound_min.y < 0:
-           pos.y -= bound_min.y
+           offset.y -bound_min.y
         elif self.tile_map_widget.height < bound_max.y:
-           pos.y += self.tile_map_widget.height - bound_max.y
-        return pos
+           offset.y = self.tile_map_widget.height - bound_max.y
+        return pos + offset
 
     def is_in_level(self, actor):
         return 0 <= actor.get_bound_min().x and \
@@ -109,6 +118,41 @@ class LevelManager(SingletonInstance):
         actor = self.get_actor(pos)
         return actor is not filter_actor and actor is not None
     
+    def get_actors_on_tiles_with_actor(self, actor):
+        return self.get_actors_on_tiles(
+            actor.get_bound_min(),
+            actor.get_bound_max(),
+            [actor])
+
+    def get_actors_on_tiles(self, bound_min, bound_max, filters=[]):
+        actors = set()
+        tile_pos_min = self.pos_to_tile(bound_min)
+        tile_pos_max = self.pos_to_tile(bound_max)
+        for y in range(tile_pos_min.y, tile_pos_max.y + 1):
+            for x in range(tile_pos_min.x, tile_pos_max.x + 1):
+                actors.update(self.actors[y][x])
+        for filter in filters:
+            if filter and filter in actors:
+                actors.remove(filter)
+        #self.app.debug_print(f'{bound_min, bound_max, tile_pos_min, tile_pos_max, [x.name for x in actors]}')
+        return actors
+
+    def update_actor_on_tile(self, actor):
+        self.unregister_actor(actor)
+        tile_pos_min = self.pos_to_tile(actor.get_bound_min())
+        tile_pos_max = self.pos_to_tile(actor.get_bound_max())
+        for y in range(tile_pos_min.y, tile_pos_max.y + 1):
+            for x in range(tile_pos_min.x, tile_pos_max.x + 1):
+                self.actors[y][x].add(actor)
+                self.actor_tile_map[actor] = (tile_pos_min, tile_pos_max)
+
+    def unregister_actor(self, actor):
+        (tile_pos_min, tile_pos_max) = self.actor_tile_map.get(actor, (None, None))
+        if tile_pos_min and tile_pos_max:
+            for y in range(tile_pos_min.y, tile_pos_max.y + 1):
+                for x in range(tile_pos_min.x, tile_pos_max.x + 1):
+                    self.actors[y][x].remove(actor)
+         
     def get_collide_actor(self, bound_min, bound_max, filter=None):
         targets = []
         for target in self.actor_manager.get_actors():
@@ -127,11 +171,13 @@ class LevelManager(SingletonInstance):
                 
     def pop_actor(self, actor):
         if actor and actor.parent is self.character_layer:
+            self.unregister_actor(actor)
             self.character_layer.remove_widget(actor)
     
     def add_actor(self, actor, layer_index=0):
         if actor and actor.parent is not self.character_layer:
             self.character_layer.add_widget(actor, layer_index)
+            self.update_actor_on_tile(actor)
             
     def update_layer_size(self, layer_size):
         self.top_layer.size = layer_size
@@ -147,8 +193,8 @@ class LevelManager(SingletonInstance):
       
     def generate_tile_map(self, level_name):
         self.level_name = level_name
-        self.num_x = 30
-        self.num_y = 30
+        self.num_x = TILE_COUNT
+        self.num_y = TILE_COUNT
         self.num_tiles = self.num_x * self.num_y
         
         texture_size = 32
@@ -159,13 +205,15 @@ class LevelManager(SingletonInstance):
         texture_data_size = width * height * stride   
         # create texture
         texture = Texture.create(size=(width, height), colorfmt='rgba')
-        data = ([int(255) for x in range(texture_data_size)])
+        color = TILE_GRASS_COLOR1
+        data = [color[x % 4] for x in range(texture_data_size)]
         # set layout
         self.tile_map_widget.width = self.num_x * TILE_WIDTH
         self.tile_map_widget.height = self.num_y * TILE_HEIGHT
         self.update_layer_size(self.tile_map_widget.size)
         for y in range(self.num_y):
             tiles = []
+            actor_sets = []
             for x in range(self.num_x):
                 # create tile
                 tile = self.create_tile(
@@ -174,13 +222,16 @@ class LevelManager(SingletonInstance):
                     tile_pos=(x, y)
                 )
                 # blit texture
-                pixels = tile.get_pixels()
-                for py in range(texture_size):
-                    pixel_offset = py * texture_size * stride
-                    data_offset = ((y * texture_size + py) * self.num_x + x) * texture_size * stride
-                    data[data_offset: data_offset + row_data_length] = pixels[pixel_offset: pixel_offset + row_data_length] 
+                if False:
+                    pixels = tile.get_pixels()
+                    for py in range(texture_size):
+                        pixel_offset = py * texture_size * stride
+                        data_offset = ((y * texture_size + py) * self.num_x + x) * texture_size * stride
+                        data[data_offset: data_offset + row_data_length] = pixels[pixel_offset: pixel_offset + row_data_length] 
                 tiles.append(tile)
+                actor_sets.append(set())
             self.tiles.append(tiles)
+            self.actors.append(actor_sets)
         data = bytes(data)
         texture.blit_buffer(data, colorfmt='rgba', bufferfmt='ubyte')
         with self.tile_map_widget.canvas:
@@ -192,6 +243,8 @@ class LevelManager(SingletonInstance):
         
     def close_level(self):
         self.character_layer.clear_widgets()
+        self.actors.clear()
+        self.actor_tile_map.clear()
         self.tiles.clear()
         self.tile_map_widget.clear_widgets()
  

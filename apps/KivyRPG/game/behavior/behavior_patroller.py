@@ -9,14 +9,13 @@ class BehaviorPatroller(Behavior):
         self.attack_range = 400.0
         self.tracing_start_radius = 600.0
         self.tracing_end_radius = 1200.0
-        self.patroll_radius = 500.0
+        self.patroll_radius = 200.0
         self.move_speed = 1.0
         self.tracing_speed = 3.0
         self.spawn_pos = Vector(0,0) 
         self.target = None
    
-    def set_behavior_state(self, behavior_state, behavior_time=1.0):
-        super().set_behavior_state(behavior_state, behavior_time)
+    def set_behavior_state(self, behavior_state, behavior_time=1.0, random_time=3.0):
         actor_manager = self.actor.actor_manager
         level_manager = self.actor.level_manager
         target = actor_manager.get_player()
@@ -27,15 +26,15 @@ class BehaviorPatroller(Behavior):
             bound_min = pos - self.actor.get_size() * 2.0
             bound_max = pos + self.actor.get_size() * 2.0
             pos = level_manager.clamp_pos_to_level_bound(pos, bound_min, bound_max)
+            to_pos = pos - self.spawn_pos
+            distance = self.spawn_pos.distance(pos)
+            move_speed = self.tracing_speed if distance > self.patroll_radius else self.move_speed 
+            self.actor.set_move_speed(move_speed)
             self.actor.move_to(pos)
-            distance = self.spawn_pos.distance(self.actor.get_pos())
-            if distance > self.patroll_radius: 
-                self.actor.set_move_speed(self.tracing_speed)
-            else:
-                self.actor.set_move_speed(self.move_speed)
         elif behavior_state == BehaviorState.TRACE_TARGET:
             self.actor.trace_actor(target)
             self.actor.set_move_speed(self.tracing_speed)
+        super().set_behavior_state(behavior_state, behavior_time)
                
     def update_behavior(self, dt):
         super().update_behavior(dt)

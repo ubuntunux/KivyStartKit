@@ -56,33 +56,34 @@ class GameManager(SingletonInstance):
     def update_scenario_end(self):
         pass
 
+    def spawn_castle(self):
+        return self.actor_manager.spawn_actor('castle', self.level_manager.get_level_center())
+    
     def update_scenario(self, dt):
         if self.scenario == GameScenario.INTRO:
             self.actor_manager.clear_actors()
 
-            self.actor_manager.spawn_player()
+            castle_radius_inner = dp(50)
+            castle_radius_outter = dp(150)
+            dungeon_radius_inner = dp(400)
+            dungeon_radius_outter = dp(1000)
 
+            castle = self.spawn_castle() 
+            self.actor_manager.spawn_actor('player', castle.get_pos() + Vector(0, -castle.size[1]))
             data = [
-                'patroller',
-                'guardian',
-                'stalker',
-                'invader',
-                'guard',
-                'carpenter',
-                'merchant',
-                'miner',
-                'farmer',
-                'civilian',
-                'castle',
-                'dungeon',
                 'inn',
                 'forest',
                 'farm',
                 'mine',
             ]
             for data_name in data:
-                pos = self.level_manager.get_random_pos()
-                self.actor_manager.spawn_actor(data_name, pos)
+                self.actor_manager.spawn_around_actor(data_name, castle, castle_radius_inner, castle_radius_outter)
+
+            data = [
+                'dungeon',
+            ] * 10
+            for data_name in data:
+                self.actor_manager.spawn_around_actor(data_name, castle, dungeon_radius_inner, dungeon_radius_outter)
             self.set_scenario(GameScenario.NONE)
    
                 
