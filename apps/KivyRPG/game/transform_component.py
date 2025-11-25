@@ -3,11 +3,14 @@ from kivy.vector import Vector
 from utility.kivy_helper import *
 from .constant import *
 from .level import LevelManager
-    
+from .character_data import *
+
 class TransformComponent():
     def __init__(self, actor, pos, property):
         self.level_manager = LevelManager.instance()
         self.actor = actor
+        self.collide_actors = []
+        self.is_blocked = False
         self.target_actor = None
         self.target_pos = Vector(0,0)
         self.move_to_target = False
@@ -47,6 +50,8 @@ class TransformComponent():
     def set_front(self, front):
         dir_x = sign(front.x)
         dir_y = sign(front.y)
+        if dir_x == 0 and dir_y == 0:
+            return
         if abs(front.x) < abs(front.y):
             self.front = Vector(0, dir_y)
         else:
@@ -54,6 +59,12 @@ class TransformComponent():
     
     def set_attack_force(self, attack_force):
         self.attack_force = attack_force
+
+    def get_target_actor(self):
+        return self.target_actor
+
+    def get_collide_actors(self):
+        return self.collide_actors
     
     def trace_actor(self, level_manager, actor):
         if actor:
@@ -77,31 +88,45 @@ class TransformComponent():
         level_manager = self.actor.level_manager  
         pos = Vector(self.get_pos())
         move_dist = self.property.get_walk_speed() * dt
+        was_blocked = self.is_blocked
+        self.is_blocked = False
+
         if self.move_to_target:
             if self.target_actor:
                 self.target_pos = self.target_actor.get_pos()
             to_target = self.target_pos - self.pos
-            is_horizontal = self.front.x != 0
-            if is_horizontal:
-                pos.x += sign(to_target.x) * min(abs(to_target.x), move_dist)
-                self.set_front(Vector(sign(to_target.x), 0))
-                if abs(to_target.x) <= move_dist:
-                    self.set_front(Vector(0, sign(to_target.y)))
+            if to_target.length() <= move_dist:
+                self.move_direction = Vector(0,0)
+                pos = Vector(self.target_pos)
+            elif was_blocked:
+                self.move_direction = to_target.normalize()
             else:
-                pos.y += sign(to_target.y) * min(abs(to_target.y), move_dist)
-                self.set_front(Vector(0, sign(to_target.y)))
-                if abs(to_target.y) <= move_dist:
-                    self.set_front(Vector(sign(to_target.x), 0))
-        else:
-            pos.x += self.move_direction.x * move_dist
-            pos.y += self.move_direction.y * move_dist 
+                is_horizontal = self.front.x != 0
+                if is_horizontal:
+                    movd_dist = min(abs(to_target.x), move_dist)
+                    if abs(to_target.x) <= move_dist:
+                        self.move_direction = Vector(0, sign(to_target.y))
+                    else:
+                        self.move_direction = Vector(sign(to_target.x), 0)
+                else:
+                    move_dist = min(abs(to_target.y), move_dist)
+                    if abs(to_target.y) <= move_dist:
+                        self.move_direction = Vector(sign(to_target.x), 0)
+                    else:
+                        self.move_direction = Vector(0, sign(to_target.y))
+            self.set_front(self.move_direction)
+        pos.x += self.move_direction.x * move_dist
+        pos.y += self.move_direction.y * move_dist 
+
         self.move_direction = Vector(0,0) # reset
         self.prev_pos = Vector(self.pos)
         bound_min = pos - self.size * 0.5
         bound_max = pos + self.size * 0.5 
-        collide_actors = level_manager.get_actors_on_tiles(bound_min, bound_max, filters=[self.actor])
-        if collide_actors:
-            for actor in collide_actors:
+        self.collide_actors = level_manager.get_actors_on_tiles(bound_min, bound_max, filters=[self.actor])
+        if self.collide_actors:
+            for actor in self.collide_actors:
+                if ActorCategory.CHARACTER == ActorType.get_actor_category(actor.get_actor_type()):
+                    continue
                 if not actor.collide_actor(bound_min, bound_max):
                     continue
                 dx_l = actor.get_bound_max().x - bound_min.x 
@@ -116,9 +141,10 @@ class TransformComponent():
                     dy = dy_b if abs(dy_b) < abs(dy_t) else dy_t
                     bound_min.y += dy
                     bound_max.y += dy
+                self.is_blocked = True
             pos = (bound_min + bound_max) * 0.5 
         if self.attack_force.x != 0 or self.attack_force.y != 0:
-            pos += self.attack_force * dt * 0.0001
+            pos += self.attack_force * dt
             f = max(0, self.attack_force.length() - 2500.0 * dt)
             self.attack_force = self.attack_force.normalize() * f
         pos = level_manager.clamp_pos_to_level_bound(pos, bound_min, bound_max)

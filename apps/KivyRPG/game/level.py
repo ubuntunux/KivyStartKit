@@ -103,7 +103,7 @@ class LevelManager(SingletonInstance):
         elif self.tile_map_widget.width < bound_max.x:
            offset.x = self.tile_map_widget.width - bound_max.x 
         if bound_min.y < 0:
-           offset.y -bound_min.y
+           offset.y = -bound_min.y
         elif self.tile_map_widget.height < bound_max.y:
            offset.y = self.tile_map_widget.height - bound_max.y
         return pos + offset

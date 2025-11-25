@@ -12,6 +12,7 @@ class GameResourceManager(ResourceManager):
         super(GameResourceManager, self).__init__()
         self.tile_data_set = {}
         self.character_data = {}
+        self.item_data = {}
         self.weapon_data = {}
         
         self.sounds_path = os.path.join(game_path, "data/sounds")
@@ -19,6 +20,7 @@ class GameResourceManager(ResourceManager):
         self.images_path = os.path.join(game_path, "data/images")
         self.maps_path = os.path.join(game_path, "data/maps")
         self.tile_data_path = os.path.join(game_path, "data/tiles")
+        self.item_data_path = os.path.join(game_path, "data/items")
         self.character_data_path = os.path.join(game_path, "data/characters")
         self.weapon_data_path = os.path.join(game_path, "data/weapons")
     
@@ -33,6 +35,7 @@ class GameResourceManager(ResourceManager):
         )  
         self.register_resources(self.tile_data_path, [".data"], self.tile_data_set, self.tile_data_set_loader, None)
         self.register_resources(self.weapon_data_path, [".data"], self.weapon_data, self.weapon_data_loader, None)
+        self.register_resources(self.item_data_path, [".data"], self.item_data, self.item_data_loader, None)
         self.register_resources(self.character_data_path, [".data"], self.character_data, self.character_data_loader, None)
 
     def close(self):
@@ -41,6 +44,7 @@ class GameResourceManager(ResourceManager):
     def destroy(self):
         super().destroy()
         self.unregister_resources(self.tile_data_set)
+        self.unregister_resources(self.item_data)
         self.unregister_resources(self.character_data)
         self.unregister_resources(self.weapon_data)
         
@@ -54,7 +58,16 @@ class GameResourceManager(ResourceManager):
                 tile_data_set_info = eval(f.read())
                 return TileDataSet(self, name, tile_data_set_info)
     
-    # character
+    # item
+    def get_item_data(self, resource_name):
+        return self.get_resource(self.item_data, resource_name)
+        
+    def item_data_loader(self, name, filepath):
+        if os.path.exists(filepath):
+            with open(filepath) as f:
+                item_data_info = eval(f.read())
+                return CharacterData(self, name, item_data_info)
+     # character
     def get_character_data(self, resource_name):
         return self.get_resource(self.character_data, resource_name)
         

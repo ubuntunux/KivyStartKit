@@ -58,6 +58,9 @@ class Character(Scatter):
     def get_is_player(self):
         return self.is_player
 
+    def get_actor_type(self):
+        return self.actor_type
+
     def on_touch_down(inst, touch):
         # do nothing
         return False

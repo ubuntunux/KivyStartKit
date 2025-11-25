@@ -7,8 +7,8 @@ from kivy.uix.widget import Widget
 from kivy.vector import Vector
 from kivy.metrics import dp
 from utility.kivy_helper import *
-from .character_data import *
-from .constant import *
+from ..character_data import *
+from ..constant import *
 
 class BaseProperty:
     def __init__(self, owner):

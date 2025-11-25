@@ -2,8 +2,15 @@ import os
 from enum import Enum
 from kivy.metrics import dp
 
-from .constant import *
 from utility.kivy_helper import *
+from ..constant import *
+from .dungeon_property_data import DungeonPropertyData
+
+class ActorCategory(Enum):
+    CHARACTER = 0
+    BUILDING = 1
+    RESOURCE = 2
+    ITEM = 3
 
 class ActorType(Enum):
     PLAYER = 0
@@ -26,22 +33,43 @@ class ActorType(Enum):
     FOREST = 3000
     FARM = 3001
     MINE = 3002
+    # items
+    GOLD = 4000
 
+    @classmethod
+    def get_actor_category(cls, actor_type):
+        if not hasattr(cls, 'category_map'):
+            cls.category_map = {
+                # character
+                cls.PLAYER: ActorCategory.CHARACTER,
+                cls.PATROLLER: ActorCategory.CHARACTER,
+                cls.GUARDIAN: ActorCategory.CHARACTER,
+                cls.STALKER: ActorCategory.CHARACTER,
+                cls.INVADER: ActorCategory.CHARACTER,
+                cls.GUARD: ActorCategory.CHARACTER,
+                cls.CARPENTER: ActorCategory.CHARACTER,
+                cls.CIVILIAN: ActorCategory.CHARACTER,
+                cls.MERCHANT: ActorCategory.CHARACTER,
+                cls.MINER: ActorCategory.CHARACTER,
+                cls.FARMER: ActorCategory.CHARACTER,
+                # building
+                cls.CASTLE: ActorCategory.BUILDING,
+                cls.DUNGEON: ActorCategory.BUILDING,
+                cls.INN: ActorCategory.BUILDING,
+                # resource
+                cls.FOREST: ActorCategory.RESOURCE,
+                cls.FARM: ActorCategory.RESOURCE,
+                cls.MINE: ActorCategory.RESOURCE,
+                # item
+                cls.GOLD: ActorCategory.ITEM,
+            }
+        return cls.category_map[actor_type]
 
 class ActionData():
     def __init__(self, character_name, action_name, texture, region):
         self.action_data_path = os.path.join(character_name, action_name)
         self.name = action_name
         self.texture = get_texture_atlas(texture, region)
-
-class DungeonPropertyData:
-    def __init__(self, property_data):
-        self.spawn_data = []
-        self.spawn_term = 3.0
-        self.limit_spawn_count = 5
-        for (key, value) in property_data.items():
-            if hasattr(self, key):
-                setattr(self, key, value)
 
 class CharacterPropertyData():
     def __init__(self, actor_type, property_data):
