@@ -9,41 +9,21 @@ from kivy.metrics import dp
 from utility.kivy_helper import *
 from ..character_data import *
 from ..constant import *
-
-class BaseProperty:
-    def __init__(self, owner):
-        self.owner = owner
-
-    def reset_property(self):
-        pass
-
-    def update_property(self, dt):
-        pass
-
-class DungeonProperty(BaseProperty):
-    def __init__(self, owner, property_data):
-        super().__init__(owner)
-        self.property_data = property_data
-
-    def get_spawn_data(self):
-        return self.property_data.spawn_data
-
-    def get_spawn_term(self):
-        return self.property_data.spawn_term
-
-    def get_limit_spawn_count(self):
-        return self.property_data.limit_spawn_count
-
-    def get_spawn_data(self):
-        return self.property_data.spawn_data
-
+from .base_property import BaseProperty
+from .dungeon_property import *
+from .gold_property import *
 
 class CharacterProperty(BaseProperty):
+    extra_property_map = {
+        DungeonPropertyData: DungeonProperty,
+        GoldPropertyData: GoldProperty
+    }
     def __init__(self, owner, property_data):
-        super().__init__(owner)
+        super().__init__(owner, property_data)
         self.hp = 0.0
         self.mp = 0.0
         self.sp = 0.0
+        self.gold = 0
         self.move_speed = 1.0
         self.extra_property = None
         self.property_data = property_data
@@ -53,8 +33,9 @@ class CharacterProperty(BaseProperty):
         self.alive = True 
 
         extra_property_data = property_data.extra_property_data
-        if isinstance(extra_property_data, DungeonPropertyData):
-            self.extra_property = DungeonProperty(owner, extra_property_data)
+        extra_prropert_class = self.extra_property_map.get(type(extra_property_data))
+        if extra_prropert_class:
+            self.extra_property = extra_prropert_class(owner, extra_property_data)
 
         self.reset_property()
         if owner.get_is_player():
@@ -135,6 +116,13 @@ class CharacterProperty(BaseProperty):
     def get_walk_speed(self):
         return self.property_data.walk_speed * self.move_speed
     
+    def get_gold(self):
+        return self.gold
+
+    def add_gold(self, gold):
+        self.gold = max(0, self.gold + gold)
+        return self.gold
+
     def set_damage(self, damage):
         if self.is_alive() and self.has_hp_property():
             self.hp -= damage

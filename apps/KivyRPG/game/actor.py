@@ -161,12 +161,14 @@ class ActorManager(SingletonInstance):
                attack_info.target.is_player != attack_info.actor.is_player:
                 attack_info.target.set_damage(attack_info.damage, attack_info.force)
                 effect_manager.create_effect(
-                    effect_name="hit",
+                    effect_name=FX_HIT,
                     attach_to=attack_info.target
                 )
                 if not attack_info.target.is_player:
                     self.game_controller.set_target(attack_info.target)
                 if not attack_info.target.is_alive():
+                    for i in range(4):
+                        self.spawn_around_actor(f'items/gold_{1<<i}', attack_info.target, 0, 50) 
                     self.dead_characters.append(attack_info.target)
         self.attack_infos = []
         

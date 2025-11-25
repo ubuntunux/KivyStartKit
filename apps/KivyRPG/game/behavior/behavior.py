@@ -32,3 +32,6 @@ class Behavior:
     def update_behavior(self, dt):
         if 0 < self.behavior_time:
             self.behavior_time -= dt
+
+    def on_collide_actor(self, other_actor):
+        pass

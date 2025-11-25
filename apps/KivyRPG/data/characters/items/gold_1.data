@@ -1,14 +1,15 @@
 {
     "actor_type": "GOLD",
-    "source": "items/roguelikeitems",
+    "source": "items/gold",
     "actions": {
         "idle": {
-            "region": (1/8, 1/4, 1/14, 1/14)
+            "region":(0/4, 2/4, 1/4, 1/4)
         }
-    },    "size": (i00, i00),
+    },    
+    "size": (100, 100),
     "property": {
         "extra_property": {
-            "gold": 100,
+            "gold": 1,
         }
     },
 }

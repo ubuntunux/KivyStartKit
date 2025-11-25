@@ -35,6 +35,8 @@ class Character(Scatter):
         self.name = name
         self.action = None
         self.actor_type = actor_type       
+        self.actor_category = ActorType.get_actor_category(actor_type)
+        self.blockable =  self.actor_category in [ActorCategory.BUILDING, ActorCategory.RESOURCE]
         self.property = None
         self.behavior = None
         self.center = Vector(pos)
@@ -60,6 +62,12 @@ class Character(Scatter):
 
     def get_actor_type(self):
         return self.actor_type
+
+    def get_actor_category(self):
+        return self.actor_category
+
+    def is_blockable(self):
+        return self.blockable
 
     def on_touch_down(inst, touch):
         # do nothing
@@ -92,9 +100,9 @@ class Character(Scatter):
         return self.transform_component.get_pos()
     
     def set_pos(self, pos):
-        self.updated_transform = self.updated_transform or (pos != self.get_pos())
-        self.transform_component.set_pos(pos)
-        if self.updated_transform:
+        if pos != self.get_pos():
+            self.updated_transform = True 
+            self.transform_component.set_pos(pos)
             self.level_manager.update_actor_on_tile(self)
 
     def get_prev_pos(self):
@@ -113,12 +121,18 @@ class Character(Scatter):
     def get_property(self):
         return self.property
 
+    def get_gold(self):
+        return self.property.get_gold()
+
     def is_attackable(self):
         return self.property.has_hp_property()
 
     def is_alive(self):
         return self.property.is_alive()
     
+    def set_dead(self):
+        self.property.set_dead()
+
     def get_damage(self):
         return self.weapon.get_damage()
     
@@ -186,6 +200,16 @@ class Character(Scatter):
                 if 0 != curr_front_x and prev_direction_x != curr_front_x:
                     self.flip_widget()
                 self.level_manager.update_actor_on_tile(self)
-        self.updated_transform = False
+            self.updated_transform = False
+
+        # get item
+        if self.is_player:
+            collide_actors = self.transform_component.collide_actors
+            for actor in collide_actors:
+                if actor.get_actor_category() == ActorCategory.ITEM:
+                    actor.behavior.on_collide_actor(self)
+
         self.property.update_property(dt) 
+
+
 

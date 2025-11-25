@@ -125,7 +125,7 @@ class TransformComponent():
         self.collide_actors = level_manager.get_actors_on_tiles(bound_min, bound_max, filters=[self.actor])
         if self.collide_actors:
             for actor in self.collide_actors:
-                if ActorCategory.CHARACTER == ActorType.get_actor_category(actor.get_actor_type()):
+                if not actor.is_blockable():
                     continue
                 if not actor.collide_actor(bound_min, bound_max):
                     continue

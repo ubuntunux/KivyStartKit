@@ -32,7 +32,7 @@ class GameInfoUI:
 
         ui_height = dp(20)
         self.gold_ui = AutoLabel(
-            text='GOLD: 100',
+            text='GOLD: 0',
             size_hint=(None, None),
             height=ui_height,
             font_size=dp(16), 
@@ -56,6 +56,7 @@ class GameInfoUI:
 
     def update(self, dt):
         player = self.actor_manager.get_player()
-
+        gold = player.get_gold()
+        self.gold_ui.text = f'GOLD: {gold}'
 
 

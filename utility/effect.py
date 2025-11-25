@@ -47,23 +47,28 @@ class EffectData():
 
     def __init__(self, resource_manager=None, name="", effect_data_info={}):
         self.name = name
-        self.emitter_data = copy.deepcopy(self.default_emitter_data)
-        self.particle_data = copy.deepcopy(self.default_particle_data)
-        
-        for (key, value) in effect_data_info.get("emitter_data", {}).items():
-            self.emitter_data[key] = value
-            if resource_manager and "sound_file" == key:
-                sound = resource_manager.get_sound(value)
-                if sound:
-                    self.emitter_data["sound"] = sound
+        self.emitter_data = None 
+        self.particle_data = None 
+        emitter_data = effect_data_info.get("emitter_data", {})
+        if emitter_data:
+            self.emitter_data = copy.deepcopy(self.default_emitter_data)
+            for (key, value) in emitter_data.items():
+                self.emitter_data[key] = value
+                if resource_manager and "sound_file" == key:
+                    sound = resource_manager.get_sound(value)
+                    if sound:
+                        self.emitter_data["sound"] = sound
             
-        for (key, value) in effect_data_info.get("particle_data", {}).items():
-            self.particle_data[key] = value
-            if resource_manager and "image_file" == key:
-                src_image = resource_manager.get_image(value)
-                if src_image:
-                    self.particle_data["texture"] = src_image.texture 
-    
+        particle_data = effect_data_info.get("particle_data", {})
+        if particle_data:
+            self.particle_data = copy.deepcopy(self.default_particle_data)
+            for (key, value) in particle_data.items():
+                self.particle_data[key] = value
+                if resource_manager and "image_file" == key:
+                    src_image = resource_manager.get_image(value)
+                    if src_image:
+                        self.particle_data["texture"] = src_image.texture 
+        
     def get_particle_data(self):
         return self.particle_data
 
@@ -178,8 +183,9 @@ class Emitter(Scatter):
         self.attach_to = attach_to
         self.alive_particles = []
         self.attach_offset = Vector(self.pos)
-        particle_count = self.emitter_data.get("particle_count", 10)
-        self.create_particles(self.particle_data, particle_count)
+        if self.emitter_data and self.particle_data:
+            particle_count = self.emitter_data.get("particle_count", 10)
+            self.create_particles(self.particle_data, particle_count)
 
     def create_particles(self, particle_data, particle_count):
         for i in range(particle_count):
@@ -196,18 +202,19 @@ class Emitter(Scatter):
         if self.parent:
             self.parent.remove_widget(self)
         
-    def play(self):
-        self.effect_manager.register_emitter(self)
-        
+    def play(self): 
         if self.audio:
             self.audio.play_audio()
-            
-        if self.parent is None:
-            self.parent_layer.add_widget(self)
-            
-        for particle in self.particles:
-            particle.play()
-            
+
+        if self.emitter_data and self.particle_data:
+            self.effect_manager.register_emitter(self)
+
+            if self.parent is None:
+                self.parent_layer.add_widget(self)
+                
+            for particle in self.particles:
+                particle.play()
+                
     def stop(self):
         for particle in self.alive_particles:
             particle.stop(True)

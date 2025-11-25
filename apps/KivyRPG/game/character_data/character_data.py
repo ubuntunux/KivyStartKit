@@ -5,6 +5,7 @@ from kivy.metrics import dp
 from utility.kivy_helper import *
 from ..constant import *
 from .dungeon_property_data import DungeonPropertyData
+from .gold_property_data import GoldPropertyData
 
 class ActorCategory(Enum):
     CHARACTER = 0
@@ -65,6 +66,17 @@ class ActorType(Enum):
             }
         return cls.category_map[actor_type]
 
+    @classmethod
+    def get_actor_extra_property_data(cls, actor_type):
+        if not hasattr(cls, 'extra_property_data_map'):
+            cls.extra_property_data_map = {
+                # building
+                cls.DUNGEON: DungeonPropertyData,
+                # item
+                cls.GOLD: GoldPropertyData,
+            }
+        return cls.extra_property_data_map.get(actor_type)
+
 class ActionData():
     def __init__(self, character_name, action_name, texture, region):
         self.action_data_path = os.path.join(character_name, action_name)
@@ -83,8 +95,9 @@ class CharacterPropertyData():
 
         self.extra_property_data = None
         extra_property_data = property_data.get('extra_property', {})
-        if actor_type == ActorType.DUNGEON:
-            self.extra_property_data = DungeonPropertyData(extra_property_data) 
+        property_data_class = ActorType.get_actor_extra_property_data(actor_type)
+        if property_data_class:
+            self.extra_property_data = property_data_class(extra_property_data)
 
 
 class CharacterData():
