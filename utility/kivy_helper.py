@@ -118,15 +118,14 @@ def update_rect(is_relative, rect, instance, value):
 def create_dynamic_rect(instance, color):
     is_relative = type(instance) in (Scatter, ScatterLayout)
     with instance.canvas.before:
-        Color(*color)
+        instance.color = Color(*color)
         pos = (0, 0) if is_relative else instance.pos
         instance.rect = Rectangle(pos=pos, size=instance.size, size_hint=(1, 1))
     instance.bind(pos=partial(update_rect, is_relative, instance.rect), size=partial(update_rect, is_relative, instance.rect))
 
-
 def create_rect(instance, color):
     with instance.canvas.before:
-        Color(*color)
+        instance.color = Color(*color)
         instance.rect = Rectangle(pos=instance.pos, size=instance.size, size_hint=(1, 1))
         
         

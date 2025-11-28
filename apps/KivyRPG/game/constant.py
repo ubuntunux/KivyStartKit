@@ -17,3 +17,6 @@ ATTACK_FORCE = 1000.0
 
 FX_PICK_ITEM = 'pick_item'
 FX_HIT = 'hit'
+
+DAY_TIME = 86400.0
+TIME_OF_DAY_SPEED = 24 * 60 / 10

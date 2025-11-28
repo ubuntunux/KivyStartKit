@@ -31,7 +31,10 @@ class LevelManager(SingletonInstance):
         self.num_x = 8
         self.num_y = 8
         self.num_tiles = self.num_x * self.num_y
-        
+        self.day = 0
+        self.time = 8.0 * 60.0 * 60.0
+        self.tod_update_time = 0.0
+
     def initialize(self, parent_widget, actor_manager, fx_manager):
         self.actor_manager = actor_manager
         self.fx_manager = fx_manager
@@ -39,12 +42,15 @@ class LevelManager(SingletonInstance):
         self.tile_map_widget.bind(on_touch_down=self.on_touch_down)
         self.character_layer = Widget(size_hint=(None, None))
         self.effect_layer = Widget(size_hint=(None, None))
+        self.tod_layer = Widget(size_hint=(None, None))
+        create_dynamic_rect(self.tod_layer, (0,0,0,0))
         self.top_layer = Widget(size_hint=(None, None))
         self.scroll_view = ScrollView(do_scroll=False, size_hint=(1,1))
         # link
         self.top_layer.add_widget(self.tile_map_widget)
         self.top_layer.add_widget(self.character_layer)
         self.top_layer.add_widget(self.effect_layer)
+        self.top_layer.add_widget(self.tod_layer)
         self.scroll_view.add_widget(self.top_layer)
         parent_widget.add_widget(self.scroll_view)
         self.update_layer_size(self.top_layer.size)
@@ -183,7 +189,8 @@ class LevelManager(SingletonInstance):
         self.top_layer.size = layer_size
         self.effect_layer.size = layer_size
         self.character_layer.size = layer_size
-        
+        self.tod_layer.size = layer_size
+
     def create_tile(self, tile_set_name, tile_name, tile_pos):
         tile_data_set = GameResourceManager.instance().get_tile_data_set(tile_set_name)  
         if tile_data_set:
@@ -247,8 +254,57 @@ class LevelManager(SingletonInstance):
         self.actor_tile_map.clear()
         self.tiles.clear()
         self.tile_map_widget.clear_widgets()
- 
+    
+    def get_day(self):
+        return self.day
+
+    def get_time(self):
+        return self.time
+
+    def update_tod(self, dt):
+        self.tod_update_time += dt
+        self.time += dt * TIME_OF_DAY_SPEED
+        tod = self.time / 3600.0
+        if DAY_TIME <= self.time:
+            self.time = self.time % DAY_TIME
+            self.day += 1
+        if 0.1 < self.tod_update_time:
+            self.tod_update_time = 0.0
+            night = [0.0, 0.0, 0.2, 0.6]
+            dawn = [0.1, 0.0, 0.0, 0.6]
+            noon = [0.3, 0.3, 0.3, 0.0]
+            color0 = [0,0,0,0]
+            color1 = [0,0,0,0]
+            t = 0.0
+            if 4.0 <= tod and tod <= 6.0:
+                t = (tod - 4.0) / 2.0
+                color0 = night
+                color1 = dawn
+            elif 6.0 <= tod and tod <= 8.0:
+                t = (tod - 6.0) / 2.0
+                color0 = dawn
+                color1 = noon
+            elif 8.0 <= tod and tod <= 16.0:
+                t = (tod - 8.0) / 8.0
+                color0 = noon
+                color1 = noon
+            elif 16.0 <= tod and tod <= 20.0:
+                t = (tod - 16.0) / 4.0
+                color0 = noon
+                color1 = night
+            else:
+                color0 = night
+                color1 = night
+            
+            inv_t = 1.0 - t
+            self.tod_layer.color.r = color0[0] * inv_t + color1[0] * t 
+            self.tod_layer.color.g = color0[1] * inv_t + color1[1] * t 
+            self.tod_layer.color.b = color0[2] * inv_t + color1[2] * t 
+            self.tod_layer.color.a = color0[3] * inv_t + color1[3] * t 
+
     def update(self, dt):
+        self.update_tod(dt)
+
         player = self.actor_manager.get_player()
         if player and player.is_alive():
             pos = player.get_pos()

@@ -59,4 +59,10 @@ class GameInfoUI:
         gold = player.get_gold()
         self.gold_ui.text = f'GOLD: {gold}'
 
+        sec = self.level_manager.get_time()
+        tod = int(sec / 3600.0)
+        minute = int((sec/60.0) % 60.0)
+        day = self.level_manager.get_day()
+        self.time_of_day_ui.text = f'DAY: {day} {tod:0{2}}:{minute:0{2}}'
+
 

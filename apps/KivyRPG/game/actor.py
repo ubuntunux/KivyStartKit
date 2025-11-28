@@ -93,7 +93,7 @@ class ActorManager(SingletonInstance):
             return self.spawn_around_actor(target_actors[0])
         return None
 
-    def spawn_around_actor(self, actor_data_name, target_actor, radius_min, radius_max):
+    def spawn_around_actor(self, actor_data_name, target_actor, radius_min, radius_max, check_collide=True):
         actor = self.spawn_actor(actor_data_name)
         NUM_TRY = 10
         for i in range(NUM_TRY):
@@ -101,7 +101,12 @@ class ActorManager(SingletonInstance):
             y = random.random() * 2.0 - 1.0
             t = random.random()
             offset = radius_min * (1.0 - t) + radius_max * t
-            size = (target_actor.get_size() + actor.get_size()) * 0.5 + Vector(offset, offset) 
+
+            if check_collide:
+                size = (target_actor.get_size() + actor.get_size()) * 0.5 + Vector(offset, offset) 
+            else:
+                size = Vector(offset, offset)  
+
             if abs(x) < abs(y):
                 x = target_actor.center[0] + size[0] * x
                 y = target_actor.center[1] + size[1] * (1 if 0 < y else -1)  
@@ -110,7 +115,7 @@ class ActorManager(SingletonInstance):
                 y = target_actor.center[1] + size[1] * y  
             pos = Vector(x,y)
             actor.set_pos(pos) 
-            if not self.level_manager.get_actors_on_tiles_with_actor(actor):
+            if not check_collide or not self.level_manager.get_actors_on_tiles_with_actor(actor):
                 break
         #self.app.debug_print(f'try: {i}')
         return actor
@@ -166,6 +171,7 @@ class ActorManager(SingletonInstance):
                 )
                 if not attack_info.target.is_player:
                     self.game_controller.set_target(attack_info.target)
+                # spawn gold
                 if not attack_info.target.is_alive():
                     for i in range(4):
                         self.spawn_around_actor(f'items/gold_{1<<i}', attack_info.target, 0, 50) 
