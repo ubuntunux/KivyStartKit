@@ -11,6 +11,20 @@ class BehaviorState(Enum):
 
 
 class Behavior:
+    actor_manager = None
+    level_manager = None
+    effect_manager = None
+    game_controller = None
+    game_manager = None
+
+    @classmethod
+    def set_managers(cls, actor_manager, level_manager, effect_manager, game_controller, game_manager):
+        cls.actor_manager = actor_manager
+        cls.level_manager = level_manager
+        cls.effect_manager = effect_manager
+        cls.game_controller = game_controller
+        cls.game_manager = game_manager
+    
     def __init__(self, actor):
         self.actor = actor
         self.behavior_state = BehaviorState.NONE
@@ -35,3 +49,9 @@ class Behavior:
 
     def on_collide_actor(self, other_actor):
         pass
+
+    def on_interaction(self, actor):
+        pass
+
+    def on_buy(self, actor):
+        return False

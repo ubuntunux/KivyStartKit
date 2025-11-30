@@ -86,8 +86,4 @@ class KivyRPGApp(BaseApp):
         self.debug_label.update(dt)
         self.debug_label.pos = (0, Window.height - self.debug_label.height)
         self.game_manager.update(dt)
-        self.game_controller.update(dt)
-        self.effect_manager.update(dt)
-        self.actor_manager.update(dt)
-        self.level_manager.update(dt)
-        
+       

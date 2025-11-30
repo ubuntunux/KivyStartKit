@@ -6,6 +6,8 @@ from utility.kivy_helper import *
 from ..constant import *
 from .dungeon_property_data import DungeonPropertyData
 from .gold_property_data import GoldPropertyData
+from .inn_property_data import InnPropertyData
+from .hp_property_data import HpPropertyData
 
 class ActorCategory(Enum):
     CHARACTER = 0
@@ -36,6 +38,7 @@ class ActorType(Enum):
     MINE = 3002
     # items
     GOLD = 4000
+    HP = 4001
 
     @classmethod
     def get_actor_category(cls, actor_type):
@@ -63,6 +66,7 @@ class ActorType(Enum):
                 cls.MINE: ActorCategory.RESOURCE,
                 # item
                 cls.GOLD: ActorCategory.ITEM,
+                cls.HP: ActorCategory.ITEM
             }
         return cls.category_map[actor_type]
 
@@ -72,8 +76,10 @@ class ActorType(Enum):
             cls.extra_property_data_map = {
                 # building
                 cls.DUNGEON: DungeonPropertyData,
+                cls.INN: InnPropertyData,
                 # item
                 cls.GOLD: GoldPropertyData,
+                cls.HP: HpPropertyData,
             }
         return cls.extra_property_data_map.get(actor_type)
 
@@ -103,6 +109,7 @@ class CharacterPropertyData():
 class CharacterData():
     def __init__(self, resource_manager, name, character_data_info):       
         self.name = name
+        self.display_name = character_data_info.get('display_name', name)
         self.size = tuple(character_data_info.get("size", TILE_SIZE))
         self.actor_type = getattr(ActorType, character_data_info.get("actor_type"))
         self.action_data = {}

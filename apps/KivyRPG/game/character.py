@@ -22,21 +22,27 @@ class Character(Scatter):
     actor_manager = None
     level_manager = None
     effect_manager = None
-    
+    game_controller = None
+    game_manager = None
+
     @classmethod
-    def set_managers(cls, actor_manager, level_manager, effect_manager):
+    def set_managers(cls, actor_manager, level_manager, effect_manager, game_controller, game_manager):
         cls.actor_manager = actor_manager
         cls.level_manager = level_manager
         cls.effect_manager = effect_manager
-    
+        cls.game_controller = game_controller
+        cls.game_manager = game_manager
+
     def __init__(self, name, character_data, pos):
         super().__init__(size=character_data.size)
         actor_type = character_data.actor_type       
+        self.instance_count = 1
         self.name = name
         self.action = None
         self.actor_type = actor_type       
         self.actor_category = ActorType.get_actor_category(actor_type)
         self.blockable =  self.actor_category in [ActorCategory.BUILDING, ActorCategory.RESOURCE]
+        self.data = character_data
         self.property = None
         self.behavior = None
         self.center = Vector(pos)
@@ -57,6 +63,12 @@ class Character(Scatter):
             self.weapon = Weapon(self, character_data.weapon_data)
             self.add_widget(self.weapon)
  
+    def get_instance_count(self):
+        return self.instance_count
+    
+    def set_instance_count(self, count):
+        self.instance_count = count
+
     def get_is_player(self):
         return self.is_player
 
@@ -141,9 +153,31 @@ class Character(Scatter):
         if attack_force:
             self.transform_component.set_attack_force(attack_force)
 
+    def add_hp(self, hp):
+        self.property.add_hp(hp)
+
     def set_move_speed(self, move_speed):
         self.property.set_move_speed(move_speed)
         
+    def add_gold(self, gold):
+        self.property.add_gold(gold)
+
+    def get_gold(self):
+        return self.property.get_gold()
+
+    def buy_item(self, item_data):
+        item_actor = self.actor_manager.create_item(item_data) 
+        if item_actor.behavior.on_buy(self):
+            self.add_item(item_actor)
+
+    def add_item(self, item_actor):
+        item_actor = self.property.add_item(item_actor)
+        self.game_controller.add_item(item_actor)
+
+    def use_item(self, item_actor):
+        self.property.use_item(item_actor.data)
+        item_actor.behavior.on_interaction(self)
+
     # Transform
     def move_to(self, pos):
         if self.level_manager.is_in_level(self):
@@ -160,20 +194,28 @@ class Character(Scatter):
 
     # Actions    
     def set_attack(self):
+        front = self.get_front()
+        attack_bound = self.get_size() * front
+        attack_bound_min = self.get_bound_min() + attack_bound
+        attack_bound_max = self.get_bound_max() + attack_bound
+        targets = self.level_manager.get_collide_actor(attack_bound_min, attack_bound_max, filter=self)
+
         if self.weapon and not self.action.is_action_state(ActionState.ATTACK):
             self.action.set_action_state(ActionState.ATTACK)
-            front = self.get_front()
-            self.weapon.set_attack(front)
-            attack_bound = self.get_size() * front
-            attack_bound_min = self.get_bound_min() + attack_bound
-            attack_bound_max = self.get_bound_max() + attack_bound
-            targets = self.level_manager.get_collide_actor(attack_bound_min, attack_bound_max, filter=self)
+            is_attack = True 
             for target in targets:
-                if target and target is not self and target.is_attackable():
+                actor_type = target.get_actor_type()
+                if self.is_player:
+                    if actor_type == ActorType.INN:
+                        target.behavior.on_interaction(self)
+                        is_attack = False
+                if is_attack and target.is_attackable():
                     damage = self.get_damage()
                     force = (target.get_pos() - self.get_pos()).normalize() * ATTACK_FORCE
                     self.actor_manager.regist_attack_info(self, target, damage, force)
-    
+            if is_attack:
+                self.weapon.set_attack(front)
+
     def update(self, player_pos, dt):
         if not self.is_player:
             self.update_time += dt
@@ -206,8 +248,7 @@ class Character(Scatter):
         if self.is_player:
             collide_actors = self.transform_component.collide_actors
             for actor in collide_actors:
-                if actor.get_actor_category() == ActorCategory.ITEM:
-                    actor.behavior.on_collide_actor(self)
+                actor.behavior.on_collide_actor(self)
 
         self.property.update_property(dt) 
 

@@ -3,7 +3,9 @@ from .behavior_civilian import *
 from .behavior_patroller import *
 from .behavior_player import *
 from .behavior_dungeon import *
+from .behavior_gold import *
 from .behavior_item import *
+from .behavior_inn import *
 
 behavior_map = {
     ActorType.PLAYER: BehaviorPlayer,
@@ -22,17 +24,18 @@ behavior_map = {
 
     ActorType.CASTLE: BehaviorCivilian,
     ActorType.DUNGEON: BehaviorDungeon,
-    ActorType.INN: BehaviorCivilian,
+    ActorType.INN: BehaviorInn,
 
     ActorType.FOREST: BehaviorCivilian,
     ActorType.FARM: BehaviorCivilian,
     ActorType.MINE: BehaviorCivilian,
 
-    ActorType.GOLD: BehaviorItem,
+    ActorType.GOLD: BehaviorGold,
+    ActorType.HP: BehaviorItem,
 }
 
-def create_behavior(owner, actor_type):
+def create_behavior(actor, actor_type):
     behavior_class = behavior_map.get(actor_type)
-    return behavior_class(owner)
+    return behavior_class(actor)
 
 

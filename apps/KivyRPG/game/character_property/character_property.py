@@ -12,14 +12,18 @@ from ..constant import *
 from .base_property import BaseProperty
 from .dungeon_property import *
 from .gold_property import *
+from .inn_property import *
+from .hp_property import *
 
 class CharacterProperty(BaseProperty):
     extra_property_map = {
         DungeonPropertyData: DungeonProperty,
-        GoldPropertyData: GoldProperty
+        GoldPropertyData: GoldProperty,
+        HpPropertyData: HpProperty,
     }
-    def __init__(self, owner, property_data):
-        super().__init__(owner, property_data)
+
+    def __init__(self, actor, property_data):
+        super().__init__(actor, property_data)
         self.hp = 0.0
         self.mp = 0.0
         self.sp = 0.0
@@ -31,14 +35,15 @@ class CharacterProperty(BaseProperty):
         self.ui_layout = None
         self.ui_hp = None
         self.alive = True 
+        self.items = {}
 
         extra_property_data = property_data.extra_property_data
         extra_prropert_class = self.extra_property_map.get(type(extra_property_data))
         if extra_prropert_class:
-            self.extra_property = extra_prropert_class(owner, extra_property_data)
+            self.extra_property = extra_prropert_class(actor, extra_property_data)
 
         self.reset_property()
-        if owner.get_is_player():
+        if actor.get_is_player():
             self.build_ui()
 
     def build_ui(self):
@@ -52,7 +57,7 @@ class CharacterProperty(BaseProperty):
             padding=dp(1)
         )
         create_dynamic_rect(self.ui_layout, (0,0,0,1))
-        self.owner.add_widget(self.ui_layout)
+        self.actor.add_widget(self.ui_layout)
 
         if self.has_hp_property():
             self.ui_hp = Widget(
@@ -123,6 +128,32 @@ class CharacterProperty(BaseProperty):
         self.gold = max(0, self.gold + gold)
         return self.gold
 
+    def add_item(self, item_actor):
+        item = self.items.get(item_actor.data)
+        if item:
+            count = item.get_instance_count()
+            item.set_instance_count(count + 1)
+        else:
+            self.items[item_actor.data] = item_actor 
+            item = item_actor
+        return item
+
+    def get_item(self, item_data):
+        return self.items.get(item_data)
+
+    def use_item(self, item_data):
+        item = self.items.get(item_data)
+        item_count = item.get_instance_count() if item else 0
+        if 0 < item_count:
+            if 1 == item_count:
+                self.items.pop(item_data)
+            else:
+                self.items[item_data].set_instance_count(item_count - 1)
+
+    def add_hp(self, hp):
+        if self.is_alive() and self.has_hp_property():
+            self.hp = min(self.get_max_hp(), self.hp + hp)
+
     def set_damage(self, damage):
         if self.is_alive() and self.has_hp_property():
             self.hp -= damage
@@ -138,7 +169,7 @@ class CharacterProperty(BaseProperty):
     def update_property(self, dt):
         if self.extra_property:
             self.extra_property.update_property(dt)
-        if self.owner.get_is_player() and self.has_hp_property():
+        if self.actor.get_is_player() and self.has_hp_property():
             self.ui_hp.width = self.ui_width * (self.get_hp() / self.get_max_hp())
 
 

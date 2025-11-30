@@ -31,8 +31,8 @@ class LevelManager(SingletonInstance):
         self.num_x = 8
         self.num_y = 8
         self.num_tiles = self.num_x * self.num_y
-        self.day = 0
-        self.time = 8.0 * 60.0 * 60.0
+        self.day = 1
+        self.time = 0
         self.tod_update_time = 0.0
 
     def initialize(self, parent_widget, actor_manager, fx_manager):
@@ -54,6 +54,9 @@ class LevelManager(SingletonInstance):
         self.scroll_view.add_widget(self.top_layer)
         parent_widget.add_widget(self.scroll_view)
         self.update_layer_size(self.top_layer.size)
+
+        self.day = 1
+        self.set_tod(MORNING_TOD)
 
     def close(self):
         pass
@@ -261,10 +264,24 @@ class LevelManager(SingletonInstance):
     def get_time(self):
         return self.time
 
+    def get_tod(self):
+        return self.time / 3600.0
+    
+    def set_tod(self, tod):
+        self.time = tod * 3600.0
+
+    def callback_night_time(self, *args):
+        tod = self.get_tod()
+        if tod < NIGHT_TOD_END or NIGHT_TOD_START < tod:
+            self.set_tod(MORNING_TOD)
+        else:
+            self.set_tod(NIGHT_TOD_START)
+
+
     def update_tod(self, dt):
         self.tod_update_time += dt
         self.time += dt * TIME_OF_DAY_SPEED
-        tod = self.time / 3600.0
+        tod = self.get_tod()
         if DAY_TIME <= self.time:
             self.time = self.time % DAY_TIME
             self.day += 1

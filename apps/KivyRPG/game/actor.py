@@ -1,3 +1,4 @@
+import copy
 from enum import Enum
 from kivy.logger import Logger
 from kivy.vector import Vector
@@ -34,11 +35,6 @@ class ActorManager(SingletonInstance):
     def initialize(self, game_controller, level_manager):
         self.game_controller = game_controller
         self.level_manager = level_manager
-        Character.set_managers(
-            actor_manager=self, 
-            level_manager=self.level_manager,
-            effect_manager=GameEffectManager.instance()
-        )
 
     def close(self):
         pass
@@ -59,6 +55,11 @@ class ActorManager(SingletonInstance):
         self.actors.clear()
         self.actor_type_map.clear()
 
+    def remove_actors_by_type(self, actor_type):
+        actors = copy.copy(self.get_actors_by_type(actor_type))
+        for actor in actors:
+            self.remove_actor(actor)
+
     def remove_actor(self, actor):
         self.level_manager.pop_actor(actor)
         if actor in self.actors:
@@ -67,13 +68,15 @@ class ActorManager(SingletonInstance):
         if actor in actors_by_type:
             actors_by_type.remove(actor)
 
+    def create_item(self, item_data):
+        return Character(character_data=item_data, pos=Vector(0,0), name=item_data.name)
+
     def spawn_actor(self, actor_data_name, pos=None, name=''):
         if pos is None:
             pos = self.level_manager.get_random_pos()
         if not name:
             name = actor_data_name
         character_data = GameResourceManager.instance().get_character_data(actor_data_name)  
-
         character = Character(character_data=character_data, pos=pos, name=name)
         self.actors.append(character)
         if character.actor_type not in self.actor_type_map:
@@ -122,10 +125,10 @@ class ActorManager(SingletonInstance):
 
     def callback_touch(self, inst, touch):
         touch_pos = Vector(touch.pos)
-        actor = self.level_manager.get_collide_point(touch_pos)
+        actors = self.level_manager.get_collide_point(touch_pos)
         if self.player and self.player.is_alive():
-            if actor is not None:
-                self.get_player().trace_actor(actor)
+            if actors:
+                self.get_player().trace_actor(actors[0])
             else:
                 self.get_player().move_to(touch_pos)
                 
