@@ -1,0 +1,21 @@
+{
+    "actor_type": "HP",
+    "actor_id": "HP_A",
+    "display_name": "HP 100",
+    "source": "items/roguelikeitems",
+    "actions": {
+        "idle": {
+            "region":(7/13, 10/15, 1/13, 1/15)
+        }
+    },    
+    "size": (100, 100),
+    "property": {
+        "extra_property": {
+            "price": {
+                "GOLD": 10
+            },
+            "item_count": 1,
+            "hp": 100,
+        }
+    },
+}

@@ -9,6 +9,7 @@ from kivy.uix.relativelayout import RelativeLayout
 from kivy.metrics import dp
 from utility.kivy_widgets import *
 from ..game_resource import GameResourceManager
+from ..character_data import ActorKey
 from ..constant import *
 
 class GameInfoUI:
@@ -56,7 +57,7 @@ class GameInfoUI:
 
     def update(self, dt):
         player = self.actor_manager.get_player()
-        gold = player.get_gold()
+        gold = player.get_item_count(ActorKey.GOLD.value) if player else 0
         self.gold_ui.text = f'GOLD: {gold}'
 
         sec = self.level_manager.get_time()

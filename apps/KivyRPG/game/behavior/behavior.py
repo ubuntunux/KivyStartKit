@@ -51,7 +51,5 @@ class Behavior:
         pass
 
     def on_interaction(self, actor):
-        pass
-
-    def on_buy(self, actor):
         return False
+

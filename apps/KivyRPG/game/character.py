@@ -36,12 +36,13 @@ class Character(Scatter):
     def __init__(self, name, character_data, pos):
         super().__init__(size=character_data.size)
         actor_type = character_data.actor_type       
-        self.instance_count = 1
         self.name = name
         self.action = None
         self.actor_type = actor_type       
-        self.actor_category = ActorType.get_actor_category(actor_type)
-        self.blockable =  self.actor_category in [ActorCategory.BUILDING, ActorCategory.RESOURCE]
+        self.actor_id = character_data.actor_id
+        self.actor_key = character_data.actor_key
+        self.actor_category = get_actor_category(actor_type)
+        self.blockable =  self.actor_category in [ActorCategory.BUILDING, ActorCategory.RESOURCE_GENERATOR]
         self.data = character_data
         self.property = None
         self.behavior = None
@@ -63,17 +64,17 @@ class Character(Scatter):
             self.weapon = Weapon(self, character_data.weapon_data)
             self.add_widget(self.weapon)
  
-    def get_instance_count(self):
-        return self.instance_count
-    
-    def set_instance_count(self, count):
-        self.instance_count = count
-
     def get_is_player(self):
         return self.is_player
 
     def get_actor_type(self):
         return self.actor_type
+
+    def get_actor_id(self):
+        return self.actor_id
+
+    def get_actor_key(self):
+        return self.actor_key
 
     def get_actor_category(self):
         return self.actor_category
@@ -133,8 +134,15 @@ class Character(Scatter):
     def get_property(self):
         return self.property
 
-    def get_gold(self):
-        return self.property.get_gold()
+    def get_property_data(self):
+        return self.property_data
+
+    def get_extra_property(self):
+        return self.property.extra_property
+
+
+    def get_extra_property_data(self):
+        return self.property.extra_property.property_data
 
     def is_attackable(self):
         return self.property.has_hp_property()
@@ -159,24 +167,19 @@ class Character(Scatter):
     def set_move_speed(self, move_speed):
         self.property.set_move_speed(move_speed)
         
-    def add_gold(self, gold):
-        self.property.add_gold(gold)
+    def add_item(self, item_data):
+        item_actor = self.property.add_item(item_data)
+        if item_actor.get_actor_type() == ActorType.HP:
+            self.game_controller.add_item_to_quick_slot(item_actor)
 
-    def get_gold(self):
-        return self.property.get_gold()
+    def get_item(self, actor_key):
+        return self.property.get_item(actor_key)
 
-    def buy_item(self, item_data):
-        item_actor = self.actor_manager.create_item(item_data) 
-        if item_actor.behavior.on_buy(self):
-            self.add_item(item_actor)
+    def get_item_count(self, actor_key):
+        return self.property.get_item_count(actor_key)
 
-    def add_item(self, item_actor):
-        item_actor = self.property.add_item(item_actor)
-        self.game_controller.add_item(item_actor)
-
-    def use_item(self, item_actor):
-        self.property.use_item(item_actor.data)
-        item_actor.behavior.on_interaction(self)
+    def use_item(self, actor_key, count=1, interaction=True):
+        return self.property.use_item(actor_key, count, interaction)
 
     # Transform
     def move_to(self, pos):
@@ -206,8 +209,7 @@ class Character(Scatter):
             for target in targets:
                 actor_type = target.get_actor_type()
                 if self.is_player:
-                    if actor_type == ActorType.INN:
-                        target.behavior.on_interaction(self)
+                    if target.behavior.on_interaction(self):
                         is_attack = False
                 if is_attack and target.is_attackable():
                     damage = self.get_damage()

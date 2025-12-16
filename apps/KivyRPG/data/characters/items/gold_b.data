@@ -3,13 +3,13 @@
     "source": "items/gold",
     "actions": {
         "idle": {
-            "region":(0/4, 2/4, 1/4, 1/4)
+            "region":(1/4, 2/4, 1/4, 1/4)
         }
     },    
     "size": (100, 100),
     "property": {
         "extra_property": {
-            "gold": 1,
+            "item_count": 2,
         }
     },
 }

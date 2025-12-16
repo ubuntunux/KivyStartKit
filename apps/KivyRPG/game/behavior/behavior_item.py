@@ -1,6 +1,7 @@
 import random
 from kivy.vector import Vector
 from ..constant import *
+from ..character_data import ActorType
 from .behavior import *
 
 class BehaviorItem(Behavior):
@@ -10,16 +11,15 @@ class BehaviorItem(Behavior):
                 effect_name=FX_PICK_ITEM,
                 attach_to=self.actor
             )
-            other_actor.add_item(self.actor)
+            other_actor.add_item(self.actor.data)
             self.actor.set_dead()
 
-    def on_buy(self, actor):
-        item_gold = self.actor.property.property_data.extra_property_data.gold
-        if item_gold <= actor.get_gold():
-            actor.add_gold(-item_gold)
-            return True
-        return False
-
     def on_interaction(self, actor):
-        item_hp = self.actor.property.property_data.extra_property_data.hp
-        actor.add_hp(item_hp)
+        self.effect_manager.create_effect(
+            effect_name=FX_PICK_ITEM,
+            attach_to=self.actor
+        )
+        if self.actor.actor_type is ActorType.HP:
+            item_hp = self.actor.property.property_data.extra_property_data.hp
+            actor.add_hp(item_hp)
+        return True

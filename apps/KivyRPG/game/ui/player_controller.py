@@ -87,7 +87,7 @@ class PlayerController:
         # attack button
         layout = BoxLayout(pos_hint={"right":1}, size_hint=(None, None), size=(dp(180), dp(180)), padding=dp(30)) 
         btn = Button(text="Attack", size_hint=(1,1), opacity=0.5)
-        btn.bind(on_press=actor_manager.callback_attack)
+        btn.bind(on_press=self.game_controller.callback_attack)
         layout.add_widget(btn)
         controller_layer.add_widget(layout)
 
@@ -129,6 +129,7 @@ class PlayerController:
             self.set_button_center(touch.pos)
             self.button_color.a = self.button_active_opacity
             self.touch_id = touch.id
+            self.game_controller.callback_touch_down_move(inst)
             return True
         return False
     

@@ -11,15 +11,14 @@ from ..character_data import *
 from ..constant import *
 from .base_property import BaseProperty
 from .dungeon_property import *
-from .gold_property import *
 from .inn_property import *
-from .hp_property import *
+from .item_property import *
 
 class CharacterProperty(BaseProperty):
     extra_property_map = {
         DungeonPropertyData: DungeonProperty,
-        GoldPropertyData: GoldProperty,
-        HpPropertyData: HpProperty,
+        InnPropertyData: InnProperty,
+        ItemPropertyData: ItemProperty,
     }
 
     def __init__(self, actor, property_data):
@@ -27,7 +26,6 @@ class CharacterProperty(BaseProperty):
         self.hp = 0.0
         self.mp = 0.0
         self.sp = 0.0
-        self.gold = 0
         self.move_speed = 1.0
         self.extra_property = None
         self.property_data = property_data
@@ -38,9 +36,9 @@ class CharacterProperty(BaseProperty):
         self.items = {}
 
         extra_property_data = property_data.extra_property_data
-        extra_prropert_class = self.extra_property_map.get(type(extra_property_data))
-        if extra_prropert_class:
-            self.extra_property = extra_prropert_class(actor, extra_property_data)
+        extra_propert_class = self.extra_property_map.get(type(extra_property_data))
+        if extra_propert_class:
+            self.extra_property = extra_propert_class(actor, extra_property_data)
 
         self.reset_property()
         if actor.get_is_player():
@@ -121,34 +119,36 @@ class CharacterProperty(BaseProperty):
     def get_walk_speed(self):
         return self.property_data.walk_speed * self.move_speed
     
-    def get_gold(self):
-        return self.gold
-
-    def add_gold(self, gold):
-        self.gold = max(0, self.gold + gold)
-        return self.gold
-
-    def add_item(self, item_actor):
-        item = self.items.get(item_actor.data)
-        if item:
-            count = item.get_instance_count()
-            item.set_instance_count(count + 1)
+    def add_item(self, item_data):
+        item_actor = self.items.get(item_data.actor_key)
+        if item_actor:
+            count = item_data.get_extra_property_data().get_item_count()
+            item_actor.get_extra_property().add_item_count(count)
         else:
-            self.items[item_actor.data] = item_actor 
-            item = item_actor
-        return item
+            item_actor = self.actor.actor_manager.create_item(item_data) 
+            self.items[item_data.actor_key] = item_actor 
+        return item_actor
 
-    def get_item(self, item_data):
-        return self.items.get(item_data)
+    def get_item(self, actor_key):
+        return self.items.get(actor_key)
 
-    def use_item(self, item_data):
-        item = self.items.get(item_data)
-        item_count = item.get_instance_count() if item else 0
-        if 0 < item_count:
-            if 1 == item_count:
-                self.items.pop(item_data)
-            else:
-                self.items[item_data].set_instance_count(item_count - 1)
+    def get_item_count(self, actor_key):
+        item_actor = self.items.get(actor_key)
+        if item_actor:
+            return item_actor.get_extra_property().get_item_count()
+        return 0
+
+    def use_item(self, actor_key, count=1, interaction=True):
+        item_actor = self.get_item(actor_key)
+        item_count = item_actor.get_extra_property().get_item_count() if item_actor else 0
+        if count <= item_count:
+            item_actor.get_extra_property().add_item_count(-count)
+            if interaction:
+                item_actor.behavior.on_interaction(self.actor)
+            if 0 == item_actor.get_extra_property().get_item_count():
+                self.items.pop(actor_key)
+            return True
+        return False
 
     def add_hp(self, hp):
         if self.is_alive() and self.has_hp_property():

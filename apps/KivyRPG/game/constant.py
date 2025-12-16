@@ -23,3 +23,6 @@ TIME_OF_DAY_SPEED = 24 * 60 / 10
 NIGHT_TOD_START = 18.0
 NIGHT_TOD_END = 4.0
 MORNING_TOD = 8.0
+
+ITEM_HP_A = 'items/hp_a'
+ITEM_HP_B = 'items/hp_b'

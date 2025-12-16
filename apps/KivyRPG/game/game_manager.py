@@ -1,4 +1,5 @@
 from enum import Enum
+import random
 from kivy.logger import Logger
 from kivy.vector import Vector
 from utility.singleton import SingletonInstance
@@ -28,6 +29,7 @@ class GameManager(SingletonInstance):
         self.stalker_spawn_term = 0.0
         self.tod = 0.0
         self.trade_actor = None
+        self.castle_actor = None
 
     def initialize(self):
         self.effect_manager = GameEffectManager.instance()
@@ -78,7 +80,13 @@ class GameManager(SingletonInstance):
         pass
 
     def spawn_castle(self):
-        return self.actor_manager.spawn_actor('castle', self.level_manager.get_level_center())
+        self.castle_actor = self.actor_manager.spawn_actor('castle', self.level_manager.get_level_center())
+        return self.castle_actor
+
+    def spawn_player(self):
+        player = self.actor_manager.spawn_actor('player', self.castle_actor.get_pos() + Vector(0, -self.castle_actor.size[1]))
+        self.game_controller.update_quick_slot()
+        return player
     
     def update_scenario(self, dt):
         if self.scenario == GameScenario.INTRO:
@@ -89,8 +97,10 @@ class GameManager(SingletonInstance):
             dungeon_radius_inner = dp(400)
             dungeon_radius_outter = dp(1000)
 
-            castle = self.spawn_castle() 
-            self.actor_manager.spawn_actor('player', castle.get_pos() + Vector(0, -castle.size[1]))
+            castle = self.spawn_castle()
+
+            self.spawn_player()
+
             data = [
                 'inn',
                 'forest',
@@ -125,23 +135,28 @@ class GameManager(SingletonInstance):
 
     def update(self, dt):
         if self.is_trade_mode():
-            player = self.actor_manager.get_player()
-            to_trader = (self.trade_actor.get_pos() - player.get_pos()).normalize()
-            if to_trader.dot(player.get_front()) < -0.5:
-                self.set_trade_actor(None)
+            self.game_controller.update(dt)
         else:
             prev_tod = self.tod 
             self.tod = self.level_manager.get_tod()
-
-            self.update_scenario(dt)
-
+            
             if self.tod < NIGHT_TOD_END or NIGHT_TOD_START < self.tod:
                 stalkers = self.actor_manager.get_actors_by_type(ActorType.STALKER)
                 if self.stalker_spawn_term < 0.0 and len(stalkers) < 50:
-                    self.actor_manager.spawn_actor("stalker")
+                    n = random.randint(0, 2)
+                    actor = self.actor_manager.spawn_actor("stalker")
+                    for i in range(n):
+                        self.actor_manager.spawn_around_actor("stalker", actor, 50, 200)
                     self.stalker_spawn_term = 1.0
                 self.stalker_spawn_term -= dt
             elif (NIGHT_TOD_START <= prev_tod or prev_tod <= NIGHT_TOD_END) and NIGHT_TOD_END <= self.tod:
                 self.actor_manager.remove_actors_by_type(ActorType.STALKER)
 
-        self.update_managers(dt)
+            self.update_scenario(dt)
+            self.update_managers(dt)
+
+            player = self.actor_manager.get_player()
+            if not player or not player.is_alive():
+                self.spawn_player()
+
+

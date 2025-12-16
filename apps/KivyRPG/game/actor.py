@@ -137,9 +137,6 @@ class ActorManager(SingletonInstance):
             self.player.set_move_direction(direction)
         
     def callback_attack(self, inst):
-        actors = self.level_manager.actors
-        n=sum([len(x) for x in actors])
-
         if self.player:
             self.player.set_attack()   
         
@@ -176,8 +173,8 @@ class ActorManager(SingletonInstance):
                     self.game_controller.set_target(attack_info.target)
                 # spawn gold
                 if not attack_info.target.is_alive():
-                    for i in range(4):
-                        self.spawn_around_actor(f'items/gold_{1<<i}', attack_info.target, 0, 50) 
+                    for c in ['a', 'b', 'c', 'd']:
+                        self.spawn_around_actor(f'items/gold_{c}', attack_info.target, 0, 50) 
                     self.dead_characters.append(attack_info.target)
         self.attack_infos = []
         

@@ -81,22 +81,51 @@ class GameController(SingletonInstance):
     def callback_buy_item(self, item_data):
         player = self.actor_manager.get_player()
         if player:
-            player.buy_item(item_data)
+            item_price = item_data.get_extra_property_data().price
+            result = True
+            for (actor_key, price) in item_price.items():
+                if player.get_item_count(actor_key) < price:
+                    result = False
+                    break
 
-    def add_item(self, item_actor):
+            if result:
+                self.game_manager.effect_manager.create_effect(
+                    effect_name=FX_PICK_ITEM,
+                    attach_to=player
+                )
+
+                for (actor_key, price) in item_price.items():
+                    player.use_item(actor_key, price, interaction=False)
+                player.add_item(item_data)
+                return True
+        return False
+
+    # quick slot
+    def update_quick_slot(self):
+        player = self.actor_manager.get_player()
+        self.quick_slot.update_quick_slot(player)
+
+    def add_item_to_quick_slot(self, item_actor):
         self.quick_slot.add_item(item_actor)
 
-    def use_item(self, item_actor):
+    def use_item(self, actor_key):
         player = self.actor_manager.get_player()
         if player:
-            player.use_item(item_actor)
+            player.use_item(actor_key, 1, interaction=True)
 
     def set_target(self, target):
         self.target_property_ui.set_target(target)
 
     def pressed_direction(self, direction):
         self.actor_manager.callback_move(direction)
-    
+
+    def callback_touch_down_move(self, inst):
+        self.game_manager.set_trade_actor(None)
+
+    def callback_attack(self, inst):
+        self.game_manager.set_trade_actor(None)
+        self.actor_manager.callback_attack(inst)
+
     def update(self, dt):
         self.player_controller.update(dt)
         self.player_property_ui.update(dt)

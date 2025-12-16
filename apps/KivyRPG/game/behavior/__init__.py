@@ -3,7 +3,6 @@ from .behavior_civilian import *
 from .behavior_patroller import *
 from .behavior_player import *
 from .behavior_dungeon import *
-from .behavior_gold import *
 from .behavior_item import *
 from .behavior_inn import *
 
@@ -30,8 +29,11 @@ behavior_map = {
     ActorType.FARM: BehaviorCivilian,
     ActorType.MINE: BehaviorCivilian,
 
-    ActorType.GOLD: BehaviorGold,
+    ActorType.GOLD: BehaviorItem,
     ActorType.HP: BehaviorItem,
+    ActorType.ORE: BehaviorItem,
+    ActorType.WOOD: BehaviorItem,
+    ActorType.GRAIN: BehaviorItem,
 }
 
 def create_behavior(actor, actor_type):
