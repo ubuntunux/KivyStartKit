@@ -1,0 +1,19 @@
+{
+    "actor_type": "ORE",
+    "display_name": "ORE",
+    "source": "items/roguelikeitems",
+    "actions": {
+        "idle": {
+            "region":(0/13, 8/15, 1/13, 1/15)
+        }
+    },    
+    "size": (100, 100),
+    "property": {
+        "extra_property": {
+            "price": {
+                "GOLD": 10
+            },
+            "item_count": 1,
+        }
+    },
+}

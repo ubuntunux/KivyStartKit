@@ -12,6 +12,7 @@ from .action import *
 from .character_data import *
 from .character_property import *
 from .weapon import *
+from .reward import get_rewards
 from .constant import *
 
 
@@ -98,6 +99,10 @@ class ActorManager(SingletonInstance):
 
     def spawn_around_actor(self, actor_data_name, target_actor, radius_min, radius_max, check_collide=True):
         actor = self.spawn_actor(actor_data_name)
+        self.placement_around_actor(actor, target_actor, radius_min, radius_max, check_collide=True)
+        return actor
+
+    def placement_around_actor(self, actor, target_actor, radius_min, radius_max, check_collide=True):
         NUM_TRY = 10
         for i in range(NUM_TRY):
             x = random.random() * 2.0 - 1.0
@@ -120,8 +125,6 @@ class ActorManager(SingletonInstance):
             actor.set_pos(pos) 
             if not check_collide or not self.level_manager.get_actors_on_tiles_with_actor(actor):
                 break
-        #self.app.debug_print(f'try: {i}')
-        return actor
 
     def callback_touch(self, inst, touch):
         touch_pos = Vector(touch.pos)
@@ -173,8 +176,8 @@ class ActorManager(SingletonInstance):
                     self.game_controller.set_target(attack_info.target)
                 # spawn gold
                 if not attack_info.target.is_alive():
-                    for c in ['a', 'b', 'c', 'd']:
-                        self.spawn_around_actor(f'items/gold_{c}', attack_info.target, 0, 50) 
+                    for item_actor in get_rewards(self, self.player, attack_info.target):
+                        self.placement_around_actor(item_actor, attack_info.target, 0, 50) 
                     self.dead_characters.append(attack_info.target)
         self.attack_infos = []
         

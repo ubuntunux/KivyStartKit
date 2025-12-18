@@ -99,16 +99,17 @@ class GameManager(SingletonInstance):
 
             castle = self.spawn_castle()
 
+            self.actor_manager.spawn_around_actor('inn', castle, castle_radius_inner, castle_radius_outter)
+
             self.spawn_player()
 
             data = [
-                'inn',
                 'forest',
                 'farm',
                 'mine',
-            ]
+            ] * 10
             for data_name in data:
-                self.actor_manager.spawn_around_actor(data_name, castle, castle_radius_inner, castle_radius_outter)
+                self.actor_manager.spawn_around_actor(data_name, castle, dungeon_radius_inner, dungeon_radius_outter)
 
             data = [
                 'dungeon',

@@ -169,7 +169,7 @@ class Character(Scatter):
         
     def add_item(self, item_data):
         item_actor = self.property.add_item(item_data)
-        if item_actor.get_actor_type() == ActorType.HP:
+        if True or item_actor.get_actor_type() == ActorType.HP:
             self.game_controller.add_item_to_quick_slot(item_actor)
 
     def get_item(self, actor_key):

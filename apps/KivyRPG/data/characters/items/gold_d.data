@@ -9,7 +9,7 @@
     "size": (100, 100),
     "property": {
         "extra_property": {
-            "gold": 8,
+            "item_count": 8,
         }
     },
 }

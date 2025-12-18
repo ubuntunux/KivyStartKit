@@ -11,6 +11,9 @@ class ItemProperty(BaseProperty):
     def add_item_count(self, item_count):
         self.item_count = max(0, self.item_count + item_count)
 
+    def set_item_count(self, item_count):
+        self.item_count = max(0, item_count)
+
     def get_item_count(self):
         return self.item_count
 

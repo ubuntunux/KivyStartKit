@@ -107,11 +107,13 @@ class GameController(SingletonInstance):
 
     def add_item_to_quick_slot(self, item_actor):
         self.quick_slot.add_item(item_actor)
+        self.update_quick_slot()
 
     def use_item(self, actor_key):
         player = self.actor_manager.get_player()
         if player:
             player.use_item(actor_key, 1, interaction=True)
+        self.update_quick_slot()
 
     def set_target(self, target):
         self.target_property_ui.set_target(target)

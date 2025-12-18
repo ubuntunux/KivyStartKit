@@ -69,8 +69,8 @@ class QuickSlotUI:
 
     def initialize(self, actor_manager, parent_layer):
         self.actor_manager = actor_manager
-        quick_slot_count = 5
-        button_width = dp(50)
+        quick_slot_count = 10
+        button_width = dp(40)
         button_height = button_width + dp(20)
         self.layout = BoxLayout(
             orientation="horizontal",

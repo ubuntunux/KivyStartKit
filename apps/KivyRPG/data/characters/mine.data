@@ -3,6 +3,6 @@
     "source": "props/dungeon",
     "size": (200, 200),
     "property": {
-        "max_hp": 1000.0,
+        "max_hp": 100.0,
     },
 }
