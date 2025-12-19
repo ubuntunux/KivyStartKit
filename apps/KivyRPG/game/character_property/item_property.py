@@ -4,6 +4,7 @@ class ItemProperty(BaseProperty):
     def __init__(self, *args, **kargs):
         super().__init__(*args, **kargs)
         self.item_count = 1
+        self.lifetime = 10.0
 
     def reset_property(self):
         self.item_count = self.property_data.item_count
@@ -19,4 +20,10 @@ class ItemProperty(BaseProperty):
 
     def get_item_price(self):
         return self.property_data.extra_property_data.price
+    
+    def get_lifetime(self):
+        return self.lifetime
 
+    def update_lifetime(self, delta):
+        self.lifetime -= delta
+        return self.lifetime

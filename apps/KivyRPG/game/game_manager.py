@@ -100,6 +100,8 @@ class GameManager(SingletonInstance):
             castle = self.spawn_castle()
 
             self.actor_manager.spawn_around_actor('inn', castle, castle_radius_inner, castle_radius_outter)
+            self.actor_manager.spawn_actor('guard', self.castle_actor.get_pos() + Vector(-self.castle_actor.size[0] * 0.5, -self.castle_actor.size[1]))
+            self.actor_manager.spawn_actor('guard', self.castle_actor.get_pos() + Vector(self.castle_actor.size[0] * 0.5, -self.castle_actor.size[1]))
 
             self.spawn_player()
 

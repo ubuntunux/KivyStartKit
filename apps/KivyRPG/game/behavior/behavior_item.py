@@ -23,3 +23,9 @@ class BehaviorItem(Behavior):
             item_hp = self.actor.property.property_data.extra_property_data.hp
             actor.add_hp(item_hp)
         return True
+
+    def update_behavior(self, dt):
+        super().update_behavior(dt)
+        lifetime = self.actor.get_extra_property().update_lifetime(dt)
+        if lifetime <= 0:
+            self.actor.set_dead()

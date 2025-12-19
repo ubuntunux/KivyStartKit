@@ -14,22 +14,35 @@ class ItemUI(ButtonBehavior, BoxLayout):
         super().__init__(size_hint=(None, None), size=size)
         self.bind(on_press=callback)
         
+        text_height = dp(10)
+        icon_size = size[1] - text_height
+        layout = BoxLayout(
+            orientation='vertical', 
+            size_hint=(None, None),
+            width=size[1],
+            height=size[1]
+        )
         icon = Image(
             size_hint=(None, None), 
-            width=size[1],
-            height=size[1],
+            width=icon_size,
+            height=icon_size,
             fit_mode="fill"
         )
         icon.texture = item_data.action_data.get('idle').texture
         label = Label(
             halign='left',
             valign='middle',
-            size_hint=(1, 1), 
+            size_hint=(None, None), 
+            width=size[1],
+            height=text_height,
             text=item_data.display_name
         )
-        self.add_widget(icon)
-        self.add_widget(label)
+        layout.add_widget(icon)
+        layout.add_widget(label)
+        self.add_widget(layout)
  
+        price_layout = BoxLayout(size_hint=(1,1))
+        self.add_widget(price_layout)
         self.item_data = item_data
 
 class TradeUI:

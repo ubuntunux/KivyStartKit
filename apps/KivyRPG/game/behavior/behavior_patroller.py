@@ -69,6 +69,6 @@ class BehaviorPatroller(Behavior):
             else:
                 self.attack_time -= dt
             
-            if not target.is_alive() or self.tracing_end_radius <= target_distance:
+            if not target.is_alive() or not self.actor.get_actor_type() is ActorType.STALKER and self.tracing_end_radius <= target_distance:
                 self.set_behavior_state(BehaviorState.ROAMING)
  
