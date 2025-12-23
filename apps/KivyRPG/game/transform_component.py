@@ -67,6 +67,8 @@ class TransformComponent():
         return self.collide_actors
     
     def trace_actor(self, level_manager, actor):
+        if self.target_actor is actor:
+            return
         if actor:
             self.move_to(actor.get_pos())
         self.target_actor = actor

@@ -165,8 +165,7 @@ class ActorManager(SingletonInstance):
         # attack infos
         for attack_info in self.attack_infos:
             if attack_info.target and \
-               attack_info.target.is_alive() and \
-               attack_info.target.is_player != attack_info.actor.is_player:
+               attack_info.target.is_alive():
                 attack_info.target.set_damage(attack_info.damage, attack_info.force)
                 effect_manager.create_effect(
                     effect_name=FX_HIT,
@@ -176,15 +175,16 @@ class ActorManager(SingletonInstance):
                     self.game_controller.set_target(attack_info.target)
                 # spawn reward
                 if not attack_info.target.is_alive():
-                    for (reward_index, item_actor) in enumerate(get_rewards(self, self.player, attack_info.target)):
-                        radius_min = 0
-                        radius_max = 0
-                        collide_check = False
-                        if reward_index != 0:
-                            radius_min = 50
-                            radius_max = 100
-                            collide_check = True
-                        self.placement_around_actor(item_actor, attack_info.target, radius_min, radius_max, collide_check) 
+                    if attack_info.actor.is_player:
+                        for (reward_index, item_actor) in enumerate(get_rewards(self, self.player, attack_info.target)):
+                            radius_min = 0
+                            radius_max = 0
+                            collide_check = False
+                            if reward_index != 0:
+                                radius_min = 50
+                                radius_max = 100
+                                collide_check = True
+                            self.placement_around_actor(item_actor, attack_info.target, radius_min, radius_max, collide_check) 
                     self.dead_characters.append(attack_info.target)
         self.attack_infos = []
         

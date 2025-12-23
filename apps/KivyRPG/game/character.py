@@ -42,7 +42,7 @@ class Character(Scatter):
         self.actor_id = character_data.actor_id
         self.actor_key = character_data.actor_key
         self.actor_category = get_actor_category(actor_type)
-        self.blockable =  self.actor_category in [ActorCategory.BUILDING, ActorCategory.RESOURCE_GENERATOR]
+        self.blockable = get_is_blockable_actor_category(self.actor_category) 
         self.data = character_data
         self.property = None
         self.behavior = None
@@ -197,15 +197,14 @@ class Character(Scatter):
 
     # Actions    
     def set_attack(self):
-        front = self.get_front()
-        attack_bound = self.get_size() * front
-        attack_bound_min = self.get_bound_min() + attack_bound
-        attack_bound_max = self.get_bound_max() + attack_bound
-        targets = self.level_manager.get_collide_actor(attack_bound_min, attack_bound_max, filter=self)
-
         if self.weapon and not self.action.is_action_state(ActionState.ATTACK):
             self.action.set_action_state(ActionState.ATTACK)
             is_attack = True 
+            front = self.get_front()
+            attack_bound = self.get_size() * front
+            attack_bound_min = self.get_bound_min() + attack_bound
+            attack_bound_max = self.get_bound_max() + attack_bound
+            targets = self.level_manager.get_collide_actor(attack_bound_min, attack_bound_max, filter=self)
             for target in targets:
                 actor_type = target.get_actor_type()
                 if self.is_player:

@@ -2,10 +2,11 @@ from enum import Enum
 
 class ActorCategory(Enum):
     CHARACTER = 0
-    BUILDING = 1
-    RESOURCE_GENERATOR = 2
-    RESOURCE = 3
-    ITEM = 4
+    MONSTER = 1
+    BUILDING = 2
+    RESOURCE_GENERATOR = 3
+    RESOURCE = 4
+    ITEM = 5
 
 class ActorType(Enum):
     PLAYER = 0
@@ -39,10 +40,10 @@ class ActorType(Enum):
 __category_map__ = {
     # character
     ActorType.PLAYER: ActorCategory.CHARACTER,
-    ActorType.PATROLLER: ActorCategory.CHARACTER,
-    ActorType.GUARDIAN: ActorCategory.CHARACTER,
-    ActorType.STALKER: ActorCategory.CHARACTER,
-    ActorType.INVADER: ActorCategory.CHARACTER,
+    ActorType.PATROLLER: ActorCategory.MONSTER,
+    ActorType.GUARDIAN: ActorCategory.MONSTER,
+    ActorType.STALKER: ActorCategory.MONSTER,
+    ActorType.INVADER: ActorCategory.MONSTER,
     ActorType.GUARD: ActorCategory.CHARACTER,
     ActorType.CARPENTER: ActorCategory.CHARACTER,
     ActorType.CIVILIAN: ActorCategory.CHARACTER,
@@ -68,6 +69,16 @@ __category_map__ = {
 
 def get_actor_category(actor_type):
     return __category_map__[actor_type]
+
+__blockable_actor_categories__ = [
+    ActorCategory.CHARACTER,
+    ActorCategory.MONSTER,
+    ActorCategory.BUILDING, 
+    ActorCategory.RESOURCE_GENERATOR
+]
+
+def get_is_blockable_actor_category(actor_category):
+    return actor_category in __blockable_actor_categories__
 
 class ActorID(Enum):
     NONE = 0

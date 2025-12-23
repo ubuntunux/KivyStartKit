@@ -1,5 +1,6 @@
 from .behavior import *
 from .behavior_civilian import *
+from .behavior_guard import *
 from .behavior_patroller import *
 from .behavior_player import *
 from .behavior_dungeon import *
@@ -14,7 +15,7 @@ behavior_map = {
     ActorType.STALKER: BehaviorPatroller,
     ActorType.INVADER: BehaviorPatroller,
 
-    ActorType.GUARD: BehaviorCivilian,
+    ActorType.GUARD: BehaviorGuard,
     ActorType.CARPENTER: BehaviorCivilian,
     ActorType.CIVILIAN: BehaviorCivilian,
     ActorType.MERCHANT: BehaviorCivilian,

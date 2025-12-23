@@ -3,7 +3,7 @@ from kivy.vector import Vector
 from ..character_data import ActorCategory
 from .behavior import *
 
-class BehaviorPatroller(Behavior):
+class BehaviorGuard(Behavior):
     def __init__(self, actor):
         super().__init__(actor)
         self.attack_time = 1.0
@@ -38,13 +38,14 @@ class BehaviorPatroller(Behavior):
         super().update_behavior(dt)
         actor_manager = self.actor.actor_manager
         level_manager = self.actor.level_manager
+
         size = (self.actor.get_size() * 2.0 + Vector(self.patroll_radius, self.patroll_radius))
         bound_min = self.actor.get_pos() - size
         bound_max = self.actor.get_pos() + size
         target = level_manager.get_nearest_enemy(
             bound_min, 
             bound_max, 
-            ActorCategory.CHARACTER
+            ActorCategory.MONSTER
         )
         if not target and self.is_behavior_state(BehaviorState.TRACE_TARGET):
             target = self.target
@@ -70,7 +71,7 @@ class BehaviorPatroller(Behavior):
                 self.set_behavior_state(BehaviorState.TRACE_TARGET)
             elif is_behavior_done:
                 self.set_behavior_state(BehaviorState.IDLE)
-        elif self.is_behavior_state(BehaviorState.TRACE_TARGET):
+        elif self.is_behavior_state(BehaviorState.TRACE_TARGET):                   
             if not target or not target.is_alive() or not self.actor.get_actor_type() is ActorType.STALKER and self.tracing_end_radius <= target_distance:
                 self.set_behavior_state(BehaviorState.ROAMING)
             else:

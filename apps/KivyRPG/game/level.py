@@ -161,21 +161,42 @@ class LevelManager(SingletonInstance):
             for y in range(tile_pos_min.y, tile_pos_max.y + 1):
                 for x in range(tile_pos_min.x, tile_pos_max.x + 1):
                     self.actors[y][x].remove(actor)
-         
+
+    def get_nearest_enemy(self, bound_min, bound_max, actor_category):
+        nearest_target = None
+        min_dist = -1.0
+        center = (bound_min + bound_max) * 0.5
+        for target in self.get_actors_on_tiles(bound_min, bound_max):
+            if target.get_actor_category() == actor_category and target.collide_actor(bound_min, bound_max):
+                to_enemy = center - target.get_pos()
+                dist = to_enemy.dot(to_enemy)
+                if dist < min_dist or min_dist < 0.0:
+                    min_dist = dist
+                    nearest_target = target 
+        return nearest_target
+
+    def get_collide_enemy(self, bound_min, bound_max, actor_category):
+        targets = []
+        for target in self.get_actors_on_tiles(bound_min, bound_max):
+            if target.get_actor_category() == actor_category and target.collide_actor(bound_min, bound_max):
+                targets.append(target)
+        return targets
+
     def get_collide_actor(self, bound_min, bound_max, filter=None):
         targets = []
-        for target in self.actor_manager.get_actors():
+        for target in self.get_actors_on_tiles(bound_min, bound_max):
             if target and target is not filter:
                 if target.collide_actor(bound_min, bound_max):
                     targets.append(target)
         return targets
 
     def get_collide_point(self, point, radius=0.0, filters=[]):
+        bound_min = point - Vector(radius, radius)
+        bound_max = point + Vector(radius, radius)
         targets = []
-        for actor in self.actor_manager.get_actors():
-            if actor and actor not in filters:
-                if (radius + actor.get_radius()) >= (point.distance(actor.get_pos())):
-                    targets.append(actor)
+        for target in self.get_actors_on_tiles(bound_min, bound_max, filters):
+            if (radius + actor.get_radius()) >= (point.distance(actor.get_pos())):
+                targets.append(actor)
         return targets
                 
     def pop_actor(self, actor):
