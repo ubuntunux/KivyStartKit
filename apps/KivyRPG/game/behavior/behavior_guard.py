@@ -45,7 +45,7 @@ class BehaviorGuard(Behavior):
         target = level_manager.get_nearest_enemy(
             bound_min, 
             bound_max, 
-            ActorCategory.MONSTER
+            self.actor.get_actor_category()
         )
         if not target and self.is_behavior_state(BehaviorState.TRACE_TARGET):
             target = self.target

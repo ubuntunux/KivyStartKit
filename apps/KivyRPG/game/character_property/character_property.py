@@ -33,6 +33,7 @@ class CharacterProperty(BaseProperty):
         self.ui_layout = None
         self.ui_hp = None
         self.alive = True 
+        self._is_criminal = False
         self.items = {}
 
         extra_property_data = property_data.extra_property_data
@@ -73,9 +74,16 @@ class CharacterProperty(BaseProperty):
         self.hp = self.property_data.max_hp
         self.mp = self.property_data.max_mp
         self.alive = True 
+        self._is_criminal = False
     
     def is_alive(self):
         return self.alive
+
+    def is_criminal(self):
+        return self._is_criminal
+
+    def set_criminal(self, is_criminal):
+        self._is_criminal = is_criminal
 
     def has_sp_property(self):
         return 0 <self.property_data.max_sp

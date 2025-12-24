@@ -140,12 +140,24 @@ class Character(Scatter):
     def get_extra_property(self):
         return self.property.extra_property
 
-
     def get_extra_property_data(self):
         return self.property.extra_property.property_data
 
+    def is_criminal(self):
+        return self.property.is_criminal()
+
+    def set_criminal(self, is_criminal):
+        self.property.set_criminal(is_criminal)
+
     def is_attackable(self):
         return self.property.has_hp_property()
+
+    def is_attackable_target(self, target):
+        if not target.is_attackable():
+            return False
+        if self.is_player or target.is_criminal():
+            return True
+        return get_is_enemy_actor_category(self.actor_category, target.actor_category)
 
     def is_alive(self):
         return self.property.is_alive()
@@ -210,7 +222,7 @@ class Character(Scatter):
                 if self.is_player:
                     if target.behavior.on_interaction(self):
                         is_attack = False
-                if is_attack and target.is_attackable():
+                if is_attack and self.is_attackable_target(target):
                     damage = self.get_damage()
                     force = (target.get_pos() - self.get_pos()).normalize() * ATTACK_FORCE
                     self.actor_manager.regist_attack_info(self, target, damage, force)

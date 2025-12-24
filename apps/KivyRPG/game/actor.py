@@ -166,6 +166,9 @@ class ActorManager(SingletonInstance):
         for attack_info in self.attack_infos:
             if attack_info.target and \
                attack_info.target.is_alive():
+                if attack_info.actor.is_player:
+                    if not get_is_enemy_actor_category(attack_info.target.get_actor_category(), attack_info.actor.get_actor_category()):
+                        attack_info.actor.set_criminal(True)
                 attack_info.target.set_damage(attack_info.damage, attack_info.force)
                 effect_manager.create_effect(
                     effect_name=FX_HIT,

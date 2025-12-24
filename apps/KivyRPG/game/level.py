@@ -8,6 +8,7 @@ from kivy.uix.scrollview import ScrollView
 from kivy.uix.widget import Widget
 from utility.kivy_helper import *
 from utility.singleton import SingletonInstance
+from .character_data import *
 from .game_resource import GameResourceManager
 from .tile import Tile
 from .constant import *
@@ -167,19 +168,21 @@ class LevelManager(SingletonInstance):
         min_dist = -1.0
         center = (bound_min + bound_max) * 0.5
         for target in self.get_actors_on_tiles(bound_min, bound_max):
-            if target.get_actor_category() == actor_category and target.collide_actor(bound_min, bound_max):
-                to_enemy = center - target.get_pos()
-                dist = to_enemy.dot(to_enemy)
-                if dist < min_dist or min_dist < 0.0:
-                    min_dist = dist
-                    nearest_target = target 
+            if (target.is_criminal() or get_is_enemy_actor_category(target.get_actor_category(), actor_category)) and \
+                target.collide_actor(bound_min, bound_max):
+                    to_enemy = center - target.get_pos()
+                    dist = to_enemy.dot(to_enemy)
+                    if dist < min_dist or min_dist < 0.0:
+                        min_dist = dist
+                        nearest_target = target 
         return nearest_target
 
     def get_collide_enemy(self, bound_min, bound_max, actor_category):
         targets = []
         for target in self.get_actors_on_tiles(bound_min, bound_max):
-            if target.get_actor_category() == actor_category and target.collide_actor(bound_min, bound_max):
-                targets.append(target)
+            if (target.is_criminal() or get_is_enemy_actor_category(target.get_actor_category(), actor_category)) and \
+                target.collide_actor(bound_min, bound_max):
+                    targets.append(target)
         return targets
 
     def get_collide_actor(self, bound_min, bound_max, filter=None):
