@@ -163,26 +163,24 @@ class LevelManager(SingletonInstance):
                 for x in range(tile_pos_min.x, tile_pos_max.x + 1):
                     self.actors[y][x].remove(actor)
 
-    def get_nearest_enemy(self, bound_min, bound_max, actor_category):
+    def get_nearest_enemy(self, actor, bound_min, bound_max):
         nearest_target = None
         min_dist = -1.0
         center = (bound_min + bound_max) * 0.5
         for target in self.get_actors_on_tiles(bound_min, bound_max):
-            if (target.is_criminal() or get_is_enemy_actor_category(target.get_actor_category(), actor_category)) and \
-                target.collide_actor(bound_min, bound_max):
-                    to_enemy = center - target.get_pos()
-                    dist = to_enemy.dot(to_enemy)
-                    if dist < min_dist or min_dist < 0.0:
-                        min_dist = dist
-                        nearest_target = target 
+            if actor.is_attackable_target(target) and target.collide_actor(bound_min, bound_max):
+                to_enemy = center - target.get_pos()
+                dist = to_enemy.dot(to_enemy)
+                if dist < min_dist or min_dist < 0.0:
+                    min_dist = dist
+                    nearest_target = target 
         return nearest_target
 
-    def get_collide_enemy(self, bound_min, bound_max, actor_category):
+    def get_collide_enemy(self, actor, bound_min, bound_max):
         targets = []
         for target in self.get_actors_on_tiles(bound_min, bound_max):
-            if (target.is_criminal() or get_is_enemy_actor_category(target.get_actor_category(), actor_category)) and \
-                target.collide_actor(bound_min, bound_max):
-                    targets.append(target)
+            if actor.is_attackable_target(target) and target.collide_actor(bound_min, bound_max):
+                targets.append(target)
         return targets
 
     def get_collide_actor(self, bound_min, bound_max, filter=None):
@@ -198,7 +196,7 @@ class LevelManager(SingletonInstance):
         bound_max = point + Vector(radius, radius)
         targets = []
         for target in self.get_actors_on_tiles(bound_min, bound_max, filters):
-            if (radius + actor.get_radius()) >= (point.distance(actor.get_pos())):
+            if (radius + target.get_radius()) >= (point.distance(target.get_pos())):
                 targets.append(actor)
         return targets
                 

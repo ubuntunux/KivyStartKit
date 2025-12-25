@@ -42,11 +42,7 @@ class BehaviorGuard(Behavior):
         size = (self.actor.get_size() * 2.0 + Vector(self.patroll_radius, self.patroll_radius))
         bound_min = self.actor.get_pos() - size
         bound_max = self.actor.get_pos() + size
-        target = level_manager.get_nearest_enemy(
-            bound_min, 
-            bound_max, 
-            self.actor.get_actor_category()
-        )
+        target = level_manager.get_nearest_enemy(self.actor, bound_min, bound_max)
         if not target and self.is_behavior_state(BehaviorState.TRACE_TARGET):
             target = self.target
         else:

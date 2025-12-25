@@ -155,9 +155,16 @@ class Character(Scatter):
     def is_attackable_target(self, target):
         if not target.is_attackable():
             return False
-        if self.is_player or target.is_criminal():
+        elif self.is_player or target.is_criminal():
             return True
-        return get_is_enemy_actor_category(self.actor_category, target.actor_category)
+        elif self.actor_category is ActorCategory.CHARACTER:
+            return target.actor_category is ActorCategory.MONSTER
+        elif self.actor_category is ActorCategory.MONSTER:
+            return target.actor_category is ActorCategory.CHARACTER or target.actor_category == ActorCategory.BUILDING
+        return False
+
+    def is_criminal_target(self, target):
+        return target.actor_category is ActorCategory.CHARACTER or target.actor_category is ActorCategory.BUILDING
 
     def is_alive(self):
         return self.property.is_alive()

@@ -4,9 +4,10 @@ class ActorCategory(Enum):
     CHARACTER = 0
     MONSTER = 1
     BUILDING = 2
-    RESOURCE_GENERATOR = 3
-    RESOURCE = 4
-    ITEM = 5
+    MONSTER_BUILDING = 3
+    RESOURCE_GENERATOR = 4
+    RESOURCE = 5
+    ITEM = 6
 
 class ActorType(Enum):
     PLAYER = 0
@@ -79,9 +80,6 @@ __blockable_actor_categories__ = [
 
 def get_is_blockable_actor_category(actor_category):
     return actor_category in __blockable_actor_categories__
-
-def get_is_enemy_actor_category(src, dst):
-    return src == ActorCategory.CHARACTER and dst == ActorCategory.MONSTER or dst == ActorCategory.CHARACTER and src == ActorCategory.MONSTER
 
 class ActorID(Enum):
     NONE = 0
