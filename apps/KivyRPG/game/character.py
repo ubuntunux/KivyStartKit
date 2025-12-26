@@ -146,8 +146,11 @@ class Character(Scatter):
     def is_criminal(self):
         return self.property.is_criminal()
 
-    def set_criminal(self, is_criminal):
-        self.property.set_criminal(is_criminal)
+    def get_criminal(self):
+        return self.property.get_criminal()
+
+    def add_criminal(self, criminal):
+        self.property.add_criminal(criminal)
 
     def is_attackable(self):
         return self.property.has_hp_property()
@@ -218,7 +221,6 @@ class Character(Scatter):
     def set_attack(self):
         if self.weapon and not self.action.is_action_state(ActionState.ATTACK):
             self.action.set_action_state(ActionState.ATTACK)
-            is_attack = True 
             front = self.get_front()
             attack_bound = self.get_size() * front
             attack_bound_min = self.get_bound_min() + attack_bound
@@ -226,15 +228,11 @@ class Character(Scatter):
             targets = self.level_manager.get_collide_actor(attack_bound_min, attack_bound_max, filter=self)
             for target in targets:
                 actor_type = target.get_actor_type()
-                if self.is_player:
-                    if target.behavior.on_interaction(self):
-                        is_attack = False
-                if is_attack and self.is_attackable_target(target):
+                if self.is_attackable_target(target):
                     damage = self.get_damage()
                     force = (target.get_pos() - self.get_pos()).normalize() * ATTACK_FORCE
                     self.actor_manager.regist_attack_info(self, target, damage, force)
-            if is_attack:
-                self.weapon.set_attack(front)
+            self.weapon.set_attack(front)
 
     def update(self, player_pos, dt):
         if not self.is_player:
@@ -264,13 +262,14 @@ class Character(Scatter):
                 self.level_manager.update_actor_on_tile(self)
             self.updated_transform = False
 
-        # get item
+        # get item or building
         if self.is_player:
             collide_actors = self.transform_component.collide_actors
+            interaction_target = None 
             for actor in collide_actors:
                 actor.behavior.on_collide_actor(self)
-
+                if actor.get_actor_category() is ActorCategory.BUILDING:
+                    interaction_target = actor
+            self.game_controller.set_interaction_target(interaction_target)
         self.property.update_property(dt) 
-
-
 

@@ -32,6 +32,15 @@ class GameInfoUI:
         create_dynamic_rect(self.layout, (0,0,0,0.3))
 
         ui_height = dp(20)
+        self.criminal_ui = AutoLabel(
+            text='CRIMINAL: 0',
+            size_hint=(None, None),
+            height=ui_height,
+            font_size=dp(16), 
+            bold=True
+        )
+        self.layout.add_widget(self.criminal_ui)
+
         self.gold_ui = AutoLabel(
             text='GOLD: 0',
             size_hint=(None, None),
@@ -57,7 +66,9 @@ class GameInfoUI:
 
     def update(self, dt):
         player = self.actor_manager.get_player()
+        criminal = player.get_criminal()
         gold = player.get_item_count(ActorKey.GOLD.value) if player else 0
+        self.criminal_ui.text = f'CRIMINAL: {criminal}'
         self.gold_ui.text = f'GOLD: {gold}'
 
         sec = self.level_manager.get_time()

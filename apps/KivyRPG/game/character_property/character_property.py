@@ -33,7 +33,8 @@ class CharacterProperty(BaseProperty):
         self.ui_layout = None
         self.ui_hp = None
         self.alive = True 
-        self._is_criminal = False
+        self.criminal = 0 
+        self.criminal_time = 0.0
         self.items = {}
 
         extra_property_data = property_data.extra_property_data
@@ -74,16 +75,21 @@ class CharacterProperty(BaseProperty):
         self.hp = self.property_data.max_hp
         self.mp = self.property_data.max_mp
         self.alive = True 
-        self._is_criminal = False
-    
+        self.criminal = 0
+        self.criminal_time = 0.0
+
     def is_alive(self):
         return self.alive
 
     def is_criminal(self):
-        return self._is_criminal
+        return 0 < self.criminal
 
-    def set_criminal(self, is_criminal):
-        self._is_criminal = is_criminal
+    def get_criminal(self):
+        return self.criminal
+
+    def add_criminal(self, criminal):
+        self.criminal = min(MAX_CRIMINAL, self.criminal + criminal)
+        self.criminal_time += self.criminal * CRIMINAL_TIME_RATIO 
 
     def has_sp_property(self):
         return 0 <self.property_data.max_sp
@@ -175,6 +181,13 @@ class CharacterProperty(BaseProperty):
         self.move_speed = move_speed
 
     def update_property(self, dt):
+        if 0 < self.criminal_time and 0 < self.criminal and self.criminal < MAX_CRIMINAL:
+            self.criminal_time -= dt
+            if self.criminal_time < CRIMINAL_TIMES[self.criminal - 1]:
+                self.criminal -= 1
+                if self.criminal <= 0:
+                    self.criminal = 0
+                    self.criminal_time = 0.0
         if self.extra_property:
             self.extra_property.update_property(dt)
         if self.actor.get_is_player() and self.has_hp_property():

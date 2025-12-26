@@ -68,8 +68,11 @@ class BehaviorGuard(Behavior):
             elif is_behavior_done:
                 self.set_behavior_state(BehaviorState.IDLE)
         elif self.is_behavior_state(BehaviorState.TRACE_TARGET):                   
-            if not target or not target.is_alive() or not self.actor.get_actor_type() is ActorType.STALKER and self.tracing_end_radius <= target_distance:
-                self.set_behavior_state(BehaviorState.ROAMING)
+            if not target or \
+                not target.is_alive() or \
+                (target.is_player and not target.is_criminal()) or \
+                (not self.actor.get_actor_type() is ActorType.STALKER and self.tracing_end_radius <= target_distance):
+                    self.set_behavior_state(BehaviorState.ROAMING)
             else:
                 self.actor.trace_actor(target)
                 target_dist = target.get_pos().distance(self.actor.get_pos())

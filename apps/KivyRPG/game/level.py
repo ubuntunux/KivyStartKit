@@ -197,7 +197,7 @@ class LevelManager(SingletonInstance):
         targets = []
         for target in self.get_actors_on_tiles(bound_min, bound_max, filters):
             if (radius + target.get_radius()) >= (point.distance(target.get_pos())):
-                targets.append(actor)
+                targets.append(target)
         return targets
                 
     def pop_actor(self, actor):

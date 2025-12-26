@@ -118,6 +118,12 @@ class GameController(SingletonInstance):
     def set_target(self, target):
         self.target_property_ui.set_target(target)
 
+    def get_interaction_target(self):
+        return self.target_property_ui.get_interaction_target()
+
+    def set_interaction_target(self, target):
+        self.target_property_ui.set_interaction_target(target)
+
     def pressed_direction(self, direction):
         self.actor_manager.callback_move(direction)
 
@@ -125,8 +131,10 @@ class GameController(SingletonInstance):
         self.game_manager.set_trade_actor(None)
 
     def callback_attack(self, inst):
-        self.game_manager.set_trade_actor(None)
-        self.actor_manager.callback_attack(inst)
+        if self.game_manager.is_trade_mode():
+            self.game_manager.set_trade_actor(None)
+        else:
+            self.actor_manager.callback_attack(inst)
 
     def update(self, dt):
         self.player_controller.update(dt)

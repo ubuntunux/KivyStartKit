@@ -131,8 +131,23 @@ class ActorManager(SingletonInstance):
         actors = self.level_manager.get_collide_point(touch_pos)
         if self.player and self.player.is_alive():
             if actors:
-                self.get_player().trace_actor(actors[0])
+                target = actors[0]
+                if self.game_controller.get_interaction_target() is target:
+                    if self.player.is_criminal():
+                        # criminal warn
+                        effect_manager = GameEffectManager.instance()
+                        effect_manager.create_effect(
+                            effect_name=FX_WARN,
+                            attach_to=self.player
+                        )
+                    else:
+                        # interaction
+                        target.behavior.on_interaction(self.player)
+                else:
+                    # trace
+                    self.player.trace_actor(target)
             else:
+                # move
                 self.get_player().move_to(touch_pos)
                 
     def callback_move(self, direction):
@@ -167,15 +182,14 @@ class ActorManager(SingletonInstance):
             if attack_info.target and \
                attack_info.target.is_alive():
                 if attack_info.actor.is_player:
+                    self.game_controller.set_target(attack_info.target)
                     if attack_info.actor.is_criminal_target(attack_info.target):
-                        attack_info.actor.set_criminal(True)
+                        attack_info.actor.add_criminal(1)
                 attack_info.target.set_damage(attack_info.damage, attack_info.force)
                 effect_manager.create_effect(
                     effect_name=FX_HIT,
                     attach_to=attack_info.target
                 )
-                if not attack_info.target.is_player:
-                    self.game_controller.set_target(attack_info.target)
                 # spawn reward
                 if not attack_info.target.is_alive():
                     if attack_info.actor.is_player:
