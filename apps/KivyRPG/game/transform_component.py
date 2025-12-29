@@ -140,7 +140,7 @@ class TransformComponent():
                     bound_min.x += dx
                     bound_max.x += dx
                     # slide
-                    if not self.actor.is_player:
+                    if not self.actor.is_player and self.target_actor is not actor:
                         dy = abs(dx) if actor.get_pos().y < pos.y else -abs(dx)
                         bound_min.y += dy 
                         bound_max.y += dy 
@@ -149,7 +149,7 @@ class TransformComponent():
                     bound_min.y += dy
                     bound_max.y += dy
                     # slide
-                    if not self.actor.is_player:
+                    if not self.actor.is_player and self.target_actor is not actor:
                         dx = abs(dy) if actor.get_pos().x < pos.x else -abs(dy)
                         bound_min.x += dx 
                         bound_max.x += dx 
