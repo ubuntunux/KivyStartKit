@@ -21,6 +21,7 @@ class TransformComponent():
         self.bound_max = Vector(pos) + self.size * 0.5
         self.front = Vector(1, 0)
         self.move_direction = Vector(0,0)
+        self.prev_move_direction = Vector(0,0)
         self.property = property
         self.attack_force = Vector(0,0)        
     
@@ -100,8 +101,6 @@ class TransformComponent():
             if to_target.length() <= move_dist:
                 self.move_direction = Vector(0,0)
                 pos = Vector(self.target_pos)
-            elif was_blocked:
-                self.move_direction = to_target.normalize()
             else:
                 is_horizontal = self.front.x != 0
                 if is_horizontal:
@@ -120,6 +119,7 @@ class TransformComponent():
         pos.x += self.move_direction.x * move_dist
         pos.y += self.move_direction.y * move_dist 
 
+        self.prev_move_direction = self.move_direction
         self.move_direction = Vector(0,0) # reset
         self.prev_pos = Vector(self.pos)
         bound_min = pos - self.size * 0.5
@@ -139,10 +139,20 @@ class TransformComponent():
                     dx = dx_l if abs(dx_l) < abs(dx_r) else dx_r
                     bound_min.x += dx
                     bound_max.x += dx
+                    # slide
+                    if not self.actor.is_player:
+                        dy = abs(dx) if actor.get_pos().y < pos.y else -abs(dx)
+                        bound_min.y += dy 
+                        bound_max.y += dy 
                 else:
                     dy = dy_b if abs(dy_b) < abs(dy_t) else dy_t
                     bound_min.y += dy
                     bound_max.y += dy
+                    # slide
+                    if not self.actor.is_player:
+                        dx = abs(dy) if actor.get_pos().x < pos.x else -abs(dy)
+                        bound_min.x += dx 
+                        bound_max.x += dx 
                 self.is_blocked = True
             pos = (bound_min + bound_max) * 0.5 
         if self.attack_force.x != 0 or self.attack_force.y != 0:

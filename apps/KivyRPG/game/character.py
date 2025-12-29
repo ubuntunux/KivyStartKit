@@ -267,6 +267,7 @@ class Character(Scatter):
             collide_actors = self.transform_component.collide_actors
             interaction_target = None 
             for actor in collide_actors:
+                self.game_controller.set_target(actor)
                 actor.behavior.on_collide_actor(self)
                 if actor.get_actor_category() is ActorCategory.BUILDING:
                     interaction_target = actor
