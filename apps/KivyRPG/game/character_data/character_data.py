@@ -12,10 +12,11 @@ __extra_property_data_map__ = {
     ActorType.INN: InnPropertyData,
     # item
     ActorType.GOLD: ItemPropertyData,
-    ActorType.HP: ItemPropertyData,
     ActorType.ORE: ItemPropertyData,
     ActorType.WOOD: ItemPropertyData,
     ActorType.GRAIN: ItemPropertyData,
+    ActorType.HP: ItemPropertyData,
+    ActorType.WEAPON: ItemPropertyData,
 }
 
 def get_actor_extra_property_data(actor_type): 

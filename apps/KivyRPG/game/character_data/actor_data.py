@@ -37,6 +37,7 @@ class ActorType(Enum):
     GRAIN = 4003
     # items
     HP = 5000
+    WEAPON = 5001
 
 __category_map__ = {
     # character
@@ -66,6 +67,7 @@ __category_map__ = {
     ActorType.GRAIN: ActorCategory.RESOURCE,
     # item
     ActorType.HP: ActorCategory.ITEM,
+    ActorType.WEAPON: ActorCategory.ITEM,
 }
 
 def get_actor_category(actor_type):
@@ -86,6 +88,9 @@ class ActorID(Enum):
     # item
     HP_A = 1
     HP_B = 2
+    # item weapon
+    WEAPON_AXE = 1000
 
 class ActorKey(Enum):
     GOLD = (ActorType.GOLD, ActorID.NONE)
+     

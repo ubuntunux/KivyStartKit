@@ -60,9 +60,7 @@ class Character(Scatter):
         self.add_widget(self.image)
         self.transform_component = TransformComponent(self, pos, self.property)
         self.weapon = None
-        if character_data.weapon_data:
-            self.weapon = Weapon(self, character_data.weapon_data)
-            self.add_widget(self.weapon)
+        self.set_weapon(character_data.weapon_data)
  
     def get_is_player(self):
         return self.is_player
@@ -130,6 +128,17 @@ class Character(Scatter):
     def get_updated_transform(self):
         return self.updated_transform
         
+    def set_weapon(self, weapon_data):
+        self.remove_weapon()
+        if weapon_data:
+            self.weapon = Weapon(self, weapon_data)
+            self.add_widget(self.weapon)
+
+    def remove_weapon(self):
+        if self.weapon:
+            self.remove_widget(self.weapon)
+            self.weapon = None
+
     # Property
     def get_property(self):
         return self.property

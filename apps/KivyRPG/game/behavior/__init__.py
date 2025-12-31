@@ -31,10 +31,12 @@ behavior_map = {
     ActorType.MINE: BehaviorCivilian,
 
     ActorType.GOLD: BehaviorItem,
-    ActorType.HP: BehaviorItem,
     ActorType.ORE: BehaviorItem,
     ActorType.WOOD: BehaviorItem,
     ActorType.GRAIN: BehaviorItem,
+
+    ActorType.HP: BehaviorItem,
+    ActorType.WEAPON: BehaviorItem,
 }
 
 def create_behavior(actor, actor_type):

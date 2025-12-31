@@ -9,7 +9,8 @@ def get_reward_monster(player, actor):
         Reward('items/gold_a'),
         Reward('items/gold_b'),
         Reward('items/gold_c'),
-        Reward('items/gold_d')
+        Reward('items/gold_d'),
+        Reward('items/weapon_axe'),
     ]
     return reward_data
 

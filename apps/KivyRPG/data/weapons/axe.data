@@ -2,7 +2,8 @@
     "image_file": "weapons/weapons",
     "texture_region": (8/11, 0/5, 1/11, 1/5),
     "attack_effect": "swish",
-    "damage": 20.0,
+    "damage": 200.0,
     "size": (150,150),
-    "pos": (50, 0)
+    "pos": (50, 0),
+    "item_data": "items/weapon_axe"
 }

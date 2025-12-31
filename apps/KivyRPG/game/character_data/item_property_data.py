@@ -5,6 +5,7 @@ class ItemPropertyData:
         self.item_count = 1 
         self.price = {}
         self.hp = 100
+        self.weapon_data = ''
         for (key, value) in property_data.items():
             if hasattr(self, key):
                 if key == 'price':
