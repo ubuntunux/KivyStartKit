@@ -4,7 +4,6 @@ from kivy.uix.button import Button
 from kivy.uix.image import Image
 from kivy.uix.label import Label
 from kivy.uix.scatter import Scatter
-from kivy.uix.scrollview import ScrollView
 from kivy.uix.widget import Widget
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.relativelayout import RelativeLayout
@@ -17,6 +16,7 @@ from .ui.game_info_ui import GameInfoUI
 from .ui.target_property_ui import TargetPropertyUI
 from .ui.player_property_ui import PlayerPropertyUI
 from .ui.quick_slot_ui import QuickSlotUI
+from .ui.inventory_ui import InventoryUI
 from .ui.trade_ui import TradeUI
 from .ui.player_controller import PlayerController
 from .constant import *
@@ -32,6 +32,7 @@ class GameController(SingletonInstance):
         self.player_property_ui = PlayerPropertyUI(app, self) 
         self.target_property_ui = TargetPropertyUI()
         self.game_info_ui = GameInfoUI()
+        self.inventory_ui = InventoryUI(app, self)
         self.trade_ui = TradeUI(app, self)
         
     def initialize(self, parent_widget, game_manager, level_manager, actor_manager):
@@ -39,13 +40,13 @@ class GameController(SingletonInstance):
         self.actor_manager = actor_manager
         self.game_manager = game_manager
 
-        self.trade_layer = FloatLayout(size_hint=(1,1))        
         self.controller_layer = FloatLayout(size_hint=(1,1))        
         self.player_controller.initialize(self.controller_layer)
         self.quick_slot.initialize(actor_manager, self.controller_layer)
         self.player_property_ui.initialize(actor_manager, self.controller_layer)
         self.target_property_ui.initialize(self.controller_layer)
         self.game_info_ui.initialize(actor_manager, level_manager, self.controller_layer)
+        self.inventory_ui.initialize(actor_manager, self.controller_layer)
         self.trade_ui.initialize(actor_manager, self.controller_layer)
 
         # reset level
@@ -59,7 +60,6 @@ class GameController(SingletonInstance):
         self.controller_layer.add_widget(btn)
         
         parent_widget.add_widget(self.controller_layer)
-        parent_widget.add_widget(self.trade_layer)
 
     def close(self):
         self.player_controller.close()
@@ -70,13 +70,22 @@ class GameController(SingletonInstance):
         self.player_property_ui.on_resize(window, width, height)
         self.target_property_ui.on_resize(window, width, height)
         self.game_info_ui.on_resize(window, width, height)
+        self.inventory_ui.on_resize(window, width, height)
         self.trade_ui.on_resize(window, width, height)
+
+    def open_inventory_menu(self, actor):
+        self.inventory_ui.open_inventory_menu(actor)
+
+    def close_inventory_menu(self):
+        self.inventory_ui.close_inventory_menu()
 
     def open_trade_menu(self, trade_actor):
         self.trade_ui.open_trade_menu(trade_actor)
+        self.open_inventory_menu(trade_actor)
 
     def close_trade_menu(self):
         self.trade_ui.close_trade_menu()
+        self.close_inventory_menu()
 
     def callback_buy_item(self, item_data):
         player = self.actor_manager.get_player()
@@ -142,4 +151,5 @@ class GameController(SingletonInstance):
         self.quick_slot.update(dt)
         self.target_property_ui.update(dt)
         self.game_info_ui.update(dt)
+        self.inventory_ui.update(dt) 
         self.trade_ui.update(dt) 
