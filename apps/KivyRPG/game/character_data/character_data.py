@@ -51,11 +51,11 @@ class CharacterPropertyData():
 class CharacterData():
     def __init__(self, resource_manager, name, character_data_info):       
         self.name = name
-        self.display_name = character_data_info.get('display_name', name)
         self.size = tuple(character_data_info.get("size", TILE_SIZE))
         self.actor_type = getattr(ActorType, character_data_info.get("actor_type"))
         self.actor_id = getattr(ActorID, character_data_info.get("actor_id", 'NONE'))
         self.actor_key = (self.actor_type, self.actor_id)
+        self.display_name = character_data_info.get('display_name', str(self.actor_type).split('.')[1])
         self.action_data = {}
         self.weapon_data = None
         self.property_data = None

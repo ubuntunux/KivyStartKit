@@ -146,6 +146,9 @@ class CharacterProperty(BaseProperty):
     def get_item(self, actor_key):
         return self.items.get(actor_key)
 
+    def get_items(self):
+        return self.items
+
     def get_item_count(self, actor_key):
         item_actor = self.items.get(actor_key)
         if item_actor:

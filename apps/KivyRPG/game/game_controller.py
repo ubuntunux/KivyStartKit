@@ -80,8 +80,9 @@ class GameController(SingletonInstance):
         self.inventory_ui.close_inventory_menu()
 
     def open_trade_menu(self, trade_actor):
+        player = self.actor_manager.get_player()
         self.trade_ui.open_trade_menu(trade_actor)
-        self.open_inventory_menu(trade_actor)
+        self.open_inventory_menu(player)
 
     def close_trade_menu(self):
         self.trade_ui.close_trade_menu()

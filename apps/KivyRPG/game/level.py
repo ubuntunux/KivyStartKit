@@ -13,6 +13,8 @@ from .game_resource import GameResourceManager
 from .tile import Tile
 from .constant import *
 
+class Stage:
+    pass
 
 class LevelManager(SingletonInstance):
     def __init__(self, app):
@@ -35,6 +37,7 @@ class LevelManager(SingletonInstance):
         self.day = 1
         self.time = 0
         self.tod_update_time = 0.0
+        self.main_stage = None
 
     def initialize(self, parent_widget, actor_manager, fx_manager):
         self.actor_manager = actor_manager

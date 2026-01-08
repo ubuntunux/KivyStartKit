@@ -206,6 +206,9 @@ class Character(Scatter):
     def get_item(self, actor_key):
         return self.property.get_item(actor_key)
 
+    def get_items(self):
+        return self.property.get_items()
+
     def get_item_count(self, actor_key):
         return self.property.get_item_count(actor_key)
 

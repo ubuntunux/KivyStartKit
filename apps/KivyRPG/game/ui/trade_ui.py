@@ -104,7 +104,8 @@ class TradeUI:
         self.game_controller.callback_buy_item(inst.item_data)
 
     def on_resize(self, window, width, height):
-        self.trade_menu_layout.x = window.width * 0.5 - self.trade_menu_layout.width - dp(20)
+        if self.trade_menu_layout:
+            self.trade_menu_layout.x = window.width * 0.5 - self.trade_menu_layout.width - dp(20)
 
     def update(self, dt):
         pass
