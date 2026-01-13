@@ -19,6 +19,7 @@ from .ui.quick_slot_ui import QuickSlotUI
 from .ui.inventory_ui import InventoryUI
 from .ui.trade_ui import TradeUI
 from .ui.player_controller import PlayerController
+from .character_data import *
 from .constant import *
        
 class GameController(SingletonInstance):
@@ -91,13 +92,14 @@ class GameController(SingletonInstance):
         self.trade_ui.close_trade_menu()
         self.close_inventory_menu()
 
-    def callback_buy_item(self, item_data):
+    def callback_buy_item(self, buy_item_data):
         player = self.actor_manager.get_player()
         if player:
-            item_price = item_data.get_extra_property_data().price
+            item_price = buy_item_data.get_extra_property_data().price
             result = True
-            for (actor_key, price) in item_price.items():
-                if player.get_item_count(actor_key) < price:
+            for (actor_data_name, price) in item_price.items():
+                item_data = GameResourceManager.instance().get_character_data(actor_data_name)
+                if player.get_item_count(item_data.actor_key) < price:
                     result = False
                     break
 
@@ -107,31 +109,25 @@ class GameController(SingletonInstance):
                     attach_to=player
                 )
 
-                for (actor_key, price) in item_price.items():
-                    player.use_item(actor_key, price, interaction=False)
-                player.add_item(item_data)
+                for (item_data_name, price) in item_price.items():
+                    item_data = GameResourceManager.instance().get_character_data(item_data_name)
+                    player.use_item(item_data.actor_key, price, interaction=False)
+                player.add_item(buy_item_data)
                 return True
         return False
 
-    def callback_sell_item(self, item_data):
+    def callback_sell_item(self, sell_item_data):
         player = self.actor_manager.get_player()
-        if player:
-            item_price = item_data.get_extra_property_data().price
-            result = True
-            for (actor_key, price) in item_price.items():
-                if player.get_item_count(actor_key) < price:
-                    result = False
-                    break
-
-            if result:
+        if player and sell_item_data.actor_type != ActorType.GOLD:
+            if player.use_item(sell_item_data.actor_key, 1, interaction=False):
                 self.game_manager.effect_manager.create_effect(
                     effect_name=FX_PICK_ITEM,
                     attach_to=player
                 )
-
-                for (actor_key, price) in item_price.items():
-                    player.use_item(actor_key, price, interaction=False)
-                player.add_item(item_data)
+                item_price = sell_item_data.get_extra_property_data().price
+                for (item_data_name, price) in item_price.items():
+                    item_data = GameResourceManager.instance().get_character_data(item_data_name)
+                    player.add_item(item_data, price)
                 return True
         return False
 

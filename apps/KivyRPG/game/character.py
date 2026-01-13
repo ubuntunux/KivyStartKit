@@ -198,8 +198,8 @@ class Character(Scatter):
     def set_move_speed(self, move_speed):
         self.property.set_move_speed(move_speed)
         
-    def add_item(self, item_data):
-        item_actor = self.property.add_item(item_data)
+    def add_item(self, item_data, item_data_count=1):
+        item_actor = self.property.add_item(item_data, item_data_count)
         if self.is_player:
             if True or item_actor.get_actor_type() == ActorType.HP:
                 self.game_controller.add_item_to_quick_slot(item_actor)

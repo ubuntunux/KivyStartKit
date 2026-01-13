@@ -133,13 +133,14 @@ class CharacterProperty(BaseProperty):
     def get_walk_speed(self):
         return self.property_data.walk_speed * self.move_speed
     
-    def add_item(self, item_data):
+    def add_item(self, item_data, item_data_count=1):
         item_actor = self.items.get(item_data.actor_key)
+        item_count = item_data.get_extra_property_data().get_item_count() * item_data_count
         if item_actor:
-            count = item_data.get_extra_property_data().get_item_count()
-            item_actor.get_extra_property().add_item_count(count)
+            item_actor.get_extra_property().add_item_count(item_count)
         else:
             item_actor = self.actor.actor_manager.create_item(item_data) 
+            item_actor.get_extra_property().set_item_count(item_count)
             self.items[item_data.actor_key] = item_actor 
         return item_actor
 

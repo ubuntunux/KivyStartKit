@@ -11,7 +11,7 @@
     "property": {
         "extra_property": {
             "price": {
-                "GOLD": 10
+                "items/gold_a": 10
             },
             "item_count": 1,
         }

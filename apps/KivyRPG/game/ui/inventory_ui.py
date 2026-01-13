@@ -143,7 +143,7 @@ class InventoryUI:
                     item = ItemUI(
                         item_actor,
                         (self.width, self.button_size),
-                        self.callback_buy_item
+                        self.callback_sell_item
                     )
                     self.box_layout.add_widget(item)
                     self.items[actor_key] = item

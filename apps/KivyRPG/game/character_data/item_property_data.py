@@ -9,8 +9,8 @@ class ItemPropertyData:
         for (key, value) in property_data.items():
             if hasattr(self, key):
                 if key == 'price':
-                    for (actor_key_str, price_value) in value.items():
-                        self.price[getattr(ActorKey, actor_key_str).value] = price_value
+                    for (item_data_name, price_value) in value.items():
+                        self.price[item_data_name] = price_value
                 else:
                     setattr(self, key, value)
 
