@@ -127,7 +127,8 @@ class GameController(SingletonInstance):
                 item_price = sell_item_data.get_extra_property_data().price
                 for (item_data_name, price) in item_price.items():
                     item_data = GameResourceManager.instance().get_character_data(item_data_name)
-                    player.add_item(item_data, price)
+                    sell_price = max(1, int(price/4))
+                    player.add_item(item_data, sell_price)
                 return True
         return False
 

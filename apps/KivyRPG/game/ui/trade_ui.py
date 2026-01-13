@@ -32,7 +32,7 @@ class ItemUI(ButtonBehavior, BoxLayout):
         )
         icon.texture = item_data.action_data.get('idle').texture
         label = Label(
-            halign='left',
+            halign='center',
             valign='middle',
             size_hint=(None, None), 
             width=size[1],
@@ -44,6 +44,34 @@ class ItemUI(ButtonBehavior, BoxLayout):
         self.add_widget(layout)
  
         price_layout = BoxLayout(size_hint=(1,1))
+        item_price = item_data.get_extra_property_data().price
+        for (item_data_name, price) in item_price.items():
+            price_item_data = GameResourceManager.instance().get_character_data(item_data_name)
+            layout = BoxLayout(
+                orientation='vertical', 
+                size_hint=(None, None),
+                width=icon_size,
+                height=size[1],
+                padding=padding
+            )
+            icon = Image(
+                size_hint=(None, None), 
+                width=icon_size,
+                height=icon_size,
+                fit_mode="fill"
+            )
+            icon.texture = price_item_data.action_data.get('idle').texture
+            label = Label(
+                halign='center',
+                valign='middle',
+                size_hint=(None, None), 
+                width=icon_size,
+                height=text_height,
+                text=str(price)
+            )
+            layout.add_widget(icon)
+            layout.add_widget(label)
+            price_layout.add_widget(layout)
         self.add_widget(price_layout)
         self.item_data = item_data
 
@@ -59,12 +87,13 @@ class TradeUI:
     def initialize(self, actor_manager, parent_layer):
         self.actor_manager = actor_manager
         self.parent_layer = parent_layer
+
     def open_trade_menu(self, trade_actor):
         self.close_trade_menu()
 
         button_count = 5
         button_size = dp(60)
-        width = button_size * 5.0
+        width = dp(200)
         self.trade_menu_layout = ScrollView(
             do_scroll_y=True,
             pos_hint={'center_y': 0.5},
