@@ -76,6 +76,9 @@ class GameController(SingletonInstance):
     def open_inventory_menu(self, actor):
         self.inventory_ui.open_inventory_menu(actor)
 
+    def update_inventory_menu(self):
+        self.inventory_ui.update_inventory_menu()
+
     def close_inventory_menu(self):
         self.inventory_ui.close_inventory_menu()
 
@@ -89,6 +92,28 @@ class GameController(SingletonInstance):
         self.close_inventory_menu()
 
     def callback_buy_item(self, item_data):
+        player = self.actor_manager.get_player()
+        if player:
+            item_price = item_data.get_extra_property_data().price
+            result = True
+            for (actor_key, price) in item_price.items():
+                if player.get_item_count(actor_key) < price:
+                    result = False
+                    break
+
+            if result:
+                self.game_manager.effect_manager.create_effect(
+                    effect_name=FX_PICK_ITEM,
+                    attach_to=player
+                )
+
+                for (actor_key, price) in item_price.items():
+                    player.use_item(actor_key, price, interaction=False)
+                player.add_item(item_data)
+                return True
+        return False
+
+    def callback_sell_item(self, item_data):
         player = self.actor_manager.get_player()
         if player:
             item_price = item_data.get_extra_property_data().price

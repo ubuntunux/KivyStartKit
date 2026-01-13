@@ -200,8 +200,10 @@ class Character(Scatter):
         
     def add_item(self, item_data):
         item_actor = self.property.add_item(item_data)
-        if True or item_actor.get_actor_type() == ActorType.HP:
-            self.game_controller.add_item_to_quick_slot(item_actor)
+        if self.is_player:
+            if True or item_actor.get_actor_type() == ActorType.HP:
+                self.game_controller.add_item_to_quick_slot(item_actor)
+            self.game_controller.update_inventory_menu()
 
     def get_item(self, actor_key):
         return self.property.get_item(actor_key)
@@ -213,7 +215,10 @@ class Character(Scatter):
         return self.property.get_item_count(actor_key)
 
     def use_item(self, actor_key, count=1, interaction=True):
-        return self.property.use_item(actor_key, count, interaction)
+        used_item = self.property.use_item(actor_key, count, interaction)
+        if self.is_player:
+            self.game_controller.update_inventory_menu()
+        return used_item
 
     # Transform
     def move_to(self, pos):

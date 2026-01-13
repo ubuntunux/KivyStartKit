@@ -38,7 +38,7 @@ class ItemUI(ButtonBehavior, BoxLayout):
             fit_mode="fill"
         )
         icon.texture = item_data.action_data.get('idle').texture
-        item_count_label = Label(
+        self.item_count_label = Label(
             halign='left',
             valign='middle',
             size_hint=(1, None), 
@@ -46,7 +46,7 @@ class ItemUI(ButtonBehavior, BoxLayout):
             text=str(item_actor.get_extra_property().get_item_count())
         )
         icon_layout.add_widget(icon)
-        icon_layout.add_widget(item_count_label)
+        icon_layout.add_widget(self.item_count_label)
         self.add_widget(icon_layout)
 
         desc_padding = dp(10)
@@ -72,6 +72,15 @@ class ItemUI(ButtonBehavior, BoxLayout):
         price_layout = BoxLayout(size_hint=(1,1))
         self.add_widget(price_layout)
         self.item_data = item_data
+
+    def remove_item(self):
+        self.parent.remove_widget(self)
+
+    def update_item(self):
+        item_count = self.item_actor.get_extra_property().get_item_count() if self.item_actor else 0
+        self.item_count_label.text = str(item_count)
+        return 0 < item_count
+
 
 class InventoryUI:
     def __init__(self, app, game_controller):
@@ -124,20 +133,32 @@ class InventoryUI:
             item_map = self.owner_actor.get_items()
             items = list(item_map.items())
             #items.sort()
+            remove_items = set()
             for (actor_key, item_actor) in items:
-                item = ItemUI(
-                    item_actor,
-                    (self.width, self.button_size),
-                    self.callback_buy_item
-                )
-                self.box_layout.add_widget(item)
-                self.items[actor_key] = item
+                if actor_key in self.items:
+                    is_valid = self.items[actor_key].update_item()
+                    if not is_valid:
+                        remove_items.add(actor_key)
+                else:
+                    item = ItemUI(
+                        item_actor,
+                        (self.width, self.button_size),
+                        self.callback_buy_item
+                    )
+                    self.box_layout.add_widget(item)
+                    self.items[actor_key] = item
+            for actor_key in self.items:
+                if actor_key not in item_map:
+                    remove_items.add(actor_key)
+            for actor_key in remove_items:
+                item = self.items.pop(actor_key)
+                item.remove_item()
             self.box_layout.height = len(self.box_layout.children) * self.button_size
         else:
             self.close_inventory_menu()
 
-    def callback_buy_item(self, inst, *args): 
-        self.game_controller.callback_buy_item(inst.item_data)
+    def callback_sell_item(self, inst, *args): 
+        self.game_controller.callback_sell_item(inst.item_data)
 
     def on_resize(self, window, width, height):
         if self.inventory_menu_layout:
