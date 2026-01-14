@@ -99,10 +99,17 @@ class QuickSlotUI:
             item.update_item()
 
     def add_item(self, item_actor):
+        empty_slot = None
         for (i, item) in enumerate(self.items):
-            if item.actor is None or item.actor is item_actor:
+            if not item.actor and not empty_slot:
+                empty_slot = item
+
+            if item.actor and item.actor.actor_key is item_actor.actor_key:
                 item.add_item(item_actor)
                 break
+        else:
+            if empty_slot:
+                empty_slot.add_item(item_actor)
 
     def callback_use_item(self, item):
         if item.actor and 0 < item.actor.get_extra_property().get_item_count():
