@@ -132,20 +132,8 @@ class ActorManager(SingletonInstance):
         if self.player and self.player.is_alive():
             if actors:
                 target = actors[0]
-                if self.game_controller.get_interaction_target() is target:
-                    if self.player.is_criminal():
-                        # criminal warn
-                        effect_manager = GameEffectManager.instance()
-                        effect_manager.create_effect(
-                            effect_name=FX_WARN,
-                            attach_to=self.player
-                        )
-                    else:
-                        # interaction
-                        target.behavior.on_interaction(self.player)
-                else:
-                    # trace
-                    self.player.trace_actor(target)
+                # trace
+                self.player.trace_actor(target)
             else:
                 # move
                 self.get_player().move_to(touch_pos)

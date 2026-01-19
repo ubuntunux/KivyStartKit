@@ -120,16 +120,6 @@ class GameManager(SingletonInstance):
                 self.actor_manager.spawn_around_actor(data_name, castle, dungeon_radius_inner, dungeon_radius_outter)
             self.set_scenario(GameScenario.NONE)
 
-    def is_trade_mode(self):
-        return self.trade_actor is not None
-
-    def set_trade_actor(self, trade_actor):
-        if trade_actor and self.trade_actor is not trade_actor:
-            self.game_controller.open_trade_menu(trade_actor)
-        elif trade_actor is None:
-            self.game_controller.close_trade_menu()
-        self.trade_actor = trade_actor
-
     def update_managers(self, dt):
         self.game_controller.update(dt)
         self.effect_manager.update(dt)
@@ -137,7 +127,7 @@ class GameManager(SingletonInstance):
         self.level_manager.update(dt)
 
     def update(self, dt):
-        if self.is_trade_mode():
+        if self.game_controller.is_trade_mode():
             self.game_controller.update(dt)
         else:
             prev_tod = self.tod 

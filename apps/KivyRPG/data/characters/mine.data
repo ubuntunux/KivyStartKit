@@ -1,6 +1,6 @@
 {
     "actor_type": "MINE",
-    "source": "props/dungeon",
+    "source": "props/mine",
     "size": (200, 200),
     "property": {
         "max_hp": 100.0,

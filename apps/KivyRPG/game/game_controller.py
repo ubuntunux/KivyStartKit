@@ -16,6 +16,7 @@ from .ui.game_info_ui import GameInfoUI
 from .ui.target_property_ui import TargetPropertyUI
 from .ui.player_property_ui import PlayerPropertyUI
 from .ui.quick_slot_ui import QuickSlotUI
+from .ui.interaction_ui import InteractionUI, InteractionType
 from .ui.inventory_ui import InventoryUI
 from .ui.trade_ui import TradeUI
 from .ui.player_controller import PlayerController
@@ -33,9 +34,11 @@ class GameController(SingletonInstance):
         self.player_property_ui = PlayerPropertyUI(app, self) 
         self.target_property_ui = TargetPropertyUI()
         self.game_info_ui = GameInfoUI()
+        self.interaction_ui = InteractionUI()
         self.inventory_ui = InventoryUI(app, self)
         self.trade_ui = TradeUI(app, self)
-        
+        self.trade_actor = None
+
     def initialize(self, parent_widget, game_manager, level_manager, actor_manager):
         self.level_manager = level_manager
         self.actor_manager = actor_manager
@@ -47,8 +50,10 @@ class GameController(SingletonInstance):
         self.player_property_ui.initialize(actor_manager, self.controller_layer)
         self.target_property_ui.initialize(self.controller_layer)
         self.game_info_ui.initialize(actor_manager, level_manager, self.controller_layer)
+        self.interaction_ui.initialize(self.controller_layer, self.callback_interaction)
         self.inventory_ui.initialize(actor_manager, self.controller_layer)
         self.trade_ui.initialize(actor_manager, self.controller_layer)
+        self.trade_actor = None
 
         # reset level
         btn = Button(text="Reset", pos_hint={"right":1, "top":1}, size_hint=(None, 0.05), width=300, opacity=0.5)
@@ -91,6 +96,31 @@ class GameController(SingletonInstance):
     def close_trade_menu(self):
         self.trade_ui.close_trade_menu()
         self.close_inventory_menu()
+
+    def is_trade_mode(self):
+        return self.trade_actor is not None
+
+    def set_trade_actor(self, trade_actor):
+        if trade_actor and self.trade_actor is not trade_actor:
+            self.open_trade_menu(trade_actor)
+        elif trade_actor is None:
+            self.close_trade_menu()
+        self.trade_actor = trade_actor
+
+    def callback_interaction(self, interaction_type, inst_widget):
+        player = self.actor_manager.get_player()
+        if not player or player.is_criminal():
+            # criminal warn
+            self.game_manager.effect_manager.create_effect(
+                effect_name=FX_WARN,
+                attach_to=self.player
+            )
+        else:
+            # interaction
+            target = self.get_interaction_target()
+            if target:
+                if interaction_type == InteractionType.TRADE:
+                    self.set_trade_actor(player)
 
     def callback_buy_item(self, buy_item_data):
         player = self.actor_manager.get_player()
@@ -151,20 +181,20 @@ class GameController(SingletonInstance):
         self.target_property_ui.set_target(target)
 
     def get_interaction_target(self):
-        return self.target_property_ui.get_interaction_target()
+        return self.interaction_ui.get_interaction_target()
 
     def set_interaction_target(self, target):
-        self.target_property_ui.set_interaction_target(target)
+        self.interaction_ui.set_interaction_target(target, self.callback_interaction)
 
     def pressed_direction(self, direction):
         self.actor_manager.callback_move(direction)
 
     def callback_touch_down_move(self, inst):
-        self.game_manager.set_trade_actor(None)
+        self.set_trade_actor(None)
 
     def callback_attack(self, inst):
-        if self.game_manager.is_trade_mode():
-            self.game_manager.set_trade_actor(None)
+        if self.is_trade_mode():
+            self.set_trade_actor(None)
         else:
             self.actor_manager.callback_attack(inst)
 
