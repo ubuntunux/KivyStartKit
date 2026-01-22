@@ -6,62 +6,62 @@ from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 from kivy.metrics import dp
+from ..character_data import * 
 from ..constant import *
 
 class InteractionType(Enum):
     TRADE = 0
-    SLEEP = 1
-    ENTER = 2
+    ENTER = 1
  
 class InteractionUI:
     def __init__(self):
-        self.btn_trade = None
-        self.btn_sleep = None
-        self.btn_enter = None
-        self.btn_close = None
-        self.ui_interaction = None
-        self.interaction_target = None
+        self.remove_candidate_interactions = {}
+        self.ui_interactions = {}
+        self.menu_height = dp(40)
+        self.callback_interaction = None
 
-    def initialize(self, parent_layer, callback_interaction):
-        def create_button(title, interaction_type):
-            btn = Button(
-                text=title,
-                pos_hint={'center_x': 0.5, 'center_y':0.5},
-                size_hint=(1, 1),
-                background_color=(0,0,0,0.5)
-            )
-            btn.bind(on_press=partial(callback_interaction, interaction_type))
-            return btn
-        
-        buttons = [
-            create_button('TRADE', InteractionType.TRADE), 
-            create_button('SLEEP', InteractionType.SLEEP), 
-            create_button('ENTER', InteractionType.ENTER), 
-        ]
+    def initialize(self, callback_interaction):
+        self.callback_interaction = callback_interaction
+        self.ui_interactions = {}
+        self.remove_candidate_interactions = {}
 
-        self.ui_interaction = BoxLayout(
-            orientation='vertical',
+    def create_button(self, layout, title, interaction_type):
+        btn = Button(
+            text=title,
             pos_hint={'center_x': 0.5, 'center_y':0.5},
-            size = (dp(120), dp(40) * len(buttons)),
+            size_hint=(1, 1),
+            background_color=(0,0,0,0.5)
         )
-        for btn in buttons:
-            self.ui_interaction.add_widget(btn)
-
+        btn.bind(on_press=partial(self.callback_interaction, interaction_type))
+        layout.add_widget(btn)
+        return btn
+    
     def on_resize(self, window, width, height):
         pass
 
-    def get_interaction_target(self):
-        return self.interaction_target
+    def set_interaction_target(self, target):
+        if target in self.remove_candidate_interactions:
+            self.ui_interactions[target] = self.remove_candidate_interactions.pop(target)
+        elif target not in self.ui_interactions:
+            ui_interaction = BoxLayout(
+                orientation='vertical',
+                pos_hint={'center_x': 0.5, 'center_y':0.5},
+                size_hint = (None, None),
+                size = (dp(120), self.menu_height),
+            )
 
-    def set_interaction_target(self, target, callback):
-        if self.interaction_target != target:
-            if self.ui_interaction.parent:
-                self.ui_interaction.parent.remove_widget(self.ui_interaction)
-            if target:
-                target.parent.add_widget(self.ui_interaction)
-                self.ui_interaction.center = target.get_pos()
-                self.ui_interaction.bind(on_press=callback)
-            self.interaction_target = target
+            if target.actor_type in [ActorType.INN, ActorType.CASTLE]:
+                self.create_button(ui_interaction, 'TRADE', InteractionType.TRADE)
+            if target.actor_type is ActorType.DUNGEON:
+                self.create_button(ui_interaction, 'ENTER', InteractionType.ENTER)
+            ui_interaction.center = target.get_pos()
+            ui_interaction.height = self.menu_height * len(ui_interaction.children)
+            target.parent.add_widget(ui_interaction)
+            self.ui_interactions[target] = ui_interaction
 
-    def update(self, dt):
-        pass
+    def update(self, player, dt):
+        for (target, ui_interaction) in self.remove_candidate_interactions.items():
+            ui_interaction.parent.remove_widget(ui_interaction)
+
+        self.remove_candidate_interactions = self.ui_interactions
+        self.ui_interactions = {}

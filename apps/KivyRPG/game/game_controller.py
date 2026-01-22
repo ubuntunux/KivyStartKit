@@ -50,7 +50,7 @@ class GameController(SingletonInstance):
         self.player_property_ui.initialize(actor_manager, self.controller_layer)
         self.target_property_ui.initialize(self.controller_layer)
         self.game_info_ui.initialize(actor_manager, level_manager, self.controller_layer)
-        self.interaction_ui.initialize(self.controller_layer, self.callback_interaction)
+        self.interaction_ui.initialize(self.callback_interaction)
         self.inventory_ui.initialize(actor_manager, self.controller_layer)
         self.trade_ui.initialize(actor_manager, self.controller_layer)
         self.trade_actor = None
@@ -117,10 +117,8 @@ class GameController(SingletonInstance):
             )
         else:
             # interaction
-            target = self.get_interaction_target()
-            if target:
-                if interaction_type == InteractionType.TRADE:
-                    self.set_trade_actor(player)
+            if interaction_type == InteractionType.TRADE:
+                self.set_trade_actor(player)
 
     def callback_buy_item(self, buy_item_data):
         player = self.actor_manager.get_player()
@@ -180,11 +178,8 @@ class GameController(SingletonInstance):
     def set_target(self, target):
         self.target_property_ui.set_target(target)
 
-    def get_interaction_target(self):
-        return self.interaction_ui.get_interaction_target()
-
     def set_interaction_target(self, target):
-        self.interaction_ui.set_interaction_target(target, self.callback_interaction)
+        self.interaction_ui.set_interaction_target(target)
 
     def pressed_direction(self, direction):
         self.actor_manager.callback_move(direction)
@@ -199,8 +194,10 @@ class GameController(SingletonInstance):
             self.actor_manager.callback_attack(inst)
 
     def update(self, dt):
+        player = self.actor_manager.get_player()
         self.player_controller.update(dt)
         self.player_property_ui.update(dt)
+        self.interaction_ui.update(player, dt)
         self.quick_slot.update(dt)
         self.target_property_ui.update(dt)
         self.game_info_ui.update(dt)
