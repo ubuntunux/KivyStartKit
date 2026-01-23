@@ -113,7 +113,7 @@ class GameController(SingletonInstance):
             # criminal warn
             self.game_manager.effect_manager.create_effect(
                 effect_name=FX_WARN,
-                attach_to=self.player
+                attach_to=player
             )
         else:
             # interaction

@@ -5,8 +5,9 @@
     "property": {
         "extra_property": {
             "spawn_data": ["patroller"],
-            "spawn_term": 5.0,
-            "limit_spawn_count": 3
+            "spawn_term": 10.0,
+            "active_actor_count": 3,
+            "limit_spawn_count": 5
         }
     },
 }
