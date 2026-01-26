@@ -20,6 +20,7 @@ from .ui.interaction_ui import InteractionUI, InteractionType
 from .ui.inventory_ui import InventoryUI
 from .ui.trade_ui import TradeUI
 from .ui.player_controller import PlayerController
+from .ui.game_menu import GameMenu
 from .character_data import *
 from .constant import *
        
@@ -38,6 +39,7 @@ class GameController(SingletonInstance):
         self.inventory_ui = InventoryUI(app, self)
         self.trade_ui = TradeUI(app, self)
         self.trade_actor = None
+        self.game_menu = GameMenu(app, self)
 
     def initialize(self, parent_widget, game_manager, level_manager, actor_manager):
         self.level_manager = level_manager
@@ -54,17 +56,32 @@ class GameController(SingletonInstance):
         self.inventory_ui.initialize(actor_manager, self.controller_layer)
         self.trade_ui.initialize(actor_manager, self.controller_layer)
         self.trade_actor = None
+        self.game_menu.initialize(actor_manager, self.controller_layer)
 
+        menu_layout = BoxLayout(
+            orientation='vertical',
+            pos_hint={"right":1, "top":1},
+            size_hint=(None, None),
+            size=(dp(150), dp(150)),
+            opacity=0.5
+        )
         # reset level
-        btn = Button(text="Reset", pos_hint={"right":1, "top":1}, size_hint=(None, 0.05), width=300, opacity=0.5)
+        btn = Button(text="Reset", size_hint=(1, 1))
         btn.bind(on_press=game_manager.callback_reset)
-        self.controller_layer.add_widget(btn)
+        menu_layout.add_widget(btn)
 
         # change time
-        btn = Button(text="Night Time", pos_hint={"right":1, "top":0.95}, size_hint=(None, 0.05), width=300, opacity=0.5)
+        btn = Button(text="Night Time", size_hint=(1, 1))
         btn.bind(on_press=level_manager.callback_night_time)
-        self.controller_layer.add_widget(btn)
-        
+        menu_layout.add_widget(btn)
+
+        # game menu
+        btn = Button(text="Menu", size_hint=(1, 1))
+        btn.bind(on_press=self.callback_open_game_menu)
+        menu_layout.add_widget(btn)
+
+        self.controller_layer.add_widget(menu_layout)
+         
         parent_widget.add_widget(self.controller_layer)
 
     def close(self):
@@ -79,6 +96,14 @@ class GameController(SingletonInstance):
         self.inventory_ui.on_resize(window, width, height)
         self.trade_ui.on_resize(window, width, height)
 
+    # game menu
+    def callback_open_game_menu(self, widget):
+        self.game_menu.open_game_menu()
+
+    def is_game_menu_opened(self):
+        return self.game_menu.is_opened()
+
+    # inventory
     def open_inventory_menu(self, actor):
         self.inventory_ui.open_inventory_menu(actor)
 
@@ -88,6 +113,7 @@ class GameController(SingletonInstance):
     def close_inventory_menu(self):
         self.inventory_ui.close_inventory_menu()
 
+    # trade menu
     def open_trade_menu(self, trade_actor):
         player = self.actor_manager.get_player()
         self.trade_ui.open_trade_menu(trade_actor)
@@ -185,9 +211,15 @@ class GameController(SingletonInstance):
         self.actor_manager.callback_move(direction)
 
     def callback_touch_down_move(self, inst):
+        if self.is_game_menu_opened():
+            return
+
         self.set_trade_actor(None)
 
     def callback_attack(self, inst):
+        if self.is_game_menu_opened():
+            return
+
         if self.is_trade_mode():
             self.set_trade_actor(None)
         else:
@@ -203,3 +235,4 @@ class GameController(SingletonInstance):
         self.game_info_ui.update(dt)
         self.inventory_ui.update(dt) 
         self.trade_ui.update(dt) 
+        self.game_menu.update(dt) 

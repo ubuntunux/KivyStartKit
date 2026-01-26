@@ -127,7 +127,7 @@ class GameManager(SingletonInstance):
         self.level_manager.update(dt)
 
     def update(self, dt):
-        if self.game_controller.is_trade_mode():
+        if self.game_controller.is_game_menu_opened() or self.game_controller.is_trade_mode():
             self.game_controller.update(dt)
         else:
             prev_tod = self.tod 
