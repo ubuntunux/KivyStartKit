@@ -33,7 +33,7 @@ class CharacterProperty(BaseProperty):
         self.ui_layout = None
         self.ui_hp = None
         self.alive = True 
-        self.criminal = 0 
+        self.criminal = 0.0 
         self.criminal_time = 0.0
         self.items = {}
 
@@ -82,10 +82,10 @@ class CharacterProperty(BaseProperty):
         return self.alive
 
     def is_criminal(self):
-        return 0 < self.criminal
+        return 0 < int(self.criminal)
 
     def get_criminal(self):
-        return self.criminal
+        return int(self.criminal)
 
     def add_criminal(self, criminal):
         self.criminal = min(MAX_CRIMINAL, self.criminal + criminal)
@@ -185,12 +185,12 @@ class CharacterProperty(BaseProperty):
         self.move_speed = move_speed
 
     def update_property(self, dt):
-        if 0 < self.criminal_time and 0 < self.criminal and self.criminal < MAX_CRIMINAL:
+        if 0.0 < self.criminal_time and 0 < int(self.criminal) and self.criminal < MAX_CRIMINAL:
             self.criminal_time -= dt
-            if self.criminal_time < CRIMINAL_TIMES[self.criminal - 1]:
-                self.criminal -= 1
-                if self.criminal <= 0:
-                    self.criminal = 0
+            if self.criminal_time < CRIMINAL_TIMES[int(self.criminal) - 1]:
+                self.criminal -= 1.0
+                if self.criminal <= 0.0:
+                    self.criminal = 0.0
                     self.criminal_time = 0.0
         if self.extra_property:
             self.extra_property.update_property(dt)

@@ -14,6 +14,7 @@ class GameResourceManager(ResourceManager):
         self.character_data = {}
         self.weapon_data = {}
         
+        self.save_path = os.path.join(game_path, "data/save")
         self.sounds_path = os.path.join(game_path, "data/sounds")
         self.effects_path = os.path.join(game_path, "data/effects")
         self.images_path = os.path.join(game_path, "data/images")

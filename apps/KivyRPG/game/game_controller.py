@@ -62,8 +62,8 @@ class GameController(SingletonInstance):
             orientation='vertical',
             pos_hint={"right":1, "top":1},
             size_hint=(None, None),
-            size=(dp(150), dp(150)),
-            opacity=0.5
+            size=(dp(150), dp(100)),
+            opacity=0.7
         )
         # reset level
         btn = Button(text="Reset", size_hint=(1, 1))
@@ -102,6 +102,12 @@ class GameController(SingletonInstance):
 
     def is_game_menu_opened(self):
         return self.game_menu.is_opened()
+
+    def load_level(self):
+        self.level_manager.load_level()
+
+    def save_level(self):
+        self.level_manager.save_level()
 
     # inventory
     def open_inventory_menu(self, actor):

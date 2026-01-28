@@ -226,6 +226,12 @@ class LevelManager(SingletonInstance):
             if tile_data:
                 return Tile(tile_data, tile_pos)
       
+    def load_level(self):
+        pass
+
+    def save_level(self):
+        pass
+
     def generate_tile_map(self, level_name):
         self.level_name = level_name
         self.num_x = TILE_COUNT

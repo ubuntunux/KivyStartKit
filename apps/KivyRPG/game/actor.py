@@ -169,15 +169,17 @@ class ActorManager(SingletonInstance):
         for attack_info in self.attack_infos:
             if attack_info.target and \
                attack_info.target.is_alive():
-                if attack_info.actor.is_player:
-                    self.game_controller.set_target(attack_info.target)
-                    if attack_info.actor.is_criminal_target(attack_info.target):
-                        attack_info.actor.add_criminal(1)
                 attack_info.target.set_damage(attack_info.damage, attack_info.force)
                 effect_manager.create_effect(
                     effect_name=FX_HIT,
                     attach_to=attack_info.target
                 )
+                if attack_info.actor.is_player:
+                    self.game_controller.set_target(attack_info.target)
+                    if attack_info.actor.is_criminal_target(attack_info.target):
+                        attack_info.actor.add_criminal(
+                            0.3 if attack_info.target.is_alive() else 3
+                        )
                 # spawn reward
                 if not attack_info.target.is_alive():
                     if attack_info.actor.is_player:
