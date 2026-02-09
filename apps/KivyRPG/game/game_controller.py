@@ -65,10 +65,6 @@ class GameController(SingletonInstance):
             size=(dp(150), dp(100)),
             opacity=0.7
         )
-        # reset level
-        btn = Button(text="Reset", size_hint=(1, 1))
-        btn.bind(on_press=game_manager.callback_reset)
-        menu_layout.add_widget(btn)
 
         # change time
         btn = Button(text="Night Time", size_hint=(1, 1))
@@ -98,16 +94,22 @@ class GameController(SingletonInstance):
 
     # game menu
     def callback_open_game_menu(self, widget):
-        self.game_menu.open_game_menu()
+        if self.is_game_menu_opened():
+            self.game_menu.close_game_menu()
+        else:
+            self.game_menu.open_game_menu()
 
     def is_game_menu_opened(self):
         return self.game_menu.is_opened()
 
-    def load_level(self):
-        self.level_manager.load_level()
+    def new_game(self):
+        self.game_manager.new_game()
 
-    def save_level(self):
-        self.level_manager.save_level()
+    def load_game(self):
+        self.game_manager.load_game()
+
+    def save_game(self):
+        self.game_manager.save_game()
 
     # inventory
     def open_inventory_menu(self, actor):

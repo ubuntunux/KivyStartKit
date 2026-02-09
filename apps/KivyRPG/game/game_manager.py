@@ -25,7 +25,7 @@ class GameManager(SingletonInstance):
         self.actor_manager = None
         self.level_manager = None 
         self.game_controller = None 
-        self.scenario = ''
+        self.scenarios = []
         self.stalker_spawn_term = 0.0
         self.tod = 0.0
         self.trade_actor = None
@@ -56,28 +56,21 @@ class GameManager(SingletonInstance):
         pass
 
     def game_start(self):
-        self.level_manager.open_level("default")
-        self.set_scenario(GameScenario.INTRO)
+        self.new_game()
 
-    def reset(self):
-        #self.actor_manager.reset_actor()
-        self.set_scenario(GameScenario.INTRO)
+    def new_game(self):
+        self.level_manager.load_level("default")
+        self.reset_actors()
 
-    def callback_reset(self, *args):
-        self.reset()
+    def load_game(self):
+        self.new_game()
 
-    def set_scenario(self, scenario):
-        if self.scenario != scenario:
-            self.update_scenario_end()
-            self.scenario = scenario
-            self.update_scenario_begin()
-       
-    def update_scenario_begin(self):
-        if self.scenario == GameScenario.INTRO:
-            pass
-
-    def update_scenario_end(self):
-        pass
+    def save_game(self):
+        level_data = self.level_manager.save_level()
+        GameResourceManager.instance().save_level_data(
+            'default',
+            level_data
+        ) 
 
     def spawn_castle(self):
         self.castle_actor = self.actor_manager.spawn_actor('castle', self.level_manager.get_level_center())
@@ -87,44 +80,45 @@ class GameManager(SingletonInstance):
         player = self.actor_manager.spawn_actor('player', self.castle_actor.get_pos() + Vector(0, -self.castle_actor.size[1]))
         self.game_controller.update_quick_slot()
         return player
-    
-    def update_scenario(self, dt):
-        if self.scenario == GameScenario.INTRO:
-            self.actor_manager.clear_actors()
+       
+    def reset_actors(self):
+        self.actor_manager.clear_actors()
 
-            castle_radius_inner = dp(50)
-            castle_radius_outter = dp(150)
-            dungeon_radius_inner = dp(400)
-            dungeon_radius_outter = dp(1000)
+        castle_radius_inner = dp(50)
+        castle_radius_outter = dp(150)
+        dungeon_radius_inner = dp(400)
+        dungeon_radius_outter = dp(1000)
 
-            castle = self.spawn_castle()
+        castle = self.spawn_castle()
 
-            self.actor_manager.spawn_around_actor('inn', castle, castle_radius_inner, castle_radius_outter)
-            self.actor_manager.spawn_actor('guard', self.castle_actor.get_pos() + Vector(-self.castle_actor.size[0] * 0.5, -self.castle_actor.size[1]))
-            self.actor_manager.spawn_actor('guard', self.castle_actor.get_pos() + Vector(self.castle_actor.size[0] * 0.5, -self.castle_actor.size[1]))
+        self.actor_manager.spawn_around_actor('inn', castle, castle_radius_inner, castle_radius_outter)
+        self.actor_manager.spawn_actor('guard', self.castle_actor.get_pos() + Vector(-self.castle_actor.size[0] * 0.5, -self.castle_actor.size[1]))
+        self.actor_manager.spawn_actor('guard', self.castle_actor.get_pos() + Vector(self.castle_actor.size[0] * 0.5, -self.castle_actor.size[1]))
 
-            self.spawn_player()
+        self.spawn_player()
 
-            data = [
-                'forest',
-                'farm',
-                'mine',
-            ] * 10
-            for data_name in data:
-                self.actor_manager.spawn_around_actor(data_name, castle, dungeon_radius_inner, dungeon_radius_outter)
+        data = [
+            'forest',
+            'farm',
+            'mine',
+        ] * 10
+        for data_name in data:
+            self.actor_manager.spawn_around_actor(data_name, castle, dungeon_radius_inner, dungeon_radius_outter)
 
-            data = [
-                'dungeon',
-            ] * 10
-            for data_name in data:
-                self.actor_manager.spawn_around_actor(data_name, castle, dungeon_radius_inner, dungeon_radius_outter)
-            self.set_scenario(GameScenario.NONE)
+        data = [
+            'dungeon',
+        ] * 10
+        for data_name in data:
+            self.actor_manager.spawn_around_actor(data_name, castle, dungeon_radius_inner, dungeon_radius_outter)
 
     def update_managers(self, dt):
         self.game_controller.update(dt)
         self.effect_manager.update(dt)
         self.actor_manager.update(dt)
         self.level_manager.update(dt)
+
+    def update_scenario(self, dt):
+        pass
 
     def update(self, dt):
         if self.game_controller.is_game_menu_opened() or self.game_controller.is_trade_mode():

@@ -32,9 +32,16 @@ class TileDataSet():
         
 
 class Tile():
-    def __init__(self, tile_data, tile_pos):
+    def __init__(self, tile_data_set, tile_data, tile_pos):
+        self.tile_data_set = tile_data_set
         self.tile_data = tile_data
         self.tile_pos = tile_pos
         
     def get_pixels(self):
         return self.tile_data.texture.pixels
+
+    def get_tile_create_info(self):
+        return {
+            'tile_set_name': self.tile_data_set.name if self.tile_data_set else '',
+            'tile_data_name': self.tile_data.name if self.tile_data else '',
+        }

@@ -32,8 +32,6 @@ class GameMenu:
             orientation='vertical',
             pos_hint={"center_x":0.5, "center_y":0.5},
             size_hint=(None, None),
-            size=(dp(150), dp(30)),
-            opacity=0.5
         )
 
         def add_button(title, callback):
@@ -41,26 +39,35 @@ class GameMenu:
             btn.bind(on_press=callback)
             self.menu_layout.add_widget(btn)
 
+        add_button("New", self.callback_new)
         add_button("Load", self.callback_load)
         add_button("Save", self.callback_save)
-        add_button("Close", self.callback_close)
+        add_button("Close", self.close_game_menu)
+
+        self.menu_layout.size = (dp(300), dp(50) * len(self.menu_layout.children))
 
     def is_opened(self):
         return self.menu_layout.parent is not None
 
     def open_game_menu(self):
-        self.parent_layer.add_widget(self.menu_layout) 
+        if not self.is_opened():
+            self.parent_layer.add_widget(self.menu_layout) 
 
-    def callback_close(self, widget=None):
-        self.parent_layer.remove_widget(self.menu_layout)
+    def close_game_menu(self, widget=None):
+        if self.is_opened():
+            self.parent_layer.remove_widget(self.menu_layout)
+
+    def callback_new(self, widget):
+        self.close_game_menu()
+        self.game_controller.new_game()
 
     def callback_load(self, widget):
-        self.callback_close()
-        self.game_controller.load_level()
+        self.close_game_menu()
+        self.game_controller.load_game()
 
     def callback_save(self, widget):
-        self.callback_close()
-        self.game_controller.save_level()
+        self.close_game_menu()
+        self.game_controller.save_game()
 
     def on_resize(self, window, width, height):
         pass

@@ -1,4 +1,5 @@
 import random
+import numpy as np
 from kivy.graphics import Color, Rectangle
 from kivy.graphics.texture import Texture
 from kivy.logger import Logger
@@ -13,7 +14,9 @@ from .game_resource import GameResourceManager
 from .tile import Tile
 from .constant import *
 
-class Stage:
+USE_TILE_TEXTURE = False
+
+class Level:
     pass
 
 class LevelManager(SingletonInstance):
@@ -220,18 +223,12 @@ class LevelManager(SingletonInstance):
         self.tod_layer.size = layer_size
 
     def create_tile(self, tile_set_name, tile_name, tile_pos):
+        tile_data = None
         tile_data_set = GameResourceManager.instance().get_tile_data_set(tile_set_name)  
         if tile_data_set:
             tile_data = tile_data_set.get_tile_data(tile_name)
-            if tile_data:
-                return Tile(tile_data, tile_pos)
+        return Tile(tile_data_set, tile_data, tile_pos)
       
-    def load_level(self):
-        pass
-
-    def save_level(self):
-        pass
-
     def generate_tile_map(self, level_name):
         self.level_name = level_name
         self.num_x = TILE_COUNT
@@ -246,8 +243,10 @@ class LevelManager(SingletonInstance):
         texture_data_size = width * height * stride   
         # create texture
         texture = Texture.create(size=(width, height), colorfmt='rgba')
-        color = TILE_GRASS_COLOR1
-        data = [color[x % 4] for x in range(texture_data_size)]
+        if not USE_TILE_TEXTURE:
+            color = TILE_GRASS_COLOR1
+            data = bytes(np.full((height, width, 4), color, dtype=np.uint8))
+            texture.blit_buffer(data, colorfmt='rgba', bufferfmt='ubyte')
         # set layout
         self.tile_map_widget.width = self.num_x * TILE_WIDTH
         self.tile_map_widget.height = self.num_y * TILE_HEIGHT
@@ -263,25 +262,28 @@ class LevelManager(SingletonInstance):
                     tile_pos=(x, y)
                 )
                 # blit texture
-                if False:
+                if 0.99 < random.random() or  USE_TILE_TEXTURE:
                     pixels = tile.get_pixels()
-                    for py in range(texture_size):
-                        pixel_offset = py * texture_size * stride
-                        data_offset = ((y * texture_size + py) * self.num_x + x) * texture_size * stride
-                        data[data_offset: data_offset + row_data_length] = pixels[pixel_offset: pixel_offset + row_data_length] 
+                    texture.blit_buffer(pixels, pos=(x*texture_size, y*texture_size), size=(texture_size, texture_size), colorfmt='rgba')
                 tiles.append(tile)
                 actor_sets.append(set())
             self.tiles.append(tiles)
             self.actors.append(actor_sets)
-        data = bytes(data)
-        texture.blit_buffer(data, colorfmt='rgba', bufferfmt='ubyte')
         with self.tile_map_widget.canvas:
             Rectangle(texture=texture, size=self.tile_map_widget.size)
-        
-    def open_level(self, level_name):
+
+    def load_level(self, level_name):
         self.close_level()
         self.generate_tile_map(level_name)
         
+    def save_level(self):
+        level_data_info = {
+            'level_name': self.level_name,
+            'num_x': self.num_x,
+            'num_y': self.num_y,
+        }
+        return level_data_info
+
     def close_level(self):
         self.character_layer.clear_widgets()
         self.actors.clear()
