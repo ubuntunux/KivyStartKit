@@ -9,20 +9,21 @@ from utility.range_variable import RangeVar
 
 
 class Resource:
-    def __init__(self, name, filepath, loader, unloader):
+    def __init__(self, name, filepath, loader, unloader, source=None):
         self.name = name
-        self.is_loaded = False
+        self.is_loaded = source is not None
         self.loader = loader
         self.unloader = unloader
         self.filepath = filepath
-        self.source = None
+        self.source = source
         
-    def get_resource(self):
+    def get_resource(self, force=False):
         if self.is_loaded:
             return self.source
-        Logger.info(f"Load {self.name}: {self.filepath}")             
+        #Logger.info(f"Load {self.name}: {self.filepath}")             
         self.is_loaded = True
-        if self.loader:
+        if self.loader or force:
+            self.unload_resource()
             self.source = self.loader(self.name, self.filepath)
             if self.source is None:
                 Logger.warning(f"failed to load {self.name}: {self.filepath}") 
@@ -30,7 +31,7 @@ class Resource:
     
     def unload_resource(self):
         if self.is_loaded:
-            Logger.info(f"Unload {self.name}: {self.filepath}")
+            #Logger.info(f"Unload {self.name}: {self.filepath}")
             self.is_loaded = False
             if self.source and self.unloader:
                 self.unloader(self.source)
@@ -118,6 +119,29 @@ class ResourceManager(SingletonInstance):
         for resource in resources:
             resource.unload_resource()
         
+    def create_resource(
+        self, 
+        resource_path, 
+        resource_ext, 
+        resource_map, 
+        resource_loader, 
+        resource_unloader,
+        resource_name,
+        data):
+        if resource_name in resource_map:
+            return resource_map[resource_name]
+        filepath = os.path.join(resource_path, resource_name + resource_ext)
+        #Logger.info(f"Create Resource {resource_name}: {filepath}")
+        resource = Resource(
+            resource_name,
+            filepath,
+            resource_loader,
+            resource_unloader,
+            data
+        )
+        resource_map[resource_name] = resource
+        return resource
+
     def get_resource(self, resource_map, resource_name, default_resource=None):
         if resource_name in resource_map:
             resource = resource_map[resource_name]
