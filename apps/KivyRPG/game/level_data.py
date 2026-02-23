@@ -1,19 +1,25 @@
+import random
+from .constant import *
 from utility.kivy_helper import *
 
 
 class LevelData():
-    def __init__(self, resource_manager, name, level_data_info):
-        self.name = name
-        
-        self.texture = None
-        image = resource_manager.get_image(weapon_data_info.get("image_file", ""))
-        if image:
-            region = weapon_data_info.get("texture_region", (0,0,1,1))
-            self.texture = get_texture_atlas(image.texture, region)
-            if weapon_data_info.get("flip_horizontal", False):
-                self.texture.flip_horizontal()
-        
-        self.attack_effect = weapon_data_info.get("attack_effect", "")
-        self.damage = weapon_data_info.get("damage", 10)
-        self.size = weapon_data_info.get("size", (100,100))
-        self.pos = weapon_data_info.get("pos", (50,0))
+    def __init__(self, resource_manager, name, level_data_info={}):
+        self.level_name = name
+        self.level_color = TILE_GRASS_COLOR1
+        self.day = 1
+        self.tod = 8.0
+        self.num_x = TILE_COUNT
+        self.num_y = TILE_COUNT
+        self.tile_create_infos = []
+        self.actors = []
+        for y in range(self.num_y):
+            for x in range(self.num_x):
+                tile_create_info = ('', '')
+                if 0.99 < random.random():
+                    tile_create_info = ("tile_set_00", "grass")
+                self.tile_create_infos.append(tile_create_info)
+
+        for (key, value) in level_data_info.items():
+            setattr(self, key, value)
+

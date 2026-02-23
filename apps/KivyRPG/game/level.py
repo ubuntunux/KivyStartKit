@@ -12,16 +12,16 @@ from utility.singleton import SingletonInstance
 from .character_data import *
 from .game_resource import GameResourceManager
 from .tile import Tile
+from .level_data import LevelData
 from .constant import *
 
-USE_TILE_TEXTURE = False
+USE_TILE_TEXTURE = True
 
 class Level:
     pass
 
 class LevelManager(SingletonInstance):
     def __init__(self, app):
-        self.level_name = ""
         self.tile_map_widget = None
         self.character_layer = None
         self.effect_layout = None
@@ -29,14 +29,13 @@ class LevelManager(SingletonInstance):
         self.scroll_view = None
         self.goal_scroll_x = -1
         self.goal_scroll_y = -1
+        self.level_data = None
         self.tiles = []
         self.actors = []
         self.actor_tile_map = {}
         self.app = app
         self.actor_manager = None
-        self.num_x = 8
-        self.num_y = 8
-        self.num_tiles = self.num_x * self.num_y
+        self.num_tiles = 0 
         self.day = 1
         self.time = 0
         self.tod_update_time = 0.0
@@ -82,29 +81,29 @@ class LevelManager(SingletonInstance):
         
     def pos_to_tile(self, pos):
         tile_pos = Vector(pos) / TILE_SIZE
-        tile_pos.x = max(0, min(self.num_x - 1, int(tile_pos[0])))
-        tile_pos.y = max(0, min(self.num_y - 1, int(tile_pos[1])))
+        tile_pos.x = max(0, min(self.level_data.num_x - 1, int(tile_pos[0])))
+        tile_pos.y = max(0, min(self.level_data.num_y - 1, int(tile_pos[1])))
         return tile_pos
     
     def tile_to_pos(self, tile_pos):
         pos = Vector(
-            max(0, min(self.num_x - 1, int(tile_pos[0]))),
-            max(0, min(self.num_y - 1, int(tile_pos[1])))
+            max(0, min(self.level_data.num_x - 1, int(tile_pos[0]))),
+            max(0, min(self.level_data.num_y - 1, int(tile_pos[1])))
         ) * TILE_SIZE
         pos.x += TILE_WIDTH * 0.5
         pos.y += TILE_HEIGHT * 0.5
         return pos
     
     def index_to_pos(self, index):
-        y = int(index / self.num_x)
+        y = int(index / self.level_data.num_x)
         x = index - y
         return (x, y)
         
     def pos_to_index(self, pos):
-        return int(pos[1] * self.num_x + pos[0])
+        return int(pos[1] * self.level_data.num_x + pos[0])
         
     def get_random_tile_pos(self):
-        return (random.randint(1, self.num_x) - 1, random.randint(1, self.num_y) - 1)
+        return (random.randint(1, self.level_data.num_x) - 1, random.randint(1, self.level_data.num_y) - 1)
     
     def get_random_pos(self):
         return self.tile_to_pos(self.get_random_tile_pos())
@@ -229,58 +228,67 @@ class LevelManager(SingletonInstance):
             tile_data = tile_data_set.get_tile_data(tile_name)
         return Tile(tile_data_set, tile_data, tile_pos)
       
-    def generate_tile_map(self, level_name):
-        self.level_name = level_name
-        self.num_x = TILE_COUNT
-        self.num_y = TILE_COUNT
-        self.num_tiles = self.num_x * self.num_y
+    def generate_tile_map(self):
+        self.day = self.level_data.day
+        self.set_tod(self.level_data.tod)
+        self.num_tiles = self.level_data.num_x * self.level_data.num_y
         
-        texture_size = 32
-        stride = 4
-        row_data_length = texture_size * stride
-        width = self.num_x * texture_size
-        height = self.num_y * texture_size
-        texture_data_size = width * height * stride   
-        # create texture
-        texture = Texture.create(size=(width, height), colorfmt='rgba')
-        if not USE_TILE_TEXTURE:
-            color = TILE_GRASS_COLOR1
-            data = bytes(np.full((height, width, 4), color, dtype=np.uint8))
-            texture.blit_buffer(data, colorfmt='rgba', bufferfmt='ubyte')
         # set layout
-        self.tile_map_widget.width = self.num_x * TILE_WIDTH
-        self.tile_map_widget.height = self.num_y * TILE_HEIGHT
+        self.tile_map_widget.width = self.level_data.num_x * TILE_WIDTH
+        self.tile_map_widget.height = self.level_data.num_y * TILE_HEIGHT
         self.update_layer_size(self.tile_map_widget.size)
-        for y in range(self.num_y):
+        create_dynamic_rect(self.tile_map_widget, self.level_data.level_color)
+
+        for y in range(self.level_data.num_y):
             tiles = []
             actor_sets = []
-            for x in range(self.num_x):
+            for x in range(self.level_data.num_x):
                 # create tile
+                tile_create_info = self.level_data.tile_create_infos[y * self.level_data.num_x + x]
                 tile = self.create_tile(
-                    tile_set_name="tile_set_00",
-                    tile_name="grass",
+                    tile_set_name=tile_create_info[0],
+                    tile_name=tile_create_info[1],
                     tile_pos=(x, y)
                 )
-                # blit texture
-                if 0.99 < random.random() or  USE_TILE_TEXTURE:
-                    pixels = tile.get_pixels()
-                    texture.blit_buffer(pixels, pos=(x*texture_size, y*texture_size), size=(texture_size, texture_size), colorfmt='rgba')
+                
+                if tile.tile_data:
+                    image = Image(
+                        texture=tile.tile_data.texture,
+                        allow_stretch=True,
+                        keep_ratio=False,
+                        size_hint=(None, None),
+                        size=(TILE_WIDTH, TILE_HEIGHT),
+                        pos=(x * TILE_WIDTH, y * TILE_HEIGHT)
+                    )
+                    self.tile_map_widget.add_widget(image)
+
                 tiles.append(tile)
                 actor_sets.append(set())
             self.tiles.append(tiles)
             self.actors.append(actor_sets)
-        with self.tile_map_widget.canvas:
-            Rectangle(texture=texture, size=self.tile_map_widget.size)
+
+    def new_level(self, level_name):
+        self.close_level()
+        self.level_data = LevelData(GameResourceManager.instance(), level_name)
+        GameResourceManager.instance().register_level_data(level_name, self.level_data)  
+        self.generate_tile_map()
 
     def load_level(self, level_name):
         self.close_level()
-        self.generate_tile_map(level_name)
-        
+        self.level_data = GameResourceManager.instance().get_level_data(level_name)  
+        self.generate_tile_map()
+        return self.level_data
+       
     def save_level(self):
         level_data_info = {
-            'level_name': self.level_name,
-            'num_x': self.num_x,
-            'num_y': self.num_y,
+            'level_name': self.level_data.level_name,
+            'level_color': self.level_data.level_color,
+            'num_x': self.level_data.num_x,
+            'num_y': self.level_data.num_y,
+            'tile_create_infos': [tile.get_tile_create_info() for tiles in self.tiles for tile in tiles],
+            'tod': self.get_tod(),
+            'day': self.day,
+            'actors': self.actor_manager.get_save_data()
         }
         return level_data_info
 
@@ -309,7 +317,6 @@ class LevelManager(SingletonInstance):
             self.set_tod(MORNING_TOD)
         else:
             self.set_tod(NIGHT_TOD_START)
-
 
     def update_tod(self, dt):
         self.tod_update_time += dt

@@ -62,6 +62,15 @@ class Character(Scatter):
         self.weapon = None
         self.set_weapon(character_data.weapon_data)
  
+    def get_save_data(self):
+        save_data = {
+            'is_player': self.get_is_player(),
+            'actor_data_name': self.data.name,
+            'actor_pos': self.get_pos(),
+            'actor_name': self.name
+        }
+        return save_data
+
     def get_is_player(self):
         return self.is_player
 

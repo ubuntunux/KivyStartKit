@@ -69,6 +69,10 @@ class ActorManager(SingletonInstance):
         if actor in actors_by_type:
             actors_by_type.remove(actor)
 
+    def get_save_data(self):
+        save_data = [actor.get_save_data() for actor in self.actors if actor.is_alive()]
+        return save_data
+
     def create_item(self, item_data):
         return Character(character_data=item_data, pos=Vector(0,0), name=item_data.name)
 

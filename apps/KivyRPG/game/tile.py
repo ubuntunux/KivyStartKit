@@ -41,7 +41,7 @@ class Tile():
         return self.tile_data.texture.pixels
 
     def get_tile_create_info(self):
-        return {
-            'tile_set_name': self.tile_data_set.name if self.tile_data_set else '',
-            'tile_data_name': self.tile_data.name if self.tile_data else '',
-        }
+        return (
+            self.tile_data_set.name if self.tile_data_set else '',
+            self.tile_data.name if self.tile_data else '',
+        )

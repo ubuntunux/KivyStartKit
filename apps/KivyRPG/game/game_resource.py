@@ -1,3 +1,4 @@
+import pprint
 import os
 from kivy.logger import Logger
 from utility.singleton import SingletonInstance
@@ -103,5 +104,4 @@ class GameResourceManager(ResourceManager):
     def save_level_data(self, resource_name, data):
         filepath = os.path.join(self.level_data_path, resource_name + '.data')
         with open(filepath, 'w') as f:
-            level_data_info = str(data)
-            f.write(level_data_info)
+            f.write(pprint.pformat(data, indent=4))

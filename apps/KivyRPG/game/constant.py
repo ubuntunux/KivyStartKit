@@ -3,9 +3,9 @@ from kivy.vector import Vector
 from kivy.metrics import dp
 from utility.kivy_helper import *
 
-TILE_GRASS_COLOR0 = (153, 191, 115, 255)
-TILE_GRASS_COLOR1 = (121, 166, 77, 255)
-TILE_GRASS_COLOR2 = (94, 142, 47, 255)
+TILE_GRASS_COLOR0 = (153/255, 191/255, 115/255, 1)
+TILE_GRASS_COLOR1 = (121/255, 166/255, 77/255, 1)
+TILE_GRASS_COLOR2 = (94/255, 142/255, 47/255, 1)
 
 TILE_COUNT = 64
 TILE_WIDTH = 128
