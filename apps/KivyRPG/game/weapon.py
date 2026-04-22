@@ -19,7 +19,18 @@ class Weapon(Scatter):
         self.attack_anim_time = 0.0
         self.attack_dir = Vector(0,0)
         self.actor = actor
+
+    def get_save_data(self):
+        save_data = {
+            'weapon_data_name': self.weapon_data.name
+        }
+        return save_data
     
+    def load_weapon_save_data(self, save_data):
+        for (key, value) in save_data.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
     def on_touch_down(inst, touch):
         # do nothing
         return False

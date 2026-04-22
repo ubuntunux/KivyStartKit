@@ -9,6 +9,7 @@ from kivy.uix.widget import Widget
 from kivy.vector import Vector
 from kivy.metrics import dp
 from utility.kivy_helper import *
+from .game_resource import GameResourceManager
 from .transform_component import TransformComponent
 from .action import *
 from .behavior import *
@@ -33,9 +34,10 @@ class Character(Scatter):
         cls.game_controller = game_controller
         cls.game_manager = game_manager
 
-    def __init__(self, name, character_data, pos):
+    def __init__(self, actor_uuid, name, character_data, pos):
         super().__init__(size=character_data.size)
         actor_type = character_data.actor_type       
+        self.actor_uuid = actor_uuid
         self.name = name
         self.action = None
         self.actor_type = actor_type       
@@ -62,14 +64,24 @@ class Character(Scatter):
         self.weapon = None
         self.set_weapon(character_data.weapon_data)
  
-    def get_save_data(self):
+    def get_character_save_data(self):
         save_data = {
             'is_player': self.get_is_player(),
             'actor_data_name': self.data.name,
             'actor_pos': self.get_pos(),
-            'actor_name': self.name
+            'actor_name': self.name,
+            'weapon_data': self.get_weapon_save_data(), 
+            'property_data': self.property.get_property_save_data(),
+            'behavior_data': self.behavior.get_behavior_save_data(),
         }
         return save_data
+
+    def load_character_save_data(self, character_save_data):
+        self.load_weapon_save_data(character_save_data.get('weapon_data', {}))
+        self.property.load_property_save_data(character_save_data.get('property_data', {}))
+        behavior_data = character_save_data.get('behavior_data', {})
+        if behavior_data:
+            self.behavior.load_behavior_save_data(behavior_data)
 
     def get_is_player(self):
         return self.is_player
@@ -137,6 +149,19 @@ class Character(Scatter):
     def get_updated_transform(self):
         return self.updated_transform
         
+    def get_weapon_save_data(self):
+        if self.weapon:
+            return self.weapon.get_save_data()
+        return {}
+
+    def load_weapon_save_data(self, weapon_save_data):
+        weapon_data_name = weapon_save_data.get('weapon_data_name', '')
+        if weapon_data_name:
+            weapon_data = GameResourceManager.instance().get_weapon_data(weapon_data_name)
+            self.set_weapon(weapon_data)
+            if self.weapon:
+                self.weapon.load_weapon_save_data(weapon_save_data)
+
     def set_weapon(self, weapon_data):
         self.remove_weapon()
         if weapon_data:

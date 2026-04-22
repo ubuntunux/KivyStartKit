@@ -9,7 +9,6 @@ class BehaviorState(Enum):
     ROAMING = 2
     TRACE_TARGET = 3
 
-
 class Behavior:
     actor_manager = None
     level_manager = None
@@ -30,6 +29,19 @@ class Behavior:
         self.behavior_state = BehaviorState.NONE
         self.behavior_time = -1
         
+    def get_behavior_save_data(self):
+        return {
+            'behavior_state': str(self.behavior_state),
+            'behavior_time': self.behavior_time
+        }
+
+    def load_behavior_save_data(self, save_data):
+        for (key, value) in save_data.items():
+            if key == 'behavior_state':
+                self.behavior_state = eval(value)
+            elif hasattr(self, key):
+                setattr(self, key, value)
+
     def is_behavior_state(self, behavior_state):
         return behavior_state == self.behavior_state
     

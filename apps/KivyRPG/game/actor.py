@@ -2,6 +2,7 @@ import copy
 from enum import Enum
 from kivy.logger import Logger
 from kivy.vector import Vector
+import uuid
 from utility.singleton import SingletonInstance
 from utility.kivy_helper import *
 from .effect import GameEffectManager
@@ -27,7 +28,7 @@ class ActorManager(SingletonInstance):
     def __init__(self, app):
         self.app = app
         self.level_manager = None
-        self.actors = []
+        self.actors = {}
         self.actor_type_map = {}
         self.dead_characters = []
         self.attack_infos = []
@@ -50,7 +51,7 @@ class ActorManager(SingletonInstance):
         return self.actor_type_map.get(actor_type, [])
         
     def clear_actors(self):
-        for actor in self.actors:
+        for actor in self.actors.values():
             self.level_manager.pop_actor(actor)
         self.player = None
         self.actors.clear()
@@ -63,27 +64,29 @@ class ActorManager(SingletonInstance):
 
     def remove_actor(self, actor):
         self.level_manager.pop_actor(actor)
-        if actor in self.actors:
-            self.actors.remove(actor)
+        if actor.actor_uuid in self.actors:
+            self.actors.pop(actor.actor_uuid)
         actors_by_type = self.get_actors_by_type(actor.actor_type)
         if actor in actors_by_type:
             actors_by_type.remove(actor)
 
     def get_save_data(self):
-        save_data = [actor.get_save_data() for actor in self.actors if actor.is_alive()]
+        save_data = [actor.get_character_save_data() for actor in self.actors.values() if actor.is_alive()]
         return save_data
 
     def create_item(self, item_data):
-        return Character(character_data=item_data, pos=Vector(0,0), name=item_data.name)
+        actor_uuid = uuid.uuid4()
+        return Character(actor_uuid=actor_uuid, character_data=item_data, pos=Vector(0,0), name=item_data.name)
 
     def spawn_actor(self, actor_data_name, pos=None, name=''):
         if pos is None:
             pos = self.level_manager.get_random_pos()
         if not name:
             name = actor_data_name
+        actor_uuid = uuid.uuid4()
         character_data = GameResourceManager.instance().get_character_data(actor_data_name)  
-        character = Character(character_data=character_data, pos=pos, name=name)
-        self.actors.append(character)
+        character = Character(actor_uuid=actor_uuid, character_data=character_data, pos=pos, name=name)
+        self.actors[actor_uuid] = character
         if character.actor_type not in self.actor_type_map:
             self.actor_type_map[character.actor_type] = []
         self.actor_type_map[character.actor_type].append(character)
@@ -163,11 +166,12 @@ class ActorManager(SingletonInstance):
 
         # update
         player_pos = self.player.get_pos() if self.player else Vector(0.0, 0.0)
-        for actor in self.actors:
+        actors = list(self.actors.values())
+        for actor in actors:
             if actor.is_alive():
                 actor.update(player_pos, dt)
             else:
-               self.dead_characters.append(actor)
+                self.dead_characters.append(actor)
         
         # attack infos
         for attack_info in self.attack_infos:

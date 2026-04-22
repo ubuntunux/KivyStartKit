@@ -64,7 +64,7 @@ class GameManager(SingletonInstance):
 
     def load_game(self):
         level_data = self.level_manager.load_level("default")
-        self.spawn_actors(level_data)
+        self.load_actors(level_data)
 
     def save_game(self):
         level_data = self.level_manager.save_level()
@@ -82,18 +82,18 @@ class GameManager(SingletonInstance):
         self.game_controller.update_quick_slot()
         return player
        
-    def spawn_actors(self, level_data):
+    def load_actors(self, level_data):
         self.actor_manager.clear_actors()
 
         for actor_info in level_data.actors:
-            self.actor_manager.spawn_actor(
+            actor = self.actor_manager.spawn_actor(
                 actor_info.get('actor_data_name'),
                 Vector(actor_info.get('actor_pos')),
                 actor_info.get('actor_name'),
             )
+            actor.load_character_save_data(actor_info)
             
-            if actor_info.get('is_player'):
-                self.game_controller.update_quick_slot()
+        self.game_controller.update_quick_slot()
 
     def reset_actors(self):
         self.actor_manager.clear_actors()

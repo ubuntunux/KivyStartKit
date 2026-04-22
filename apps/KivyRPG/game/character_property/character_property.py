@@ -68,6 +68,29 @@ class CharacterProperty(BaseProperty):
             create_dynamic_rect(self.ui_hp, (1,0,0,1))
             self.ui_layout.add_widget(self.ui_hp)
 
+    def get_property_save_data(self):
+        save_data = {
+            'hp': self.hp,
+            'mp': self.mp,
+            'sp': self.sp,
+            'alive': self.alive,
+            'criminal': self.criminal,
+            'criminal_time': self.criminal_time
+        }
+
+        if self.extra_property:
+            save_data['extra_property_data'] = self.extra_property.get_property_save_data()
+
+        return save_data
+
+    def load_property_save_data(self, save_data):
+        for (key, value) in save_data.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
+        if self.extra_property:
+            self.extra_property.load_property_save_data(save_data['extra_property_data'])
+
     def reset_property(self):
         if self.extra_property:
             self.extra_property.reset_property()
