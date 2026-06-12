@@ -75,7 +75,8 @@ class CharacterProperty(BaseProperty):
             'sp': self.sp,
             'alive': self.alive,
             'criminal': self.criminal,
-            'criminal_time': self.criminal_time
+            'criminal_time': self.criminal_time,
+            'items': [(actor_key, item_actor.get_extra_property().get_item_count()) for (actor_key, item_actor) in self.items.items()] 
         }
 
         if self.extra_property:
@@ -100,6 +101,7 @@ class CharacterProperty(BaseProperty):
         self.alive = True 
         self.criminal = 0
         self.criminal_time = 0.0
+        self.items = {}
 
     def is_alive(self):
         return self.alive

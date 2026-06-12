@@ -154,9 +154,9 @@ class EffectManager(SingletonInstance):
     def update(self, dt):
         if not self.active:
             return
-        for emitter in self.alive_emitters:
-            emitter.update(dt)
 
+        for emitter in self.emitters.values():
+            emitter.update(dt)
 
 class Emitter(Scatter):
     def __init__(
@@ -170,9 +170,16 @@ class Emitter(Scatter):
         flip_y=False,
         **kargs
     ):
-        Scatter.__init__(self, **kargs)
+        Scatter.__init__(
+            self, 
+            do_translation=False,
+            do_rotation=False,
+            do_scale=False,
+            **kargs
+        )
         flip_widget(self, flip_x, flip_y)
         
+        self.is_alive = False
         self.emitter_name = emitter_name
         self.emitter_data = effect_data.emitter_data
         self.particle_data = effect_data.particle_data
@@ -198,11 +205,13 @@ class Emitter(Scatter):
             particle.destroy()
         self.alive_particles = []
         self.particles = []
-
         if self.parent:
             self.parent.remove_widget(self)
-        
+        self.effect_manager.unregister_emitter(self)
+        self.is_alive = False    
+
     def play(self): 
+        self.is_alive = True
         if self.audio:
             self.audio.play_audio()
 
@@ -226,21 +235,30 @@ class Emitter(Scatter):
     def unregister_particle(self, particle):
         if particle in self.alive_particles:
             self.alive_particles.remove(particle)
-        if self.alive_particles == []:
-            self.effect_manager.unregister_emitter(self)
 
     def update(self, dt):
+        if not self.is_alive:
+            return
+
         if self.attach_to:
             center = self.attach_to.to_window(*self.attach_to.center)
             self.center = add(self.parent.to_widget(*center), self.attach_offset)
         
-        for particle in self.alive_particles:
+        for particle in self.particles:
             particle.update(dt)
+
+        if not self.alive_particles:
+            self.destroy()
 
 
 class Particle(Scatter):
     def __init__(self, emitter):
-        Scatter.__init__(self)
+        Scatter.__init__(
+            self, 
+            do_translation=False,
+            do_rotation=False,
+            do_scale=False,
+        )
         self.emitter = emitter
         self.is_first_time = True
         self.is_alive = False
