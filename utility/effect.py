@@ -240,7 +240,7 @@ class Emitter(Scatter):
         if not self.is_alive:
             return
 
-        if self.attach_to:
+        if self.attach_to and self.parent:
             center = self.attach_to.to_window(*self.attach_to.center)
             self.center = add(self.parent.to_widget(*center), self.attach_offset)
         

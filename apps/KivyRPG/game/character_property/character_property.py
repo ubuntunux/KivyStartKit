@@ -7,6 +7,7 @@ from kivy.uix.widget import Widget
 from kivy.vector import Vector
 from kivy.metrics import dp
 from utility.kivy_helper import *
+from ..game_resource import GameResourceManager
 from ..character_data import *
 from ..constant import *
 from .base_property import BaseProperty
@@ -76,7 +77,7 @@ class CharacterProperty(BaseProperty):
             'alive': self.alive,
             'criminal': self.criminal,
             'criminal_time': self.criminal_time,
-            'items': [(actor_key, item_actor.get_extra_property().get_item_count()) for (actor_key, item_actor) in self.items.items()] 
+            'items': [(item_actor.data.name, item_actor.get_extra_property().get_item_count()) for item_actor in self.items.values()] 
         }
 
         if self.extra_property:
@@ -86,7 +87,12 @@ class CharacterProperty(BaseProperty):
 
     def load_property_save_data(self, save_data):
         for (key, value) in save_data.items():
-            if hasattr(self, key):
+            if key == 'items':
+                for (item_data_name, item_count) in value:
+                    item_data = GameResourceManager.instance().get_character_data(item_data_name) 
+                    # todo - add_item by character for register quick slot
+                    self.add_item(item_data, item_count)
+            elif hasattr(self, key):
                 setattr(self, key, value)
 
         if self.extra_property:
