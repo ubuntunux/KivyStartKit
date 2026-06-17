@@ -121,6 +121,10 @@ class GameController(SingletonInstance):
     def close_inventory_menu(self):
         self.inventory_ui.close_inventory_menu()
 
+    def refresh_player_inventory(self):
+        self.update_quick_slot()
+        self.update_inventory_menu()
+
     # trade menu
     def open_trade_menu(self, trade_actor):
         player = self.actor_manager.get_player()
@@ -202,12 +206,14 @@ class GameController(SingletonInstance):
     def add_item_to_quick_slot(self, item_actor):
         self.quick_slot.add_item(item_actor)
         self.update_quick_slot()
+        self.update_inventory_menu()
 
     def use_item(self, actor_key):
         player = self.actor_manager.get_player()
         if player:
             player.use_item(actor_key, 1, interaction=True)
-        self.update_quick_slot()
+            self.update_quick_slot()
+            self.update_inventory_menu()
 
     def set_target(self, target):
         self.target_property_ui.set_target(target)

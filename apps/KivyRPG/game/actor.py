@@ -69,6 +69,8 @@ class ActorManager(SingletonInstance):
         actors_by_type = self.get_actors_by_type(actor.actor_type)
         if actor in actors_by_type:
             actors_by_type.remove(actor)
+        if actor.is_player:
+            self.game_controller.refresh_player_inventory()
 
     def get_save_data(self):
         save_data = [actor.get_character_save_data() for actor in self.actors.values() if actor.is_alive()]

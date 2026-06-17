@@ -91,7 +91,7 @@ class CharacterProperty(BaseProperty):
                 for (item_data_name, item_count) in value:
                     item_data = GameResourceManager.instance().get_character_data(item_data_name) 
                     # todo - add_item by character for register quick slot
-                    self.add_item(item_data, item_count)
+                    self.actor.add_item(item_data, item_count)
             elif hasattr(self, key):
                 setattr(self, key, value)
 

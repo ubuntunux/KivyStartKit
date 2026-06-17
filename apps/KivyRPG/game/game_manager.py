@@ -64,6 +64,7 @@ class GameManager(SingletonInstance):
 
     def load_game(self):
         level_data = self.level_manager.load_level("default")
+        #self.reset_actors()
         self.load_actors(level_data)
 
     def save_game(self):
@@ -78,13 +79,14 @@ class GameManager(SingletonInstance):
         return self.castle_actor
 
     def spawn_player(self):
-        player = self.actor_manager.spawn_actor('player', self.castle_actor.get_pos() + Vector(0, -self.castle_actor.size[1]))
-        self.game_controller.update_quick_slot()
-        return player
+        spawn_pos = Vector(0,0)
+        if self.castle_actor:
+            spawn_pos = self.castle_actor.get_pos() + Vector(0, -self.castle_actor.size[1])
+        return self.actor_manager.spawn_actor('player', spawn_pos)
        
     def load_actors(self, level_data):
-        self.actor_manager.clear_actors()
-
+        self.clear_actors()
+       
         for actor_info in level_data.actors:
             actor = self.actor_manager.spawn_actor(
                 actor_info.get('actor_data_name'),
@@ -94,15 +96,21 @@ class GameManager(SingletonInstance):
             actor.load_character_save_data(actor_info)
             
         self.game_controller.update_quick_slot()
+        self.game_controller.update_inventory_menu()
+
+    def clear_actors(self):
+        self.actor_manager.clear_actors()
+        self.game_controller.update_quick_slot()
+        self.game_controller.update_inventory_menu()
 
     def reset_actors(self):
-        self.actor_manager.clear_actors()
+        self.clear_actors()
 
         castle_radius_inner = dp(50)
         castle_radius_outter = dp(150)
         dungeon_radius_inner = dp(400)
         dungeon_radius_outter = dp(1000)
-
+        # spawn at first
         castle = self.spawn_castle()
 
         self.actor_manager.spawn_around_actor('inn', castle, castle_radius_inner, castle_radius_outter)
