@@ -1,5 +1,6 @@
 import pprint
 import os
+from uuid import UUID
 from kivy.logger import Logger
 from utility.singleton import SingletonInstance
 from utility.resource import ResourceManager

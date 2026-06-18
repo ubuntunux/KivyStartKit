@@ -80,12 +80,13 @@ class ActorManager(SingletonInstance):
         actor_uuid = uuid.uuid4()
         return Character(actor_uuid=actor_uuid, character_data=item_data, pos=Vector(0,0), name=item_data.name)
 
-    def spawn_actor(self, actor_data_name, pos=None, name=''):
+    def spawn_actor(self, actor_data_name, pos=None, name='', actor_uuid=None):
         if pos is None:
             pos = self.level_manager.get_random_pos()
         if not name:
             name = actor_data_name
-        actor_uuid = uuid.uuid4()
+        if not actor_uuid:
+            actor_uuid = uuid.uuid4()
         character_data = GameResourceManager.instance().get_character_data(actor_data_name)  
         character = Character(actor_uuid=actor_uuid, character_data=character_data, pos=pos, name=name)
         self.actors[actor_uuid] = character

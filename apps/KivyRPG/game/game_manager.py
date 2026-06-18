@@ -64,7 +64,6 @@ class GameManager(SingletonInstance):
 
     def load_game(self):
         level_data = self.level_manager.load_level("default")
-        #self.reset_actors()
         self.load_actors(level_data)
 
     def save_game(self):
@@ -90,8 +89,9 @@ class GameManager(SingletonInstance):
         for actor_info in level_data.actors:
             actor = self.actor_manager.spawn_actor(
                 actor_info.get('actor_data_name'),
-                Vector(actor_info.get('actor_pos')),
-                actor_info.get('actor_name'),
+                pos = Vector(actor_info.get('actor_pos')),
+                name = actor_info.get('actor_name'),
+                actor_uuid = actor_info.get('actor_uuid')
             )
             actor.load_character_save_data(actor_info)
             

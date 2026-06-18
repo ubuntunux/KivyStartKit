@@ -66,6 +66,7 @@ class Character(Scatter):
  
     def get_character_save_data(self):
         save_data = {
+            'actor_uuid': self.actor_uuid,
             'is_player': self.get_is_player(),
             'actor_data_name': self.data.name,
             'actor_pos': self.get_pos(),
