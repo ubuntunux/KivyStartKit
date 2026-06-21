@@ -11,6 +11,9 @@ class BaseProperty:
             if hasattr(self, key):
                 setattr(self, key, value)
 
+    def post_property_load_processing(self):
+        pass
+
     def reset_property(self):
         pass
 

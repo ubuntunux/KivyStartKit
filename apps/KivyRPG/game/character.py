@@ -84,8 +84,17 @@ class Character(Scatter):
         if behavior_data:
             self.behavior.load_behavior_save_data(behavior_data)
 
+    def post_character_load_processing(self):
+        self.property.post_property_load_processing()
+        if self.weapon:
+            self.weapon.post_weapon_load_processing()
+        self.behavior.post_behavior_load_processing()
+
     def get_is_player(self):
         return self.is_player
+
+    def get_actor_uuid(self):
+        return self.actor_uuid
 
     def get_actor_type(self):
         return self.actor_type

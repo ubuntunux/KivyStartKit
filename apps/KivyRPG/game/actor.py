@@ -44,6 +44,9 @@ class ActorManager(SingletonInstance):
     def get_player(self):
         return self.player
         
+    def get_actor(self, actor_uuid):
+        return self.actors.get(actor_uuid)
+
     def get_actors(self):
         return self.actors
 
@@ -72,9 +75,23 @@ class ActorManager(SingletonInstance):
         if actor.is_player:
             self.game_controller.refresh_player_inventory()
 
+    def load_save_data(self, actors):
+        for actor_info in actors:
+            actor = self.spawn_actor(
+                actor_info.get('actor_data_name'),
+                pos = Vector(actor_info.get('actor_pos')),
+                name = actor_info.get('actor_name'),
+                actor_uuid = actor_info.get('actor_uuid')
+            )
+            actor.load_character_save_data(actor_info)
+
     def get_save_data(self):
         save_data = [actor.get_character_save_data() for actor in self.actors.values() if actor.is_alive()]
         return save_data
+
+    def post_actor_load_processing(self):
+        for actor in self.actors.values():
+            actor.post_character_load_processing()
 
     def create_item(self, item_data):
         actor_uuid = uuid.uuid4()

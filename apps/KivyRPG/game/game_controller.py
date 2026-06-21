@@ -111,6 +111,9 @@ class GameController(SingletonInstance):
     def save_game(self):
         self.game_manager.save_game()
 
+    def post_controller_load_processing(self):
+        pass
+
     # inventory
     def open_inventory_menu(self, actor):
         self.inventory_ui.open_inventory_menu(actor)

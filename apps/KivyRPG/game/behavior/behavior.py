@@ -42,6 +42,9 @@ class Behavior:
             elif hasattr(self, key):
                 setattr(self, key, value)
 
+    def post_behavior_load_processing(self):
+        pass
+
     def is_behavior_state(self, behavior_state):
         return behavior_state == self.behavior_state
     

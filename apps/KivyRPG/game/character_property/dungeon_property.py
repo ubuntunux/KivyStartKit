@@ -7,6 +7,27 @@ class DungeonProperty(BaseProperty):
         super().__init__(*args, **kargs)
         self.actors = []       
         self.spawn_count = 0
+        self.temp_actor_uuid_list = []
+
+    def get_property_save_data(self):
+        save_data = {
+            'actor_uuid_list': [actor.get_actor_uuid() for actor in self.actors],
+            'spawn_count': self.spawn_count,
+        }
+        return save_data
+
+    def load_property_save_data(self, save_data):
+        for (key, value) in save_data.items():
+            if key == 'actor_uuid_list':
+                self.temp_actor_uuid_list = value
+            elif hasattr(self, key):
+                setattr(self, key, value)
+
+    def post_property_load_processing(self):
+        for actor_uuid in self.temp_actor_uuid_list:
+            actor = self.actor.actor_manager.get_actor(actor_uuid)
+            self.actors.append(actor)
+        self.temp_actor_uuid_list = []
 
     def get_spawn_data(self):
         return self.property_data.spawn_data

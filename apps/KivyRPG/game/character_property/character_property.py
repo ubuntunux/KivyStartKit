@@ -98,6 +98,10 @@ class CharacterProperty(BaseProperty):
         if self.extra_property:
             self.extra_property.load_property_save_data(save_data['extra_property_data'])
 
+    def post_property_load_processing(self):
+        if self.extra_property:
+            self.extra_property.post_property_load_processing()
+
     def reset_property(self):
         if self.extra_property:
             self.extra_property.reset_property()

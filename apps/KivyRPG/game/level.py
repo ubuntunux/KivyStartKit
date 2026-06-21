@@ -292,6 +292,9 @@ class LevelManager(SingletonInstance):
         }
         return level_data_info
 
+    def post_level_load_processing(self):
+        pass
+
     def close_level(self):
         self.character_layer.clear_widgets()
         self.actors.clear()

@@ -85,16 +85,11 @@ class GameManager(SingletonInstance):
        
     def load_actors(self, level_data):
         self.clear_actors()
+        self.actor_manager.load_save_data(level_data.actors)
        
-        for actor_info in level_data.actors:
-            actor = self.actor_manager.spawn_actor(
-                actor_info.get('actor_data_name'),
-                pos = Vector(actor_info.get('actor_pos')),
-                name = actor_info.get('actor_name'),
-                actor_uuid = actor_info.get('actor_uuid')
-            )
-            actor.load_character_save_data(actor_info)
-            
+        self.actor_manager.post_actor_load_processing()   
+        self.level_manager.post_level_load_processing()
+        self.game_controller.post_controller_load_processing()
         self.game_controller.update_quick_slot()
         self.game_controller.update_inventory_menu()
 

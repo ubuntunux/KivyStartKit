@@ -31,6 +31,9 @@ class Weapon(Scatter):
             if hasattr(self, key):
                 setattr(self, key, value)
 
+    def post_weapon_load_processing(self):
+        pass
+
     def on_touch_down(inst, touch):
         # do nothing
         return False
