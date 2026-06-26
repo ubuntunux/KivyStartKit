@@ -1,3 +1,4 @@
+import pickle
 import pprint
 import os
 from uuid import UUID
@@ -98,11 +99,15 @@ class GameResourceManager(ResourceManager):
         
     def level_data_loader(self, name, filepath):
         if os.path.exists(filepath):
-            with open(filepath) as f:
-                level_data_info = eval(f.read())
+            with open(filepath, "rb") as f:
+                level_data_info = pickle.load(f)
                 return LevelData(self, name, level_data_info)
 
     def save_level_data(self, resource_name, data):
         filepath = os.path.join(self.level_data_path, resource_name + '.data')
+        with open(filepath, "wb") as f:
+            pickle.dump(data, f)
+        # debug
+        filepath = os.path.join(self.level_data_path, resource_name + '.json')
         with open(filepath, 'w') as f:
             f.write(pprint.pformat(data, indent=4))

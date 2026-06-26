@@ -15,7 +15,18 @@ class BehaviorGuard(Behavior):
         self.tracing_speed = 3.0
         self.spawn_pos = Vector(0,0) 
         self.target = None
-   
+        self.target_actor_uuid = None
+
+    def get_behavior_save_data(self):
+        save_data = super().get_behavior_save_data()
+        save_data['target_actor_uuid'] = self.target.actor_uuid if self.target else None
+        save_data['spawn_pos'] = self.spawn_pos
+        save_data['attack_time'] = self.attack_time
+        return save_data   
+
+    def post_behavior_load_processing(self):
+        self.target = self.actor.actor_manager.get_actor(self.target_actor_uuid)
+
     def set_behavior_state(self, behavior_state, behavior_time=1.0, random_time=3.0):
         actor_manager = self.actor.actor_manager
         level_manager = self.actor.level_manager

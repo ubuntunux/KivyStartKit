@@ -8,15 +8,7 @@ class BehaviorDungeon(Behavior):
     def get_behavior_save_data(self):
         save_data = super().get_behavior_save_data()
         save_data['spawn_time'] = self.spawn_time
-
-    def load_behavior_save_data(self, save_data):
-        super().load_behavior_save_data(save_data)
-        for (key, value) in save_data.items():
-            if hasattr(self, key):
-                setattr(self, key, value)
-
-    def post_behavior_load_processing(self):
-        super().post_behavior_load_processing()
+        return save_data
 
     def update_behavior(self, dt):
         super().update_behavior(dt)
