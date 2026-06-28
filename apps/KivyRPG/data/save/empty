@@ -1,0 +1,9 @@
+" ============================================================================
+" Netrw Directory Listing                                        (netrw v184)
+"   /storage/emulated/0/Workspace/KivyStartKit/apps/KivyRPG/data/save
+"   Sorted by      name
+"   Sort sequence: [\/]$,*,\(\.bak\|\~\|\.o\|\.h\|\.info\|\.swp\|\.obj\)[*@]\=$
+"   Quick Help: <F1>:help  -:go up dir  D:delete  R:rename  s:sort-by  x:special
+" ==============================================================================
+../
+./

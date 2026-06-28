@@ -1,3 +1,4 @@
+import pprint
 import random
 from .constant import *
 from utility.kivy_helper import *
@@ -23,3 +24,5 @@ class LevelData():
         for (key, value) in level_data_info.items():
             setattr(self, key, value)
 
+    def __repr__(self):
+        return pprint.pformat(self.__dict__)

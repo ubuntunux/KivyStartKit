@@ -112,7 +112,7 @@ class GameController(SingletonInstance):
         self.game_manager.save_game()
 
     def post_controller_load_processing(self):
-        pass
+        self.refresh_player_inventory()
 
     # inventory
     def open_inventory_menu(self, actor):
@@ -208,15 +208,13 @@ class GameController(SingletonInstance):
 
     def add_item_to_quick_slot(self, item_actor):
         self.quick_slot.add_item(item_actor)
-        self.update_quick_slot()
-        self.update_inventory_menu()
+        self.refresh_player_inventory()
 
     def use_item(self, actor_key):
         player = self.actor_manager.get_player()
         if player:
             player.use_item(actor_key, 1, interaction=True)
-            self.update_quick_slot()
-            self.update_inventory_menu()
+            self.refresh_player_inventory()
 
     def set_target(self, target):
         self.target_property_ui.set_target(target)

@@ -30,6 +30,7 @@ class GameManager(SingletonInstance):
         self.tod = 0.0
         self.trade_actor = None
         self.castle_actor = None
+        self.game_data = {}
 
     def initialize(self):
         self.effect_manager = GameEffectManager.instance()
@@ -63,14 +64,25 @@ class GameManager(SingletonInstance):
         self.reset_actors()
 
     def load_game(self):
-        level_data = self.level_manager.load_level("default")
-        self.load_actors(level_data)
+        self.game_data = GameResourceManager.instance().get_game_data("default")
+        level_name = self.game_data['current_level_name'] 
+        level_data = self.game_data['level_data'].get(level_name)
+        self.level_manager.load_level(level_data)
+        self.actor_manager.load_actor_save_data(self.game_data['player_data'])
+        self.actor_manager.post_actor_load_processing()   
+        self.level_manager.post_level_load_processing()
+        self.game_controller.post_controller_load_processing()
 
     def save_game(self):
+        player_data = self.actor_manager.get_player_save_data()
         level_data = self.level_manager.save_level()
-        GameResourceManager.instance().save_level_data(
-            level_data.get('level_name'),
-            level_data
+        self.game_data['player_data'] = player_data
+        self.game_data['current_level_name'] = level_data.level_name
+        if 'level_data' not in self.game_data:
+            self.game_data['level_data'] = {}
+        self.game_data['level_data'][level_data.level_name] = level_data
+        GameResourceManager.instance().save_game_data(
+            'default', self.game_data
         ) 
 
     def spawn_castle(self):
@@ -83,20 +95,9 @@ class GameManager(SingletonInstance):
             spawn_pos = self.castle_actor.get_pos() + Vector(0, -self.castle_actor.size[1])
         return self.actor_manager.spawn_actor('player', spawn_pos)
        
-    def load_actors(self, level_data):
-        self.clear_actors()
-        self.actor_manager.load_save_data(level_data.actors)
-       
-        self.actor_manager.post_actor_load_processing()   
-        self.level_manager.post_level_load_processing()
-        self.game_controller.post_controller_load_processing()
-        self.game_controller.update_quick_slot()
-        self.game_controller.update_inventory_menu()
-
     def clear_actors(self):
         self.actor_manager.clear_actors()
-        self.game_controller.update_quick_slot()
-        self.game_controller.update_inventory_menu()
+        self.game_controller.refresh_player_inventory()
 
     def reset_actors(self):
         self.clear_actors()

@@ -16,7 +16,7 @@ class GameResourceManager(ResourceManager):
         self.tile_data_set = {}
         self.character_data = {}
         self.weapon_data = {}
-        self.level_data = {}
+        self.game_data = {}
         
         self.save_path = os.path.join(game_path, "data/save")
         self.sounds_path = os.path.join(game_path, "data/sounds")
@@ -26,7 +26,7 @@ class GameResourceManager(ResourceManager):
         self.tile_data_path = os.path.join(game_path, "data/tiles")
         self.character_data_path = os.path.join(game_path, "data/characters")
         self.weapon_data_path = os.path.join(game_path, "data/weapons")
-        self.level_data_path = os.path.join(game_path, "data/levels")
+        self.game_data_path = os.path.join(game_path, "data/save")
 
     def initialize(self):
         super().initialize(
@@ -40,13 +40,13 @@ class GameResourceManager(ResourceManager):
         self.register_resources(self.tile_data_path, [".data"], self.tile_data_set, self.tile_data_set_loader, None)
         self.register_resources(self.weapon_data_path, [".data"], self.weapon_data, self.weapon_data_loader, None)
         self.register_resources(self.character_data_path, [".data"], self.character_data, self.character_data_loader, None)
-        self.register_resources(self.level_data_path, [".data"], self.level_data, self.level_data_loader, None)
+        self.register_resources(self.game_data_path, [".data"], self.game_data, self.game_data_loader, None)
 
     def close(self):
         pass
         
     def destroy(self):
-        self.unregister_resources(self.level_data)
+        self.unregister_resources(self.game_data)
         self.unregister_resources(self.tile_data_set)
         self.unregister_resources(self.character_data)
         self.unregister_resources(self.weapon_data)
@@ -82,32 +82,31 @@ class GameResourceManager(ResourceManager):
                 weapon_data_info = eval(f.read())
                 return WeaponData(self, name, weapon_data_info)
                 
-    # level
-    def register_level_data(self, level_name, data):
+    # game
+    def register_game_data(self, game_name, data):
         return self.create_resource(
-            self.level_data_path, 
+            self.game_data_path, 
             '.data', 
-            self.level_data, 
-            self.level_data_loader, 
+            self.game_data, 
+            self.game_data_loader, 
             None,
-            level_name,
+            game_name,
             data
         )
             
-    def get_level_data(self, resource_name):
-        return self.get_resource(self.level_data, resource_name)
-        
-    def level_data_loader(self, name, filepath):
+    def get_game_data(self, resource_name):
+        return self.get_resource(self.game_data, resource_name)
+    
+    def game_data_loader(self, name, filepath):
         if os.path.exists(filepath):
             with open(filepath, "rb") as f:
-                level_data_info = pickle.load(f)
-                return LevelData(self, name, level_data_info)
+                return pickle.load(f)
 
-    def save_level_data(self, resource_name, data):
-        filepath = os.path.join(self.level_data_path, resource_name + '.data')
+    def save_game_data(self, resource_name, data):
+        filepath = os.path.join(self.game_data_path, resource_name + '.data')
         with open(filepath, "wb") as f:
             pickle.dump(data, f)
         # debug
-        filepath = os.path.join(self.level_data_path, resource_name + '.json')
+        filepath = os.path.join(self.game_data_path, resource_name + '.json')
         with open(filepath, 'w') as f:
             f.write(pprint.pformat(data, indent=4))

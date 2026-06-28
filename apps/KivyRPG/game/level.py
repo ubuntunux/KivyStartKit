@@ -270,13 +270,13 @@ class LevelManager(SingletonInstance):
     def new_level(self, level_name):
         self.close_level()
         self.level_data = LevelData(GameResourceManager.instance(), level_name)
-        GameResourceManager.instance().register_level_data(level_name, self.level_data)  
         self.generate_tile_map()
 
-    def load_level(self, level_name):
+    def load_level(self, level_data):
         self.close_level()
-        self.level_data = GameResourceManager.instance().get_level_data(level_name)  
+        self.level_data = level_data 
         self.generate_tile_map()
+        self.actor_manager.load_actors_save_data(level_data.actors)
         return self.level_data
        
     def save_level(self):
@@ -288,14 +288,16 @@ class LevelManager(SingletonInstance):
             'tile_create_infos': [tile.get_tile_create_info() for tiles in self.tiles for tile in tiles],
             'tod': self.get_tod(),
             'day': self.day,
-            'actors': self.actor_manager.get_save_data()
+            'actors': self.actor_manager.get_actors_save_data()
         }
-        return level_data_info
+        level_data = LevelData(self, self.level_data.level_name, level_data_info)
+        return level_data
 
     def post_level_load_processing(self):
         pass
 
     def close_level(self):
+        self.actor_manager.clear_actors()
         self.character_layer.clear_widgets()
         self.actors.clear()
         self.actor_tile_map.clear()
