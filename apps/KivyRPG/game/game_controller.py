@@ -114,6 +114,10 @@ class GameController(SingletonInstance):
     def post_controller_load_processing(self):
         self.refresh_player_inventory()
 
+    def on_close_level(self):
+        self.interaction_ui.clear_interaction_ui()
+        self.refresh_player_inventory()
+
     # inventory
     def open_inventory_menu(self, actor):
         self.inventory_ui.open_inventory_menu(actor)
@@ -148,18 +152,25 @@ class GameController(SingletonInstance):
             self.close_trade_menu()
         self.trade_actor = trade_actor
 
-    def callback_interaction(self, interaction_type, inst_widget):
+    def callback_interaction(self, interaction_type, target_actor, inst_widget):
         player = self.actor_manager.get_player()
-        if not player or player.is_criminal():
-            # criminal warn
+        disable_interaction = True
+        if player and player.is_alive():
+            if interaction_type == InteractionType.TRADE:
+                if player.is_criminal() == False:
+                    self.set_trade_actor(player)
+                    disable_interaction = False
+            elif interaction_type == InteractionType.ENTER:
+                if target_actor.actor_type is ActorType.DUNGEON:
+                    self.game_manager.enter_dungeon(target_actor)
+                elif target_actor.actor_type is ActorType.DUNGEON:
+                    self.game_manager.exit_dungeon(target_actor)
+
+        if disable_interaction:
             self.game_manager.effect_manager.create_effect(
                 effect_name=FX_WARN,
                 attach_to=player
             )
-        else:
-            # interaction
-            if interaction_type == InteractionType.TRADE:
-                self.set_trade_actor(player)
 
     def callback_buy_item(self, buy_item_data):
         player = self.actor_manager.get_player()

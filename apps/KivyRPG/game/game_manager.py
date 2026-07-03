@@ -10,6 +10,7 @@ from .actor import ActorManager
 from .behavior import Behavior
 from .character import Character
 from .level import LevelManager
+from .level_data import LevelData
 from .game_controller import GameController
 from .character_data import *
 from .constant import *
@@ -29,7 +30,7 @@ class GameManager(SingletonInstance):
         self.stalker_spawn_term = 0.0
         self.tod = 0.0
         self.trade_actor = None
-        self.castle_actor = None
+        self.current_game_name = 'default'
         self.game_data = {}
 
     def initialize(self):
@@ -60,14 +61,23 @@ class GameManager(SingletonInstance):
         self.new_game()
 
     def new_game(self):
-        self.level_manager.new_level("default")
+        level_data = LevelData(GameResourceManager.instance(), "main_level", True)
+        self.level_manager.new_level(level_data)
+        self.level_manager.set_day(1)
+        self.level_manager.set_tod(MORNING_TOD)
         self.reset_actors()
 
     def load_game(self):
-        self.game_data = GameResourceManager.instance().get_game_data("default")
+        self.level_manager.close_level()
+        self.game_controller.on_close_level()
+
+        self.game_data = GameResourceManager.instance().get_game_data(self.current_game_name)
         level_name = self.game_data['current_level_name'] 
         level_data = self.game_data['level_data'].get(level_name)
         self.level_manager.load_level(level_data)
+        self.level_manager.set_day(self.game_data['day'])
+        self.level_manager.set_tod(self.game_data['tod'])
+
         self.actor_manager.load_actor_save_data(self.game_data['player_data'])
         self.actor_manager.post_actor_load_processing()   
         self.level_manager.post_level_load_processing()
@@ -76,24 +86,24 @@ class GameManager(SingletonInstance):
     def save_game(self):
         player_data = self.actor_manager.get_player_save_data()
         level_data = self.level_manager.save_level()
+
         self.game_data['player_data'] = player_data
+        self.game_data['day'] = self.level_manager.get_day()
+        self.game_data['tod'] = self.level_manager.get_tod()
         self.game_data['current_level_name'] = level_data.level_name
         if 'level_data' not in self.game_data:
             self.game_data['level_data'] = {}
         self.game_data['level_data'][level_data.level_name] = level_data
+
         GameResourceManager.instance().save_game_data(
-            'default', self.game_data
+            self.current_game_name,
+            self.game_data
         ) 
 
-    def spawn_castle(self):
-        self.castle_actor = self.actor_manager.spawn_actor('castle', self.level_manager.get_level_center())
-        return self.castle_actor
-
-    def spawn_player(self):
-        spawn_pos = Vector(0,0)
-        if self.castle_actor:
-            spawn_pos = self.castle_actor.get_pos() + Vector(0, -self.castle_actor.size[1])
-        return self.actor_manager.spawn_actor('player', spawn_pos)
+    def spawn_player(self, spawn_pos=None):
+        if spawn_pos:
+            self.level_manager.set_spawn_pos(spawn_pos)
+        return self.actor_manager.spawn_actor('player', self.level_manager.get_spawn_pos())
        
     def clear_actors(self):
         self.actor_manager.clear_actors()
@@ -106,14 +116,13 @@ class GameManager(SingletonInstance):
         castle_radius_outter = dp(150)
         dungeon_radius_inner = dp(400)
         dungeon_radius_outter = dp(1000)
+
         # spawn at first
-        castle = self.spawn_castle()
+        castle = self.actor_manager.spawn_actor('castle', self.level_manager.get_level_center())
 
         self.actor_manager.spawn_around_actor('inn', castle, castle_radius_inner, castle_radius_outter)
-        self.actor_manager.spawn_actor('guard', self.castle_actor.get_pos() + Vector(-self.castle_actor.size[0] * 0.5, -self.castle_actor.size[1]))
-        self.actor_manager.spawn_actor('guard', self.castle_actor.get_pos() + Vector(self.castle_actor.size[0] * 0.5, -self.castle_actor.size[1]))
-
-        self.spawn_player()
+        self.actor_manager.spawn_actor('guard', castle.get_pos() + Vector(-castle.size[0] * 0.5, -castle.size[1]))
+        self.actor_manager.spawn_actor('guard', castle.get_pos() + Vector(castle.size[0] * 0.5, -castle.size[1]))
 
         data = [
             'forest',
@@ -128,6 +137,62 @@ class GameManager(SingletonInstance):
         ] * 10
         for data_name in data:
             self.actor_manager.spawn_around_actor(data_name, castle, dungeon_radius_inner, dungeon_radius_outter)
+
+        spawn_pos = castle.get_pos() + Vector(0, -castle.size[1])
+        self.spawn_player(spawn_pos)
+
+    def enter_dungeon(self, dungeon_actor):
+        # save previoud level status
+        player_data = self.actor_manager.get_player_save_data()
+        level_data = self.level_manager.save_level()
+        self.game_data['player_data'] = player_data
+        self.game_data['current_level_name'] = level_data.level_name
+        if 'level_data' not in self.game_data:
+            self.game_data['level_data'] = {}
+        self.game_data['level_data'][level_data.level_name] = level_data
+         
+        # close level
+        self.level_manager.close_level()
+        self.game_controller.on_close_level()
+
+        # new level
+        level_name = dungeon_actor.actor_uuid
+        self.game_data['current_level_name'] = level_name
+
+        if level_name in self.game_data['level_data']:
+            level_data = self.game_data['level_data'].get(level_name)
+            self.level_manager.load_level(level_data)
+        else:
+            level_data = LevelData(GameResourceManager.instance(), level_name, False)
+            level_data.level_color = TILE_DARK_DUNGEON0
+            level_data.num_x = DUNGEON_TILE_COUNT
+            level_data.num_y = DUNGEON_TILE_COUNT
+            self.level_manager.new_level(level_data)
+
+            data = [
+                'forest',
+                'farm',
+                'mine',
+            ] * 5
+            for data_name in data:
+                self.actor_manager.spawn_actor(data_name)
+
+            data = [
+                'patroller',
+                'stalker',
+            ] * 3
+            for data_name in data:
+                self.actor_manager.spawn_actor(data_name)
+
+            self.actor_manager.spawn_actor('guardian')
+            gate = self.actor_manager.spawn_actor('gate')
+            spawn_pos = gate.get_pos() + Vector(0, -gate.size[1])
+            self.level_manager.set_spawn_pos(spawn_pos)
+            player_data['actor_pos'] = spawn_pos
+        self.actor_manager.load_actor_save_data(player_data)
+        self.actor_manager.post_actor_load_processing()   
+        self.level_manager.post_level_load_processing()
+        self.game_controller.post_controller_load_processing()
 
     def update_managers(self, dt):
         self.game_controller.update(dt)

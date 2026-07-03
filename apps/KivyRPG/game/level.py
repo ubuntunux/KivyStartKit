@@ -61,7 +61,7 @@ class LevelManager(SingletonInstance):
         parent_widget.add_widget(self.scroll_view)
         self.update_layer_size(self.top_layer.size)
 
-        self.day = 1
+        self.set_day(1)
         self.set_tod(MORNING_TOD)
 
     def close(self):
@@ -229,8 +229,6 @@ class LevelManager(SingletonInstance):
         return Tile(tile_data_set, tile_data, tile_pos)
       
     def generate_tile_map(self):
-        self.day = self.level_data.day
-        self.set_tod(self.level_data.tod)
         self.num_tiles = self.level_data.num_x * self.level_data.num_y
         
         # set layout
@@ -267,9 +265,9 @@ class LevelManager(SingletonInstance):
             self.tiles.append(tiles)
             self.actors.append(actor_sets)
 
-    def new_level(self, level_name):
+    def new_level(self, level_data):
         self.close_level()
-        self.level_data = LevelData(GameResourceManager.instance(), level_name)
+        self.level_data = level_data
         self.generate_tile_map()
 
     def load_level(self, level_data):
@@ -281,16 +279,21 @@ class LevelManager(SingletonInstance):
        
     def save_level(self):
         level_data_info = {
+            'is_main_level': self.level_data.is_main_level,
             'level_name': self.level_data.level_name,
             'level_color': self.level_data.level_color,
             'num_x': self.level_data.num_x,
             'num_y': self.level_data.num_y,
             'tile_create_infos': [tile.get_tile_create_info() for tiles in self.tiles for tile in tiles],
-            'tod': self.get_tod(),
-            'day': self.day,
-            'actors': self.actor_manager.get_actors_save_data()
+            'actors': self.actor_manager.get_actors_save_data(),
+            'spawn_pos': self.level_data.spawn_pos,
         }
-        level_data = LevelData(self, self.level_data.level_name, level_data_info)
+        level_data = LevelData(
+            self, 
+            self.level_data.level_name, 
+            self.level_data.is_main_level,
+            level_data_info
+        )
         return level_data
 
     def post_level_load_processing(self):
@@ -304,8 +307,17 @@ class LevelManager(SingletonInstance):
         self.tiles.clear()
         self.tile_map_widget.clear_widgets()
     
+    def get_spawn_pos(self):
+        return self.level_data.spawn_pos
+
+    def set_spawn_pos(self, spawn_pos):
+        self.level_data.spawn_pos = spawn_pos
+
     def get_day(self):
         return self.day
+
+    def set_day(self, day):
+        self.day = day
 
     def get_time(self):
         return self.time

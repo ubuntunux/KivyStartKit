@@ -26,6 +26,7 @@ class ActorType(Enum):
     CASTLE = 2000
     DUNGEON = 2001
     INN = 2002
+    GATE = 2003
     # resource generators
     FOREST = 3000
     FARM = 3001
@@ -56,6 +57,7 @@ __category_map__ = {
     ActorType.CASTLE: ActorCategory.BUILDING,
     ActorType.DUNGEON: ActorCategory.BUILDING,
     ActorType.INN: ActorCategory.BUILDING,
+    ActorType.GATE: ActorCategory.BUILDING,
     # resource generator
     ActorType.FOREST: ActorCategory.RESOURCE_GENERATOR,
     ActorType.FARM: ActorCategory.RESOURCE_GENERATOR,

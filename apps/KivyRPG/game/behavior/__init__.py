@@ -25,6 +25,7 @@ behavior_map = {
     ActorType.CASTLE: BehaviorCivilian,
     ActorType.DUNGEON: BehaviorDungeon,
     ActorType.INN: BehaviorInn,
+    ActorType.GATE: BehaviorInn,
 
     ActorType.FOREST: BehaviorCivilian,
     ActorType.FARM: BehaviorCivilian,

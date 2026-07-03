@@ -6,6 +6,11 @@ class ItemProperty(BaseProperty):
         self.item_count = 1
         self.lifetime = 10.0
 
+    def get_property_save_data(self):
+        save_data = super().get_property_save_data()
+        save_data['lifetime'] = self.lifetime
+        return save_data
+
     def reset_property(self):
         self.item_count = self.property_data.item_count
 

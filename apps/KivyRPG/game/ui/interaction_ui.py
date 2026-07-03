@@ -25,14 +25,29 @@ class InteractionUI:
         self.ui_interactions = {}
         self.remove_candidate_interactions = {}
 
-    def create_button(self, layout, title, interaction_type):
+    def clear_interaction_ui(self):
+        for (target, ui_interaction) in self.remove_candidate_interactions.items():
+            if ui_interaction.parent:
+                ui_interaction.parent.remove_widget(ui_interaction)
+        self.remove_candidate_interactions = {}
+
+        for (target, ui_interaction) in self.ui_interactions.items():
+            if ui_interaction.parent:
+                ui_interaction.parent.remove_widget(ui_interaction)
+        self.ui_interactions = {}
+
+    def create_button(self, actor, layout, title, interaction_type):
         btn = Button(
             text=title,
             pos_hint={'center_x': 0.5, 'center_y':0.5},
             size_hint=(1, 1),
             background_color=(0,0,0,0.5)
         )
-        btn.bind(on_press=partial(self.callback_interaction, interaction_type))
+        btn.bind(on_press=partial(
+            self.callback_interaction, 
+            interaction_type, 
+            actor
+        ))
         layout.add_widget(btn)
         return btn
     
@@ -51,9 +66,9 @@ class InteractionUI:
             )
 
             if target.actor_type in [ActorType.INN, ActorType.CASTLE]:
-                self.create_button(ui_interaction, 'TRADE', InteractionType.TRADE)
-            if target.actor_type is ActorType.DUNGEON:
-                self.create_button(ui_interaction, 'ENTER', InteractionType.ENTER)
+                self.create_button(target, ui_interaction, 'TRADE', InteractionType.TRADE)
+            elif target.actor_type in (ActorType.DUNGEON, ActorType.GATE): 
+                self.create_button(target, ui_interaction, 'ENTER', InteractionType.ENTER)
             ui_interaction.center = target.get_pos()
             ui_interaction.height = self.menu_height * len(ui_interaction.children)
             target.parent.add_widget(ui_interaction)
@@ -61,7 +76,8 @@ class InteractionUI:
 
     def update(self, player, dt):
         for (target, ui_interaction) in self.remove_candidate_interactions.items():
-            ui_interaction.parent.remove_widget(ui_interaction)
+            if ui_interaction.parent:
+                ui_interaction.parent.remove_widget(ui_interaction)
 
         self.remove_candidate_interactions = self.ui_interactions
         self.ui_interactions = {}
