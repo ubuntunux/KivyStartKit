@@ -3,12 +3,14 @@ from utility.kivy_helper import *
 from ..constant import *
 from .actor_data import *
 from .dungeon_property_data import *
+from .gate_property_data import *
 from .item_property_data import *
 from .inn_property_data import *
 
 __extra_property_data_map__ = {
     # building
     ActorType.DUNGEON: DungeonPropertyData,
+    ActorType.GATE: GatePropertyData,
     ActorType.INN: InnPropertyData,
     # item
     ActorType.GOLD: ItemPropertyData,

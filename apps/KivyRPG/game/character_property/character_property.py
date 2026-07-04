@@ -12,12 +12,14 @@ from ..character_data import *
 from ..constant import *
 from .base_property import BaseProperty
 from .dungeon_property import *
+from .gate_property import *
 from .inn_property import *
 from .item_property import *
 
 class CharacterProperty(BaseProperty):
     extra_property_map = {
         DungeonPropertyData: DungeonProperty,
+        GatePropertyData: GateProperty,
         InnPropertyData: InnProperty,
         ItemPropertyData: ItemProperty,
     }

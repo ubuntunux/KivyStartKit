@@ -163,7 +163,7 @@ class GameController(SingletonInstance):
             elif interaction_type == InteractionType.ENTER:
                 if target_actor.actor_type is ActorType.DUNGEON:
                     self.game_manager.enter_dungeon(target_actor)
-                elif target_actor.actor_type is ActorType.DUNGEON:
+                elif target_actor.actor_type is ActorType.GATE:
                     self.game_manager.exit_dungeon(target_actor)
 
         if disable_interaction:

@@ -83,7 +83,7 @@ class GameManager(SingletonInstance):
         self.level_manager.post_level_load_processing()
         self.game_controller.post_controller_load_processing()
 
-    def save_game(self):
+    def save_game(self, save_file=True):
         player_data = self.actor_manager.get_player_save_data()
         level_data = self.level_manager.save_level()
 
@@ -95,10 +95,11 @@ class GameManager(SingletonInstance):
             self.game_data['level_data'] = {}
         self.game_data['level_data'][level_data.level_name] = level_data
 
-        GameResourceManager.instance().save_game_data(
-            self.current_game_name,
-            self.game_data
-        ) 
+        if save_file:
+            GameResourceManager.instance().save_game_data(
+                self.current_game_name,
+                self.game_data
+            ) 
 
     def spawn_player(self, spawn_pos=None):
         if spawn_pos:
@@ -143,13 +144,10 @@ class GameManager(SingletonInstance):
 
     def enter_dungeon(self, dungeon_actor):
         # save previoud level status
-        player_data = self.actor_manager.get_player_save_data()
-        level_data = self.level_manager.save_level()
-        self.game_data['player_data'] = player_data
-        self.game_data['current_level_name'] = level_data.level_name
-        if 'level_data' not in self.game_data:
-            self.game_data['level_data'] = {}
-        self.game_data['level_data'][level_data.level_name] = level_data
+        self.save_game(save_file=False) 
+        player_data = self.game_data['player_data'] 
+        parent_level_name = self.game_data['current_level_name']
+        level_data = self.game_data['level_data'][parent_level_name] 
          
         # close level
         self.level_manager.close_level()
@@ -162,6 +160,7 @@ class GameManager(SingletonInstance):
         if level_name in self.game_data['level_data']:
             level_data = self.game_data['level_data'].get(level_name)
             self.level_manager.load_level(level_data)
+            player_data['actor_pos'] = level_data.spawn_pos
         else:
             level_data = LevelData(GameResourceManager.instance(), level_name, False)
             level_data.level_color = TILE_DARK_DUNGEON0
@@ -186,9 +185,35 @@ class GameManager(SingletonInstance):
 
             self.actor_manager.spawn_actor('guardian')
             gate = self.actor_manager.spawn_actor('gate')
+            gate.get_extra_property().set_parent_level_name(parent_level_name)
+            enter_pos = dungeon_actor.get_pos() + Vector(0, -dungeon_actor.size[1])
+            gate.get_extra_property().set_enter_pos(enter_pos)
+
             spawn_pos = gate.get_pos() + Vector(0, -gate.size[1])
             self.level_manager.set_spawn_pos(spawn_pos)
             player_data['actor_pos'] = spawn_pos
+        self.actor_manager.load_actor_save_data(player_data)
+        self.actor_manager.post_actor_load_processing()   
+        self.level_manager.post_level_load_processing()
+        self.game_controller.post_controller_load_processing()
+
+    def exit_dungeon(self, gate_actor):
+        # save previoud level status
+        self.save_game(save_file=False) 
+        player_data = self.game_data['player_data'] 
+         
+        # close level
+        self.level_manager.close_level()
+        self.game_controller.on_close_level()
+
+        # load level
+        player_data['actor_pos'] = gate_actor.get_extra_property().get_enter_pos()
+        
+        level_name = gate_actor.get_extra_property().get_parent_level_name()
+        self.game_data['current_level_name'] = level_name
+        level_data = self.game_data['level_data'].get(level_name)
+        self.level_manager.load_level(level_data)
+
         self.actor_manager.load_actor_save_data(player_data)
         self.actor_manager.post_actor_load_processing()   
         self.level_manager.post_level_load_processing()
