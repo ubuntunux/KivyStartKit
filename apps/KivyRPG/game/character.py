@@ -56,14 +56,14 @@ class Character(Scatter):
         self.update_time = 0.0
         self.action = Action(character_data.action_data)
         self.property = CharacterProperty(self, character_data.property_data)
-        self.behavior = create_behavior(self, actor_type) 
         self.image = Image(size=character_data.size, fit_mode="fill")
         self.image.texture = self.action.get_current_texture()
         self.add_widget(self.image)
         self.transform_component = TransformComponent(self, pos, self.property)
         self.weapon = None
         self.set_weapon(character_data.weapon_data)
- 
+        self.behavior = create_behavior(self, actor_type) 
+
     def get_character_save_data(self):
         save_data = {
             'actor_uuid': self.actor_uuid,
@@ -188,7 +188,7 @@ class Character(Scatter):
         return self.property
 
     def get_property_data(self):
-        return self.property_data
+        return self.property.property_data
 
     def get_extra_property(self):
         return self.property.extra_property

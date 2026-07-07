@@ -37,6 +37,9 @@ class CharacterPropertyData():
         self.max_hp = 0
         self.max_mp = 0
         self.max_sp = 0
+        self.attack_time = 1.0
+        self.attack_range = 400.0
+        self.tracing_range = 600.0
         for (key, value) in property_data.items():
             if hasattr(self, key):
                 setattr(self, key, value)

@@ -6,10 +6,10 @@ from .behavior import *
 class BehaviorPatroller(Behavior):
     def __init__(self, actor):
         super().__init__(actor)
-        self.attack_time = 1.0
-        self.attack_range = 400.0
-        self.tracing_start_radius = 600.0
-        self.tracing_end_radius = 1200.0
+        self.attack_time = actor.get_property_data().attack_time
+        self.attack_range = actor.get_property_data().attack_range
+        self.tracing_start_radius = actor.get_property_data().tracing_range
+        self.tracing_end_radius = self.tracing_start_radius + 600.0
         self.patroll_radius = 200.0
         self.move_speed = 1.0
         self.tracing_speed = 3.0

@@ -102,6 +102,9 @@ class GameManager(SingletonInstance):
             ) 
 
     def spawn_player(self, spawn_pos=None):
+        player = self.actor_manager.get_player()
+        if player:
+            self.actor_manager.remove_actor(player)
         if spawn_pos:
             self.level_manager.set_spawn_pos(spawn_pos)
         return self.actor_manager.spawn_actor('player', self.level_manager.get_spawn_pos())
@@ -184,8 +187,10 @@ class GameManager(SingletonInstance):
                 self.actor_manager.spawn_actor(data_name)
 
             self.actor_manager.spawn_actor('guardian')
-            gate = self.actor_manager.spawn_actor('gate')
+            gate_pos = self.level_manager.tile_to_pos(Vector(level_data.num_x / 2, level_data.num_y / 2))
+            gate = self.actor_manager.spawn_actor('gate', pos=gate_pos)
             gate.get_extra_property().set_parent_level_name(parent_level_name)
+
             enter_pos = dungeon_actor.get_pos() + Vector(0, -dungeon_actor.size[1])
             gate.get_extra_property().set_enter_pos(enter_pos)
 
@@ -219,6 +224,26 @@ class GameManager(SingletonInstance):
         self.level_manager.post_level_load_processing()
         self.game_controller.post_controller_load_processing()
 
+    def goto_level(self, level_name):
+        # save previoud level status
+        self.save_game(save_file=False) 
+         
+        # close level
+        self.level_manager.close_level()
+        self.game_controller.on_close_level()
+
+        # load level
+        self.game_data['current_level_name'] = level_name
+        level_data = self.game_data['level_data'].get(level_name)
+        self.level_manager.load_level(level_data)
+
+        player_data = self.game_data['player_data'] 
+        player_data['actor_pos'] = self.level_manager.get_spawn_pos() 
+        self.actor_manager.load_actor_save_data(player_data)
+        self.actor_manager.post_actor_load_processing()   
+        self.level_manager.post_level_load_processing()
+        self.game_controller.post_controller_load_processing()
+
     def update_managers(self, dt):
         self.game_controller.update(dt)
         self.effect_manager.update(dt)
@@ -234,24 +259,27 @@ class GameManager(SingletonInstance):
         else:
             prev_tod = self.tod 
             self.tod = self.level_manager.get_tod()
-            
-            if self.tod < NIGHT_TOD_END or NIGHT_TOD_START < self.tod:
-                stalkers = self.actor_manager.get_actors_by_type(ActorType.STALKER)
-                if self.stalker_spawn_term < 0.0 and len(stalkers) < 50:
-                    n = random.randint(0, 2)
-                    actor = self.actor_manager.spawn_actor("stalker")
-                    for i in range(n):
-                        self.actor_manager.spawn_around_actor("stalker", actor, 50, 200)
-                    self.stalker_spawn_term = 1.0
-                self.stalker_spawn_term -= dt
-            elif (NIGHT_TOD_START <= prev_tod or prev_tod <= NIGHT_TOD_END) and NIGHT_TOD_END <= self.tod:
-                self.actor_manager.remove_actors_by_type(ActorType.STALKER)
+            is_main_level = self.level_manager.get_is_main_level() 
+            if is_main_level:
+                if self.tod < NIGHT_TOD_END or NIGHT_TOD_START < self.tod:
+                    stalkers = self.actor_manager.get_actors_by_type(ActorType.STALKER)
+                    if self.stalker_spawn_term < 0.0 and len(stalkers) < 50:
+                        n = random.randint(0, 2)
+                        actor = self.actor_manager.spawn_actor("stalker")
+                        for i in range(n):
+                            self.actor_manager.spawn_around_actor("stalker", actor, 50, 200)
+                        self.stalker_spawn_term = 1.0
+                    self.stalker_spawn_term -= dt
+                elif (NIGHT_TOD_START <= prev_tod or prev_tod <= NIGHT_TOD_END) and NIGHT_TOD_END <= self.tod:
+                    self.actor_manager.remove_actors_by_type(ActorType.STALKER)
 
             self.update_scenario(dt)
             self.update_managers(dt)
 
             player = self.actor_manager.get_player()
             if not player or not player.is_alive():
+                if self.level_manager.get_is_main_level() == False:
+                    self.goto_level("main_level")
                 self.spawn_player()
 
 

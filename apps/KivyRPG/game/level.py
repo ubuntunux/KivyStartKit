@@ -327,6 +327,9 @@ class LevelManager(SingletonInstance):
     
     def set_tod(self, tod):
         self.time = tod * 3600.0
+    
+    def get_is_main_level(self):
+        return self.level_data.is_main_level
 
     def callback_night_time(self, *args):
         tod = self.get_tod()
