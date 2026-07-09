@@ -102,6 +102,13 @@ class GameManager(SingletonInstance):
                 self.game_data
             ) 
       
+    def respawn(self, respawn_at_town):
+        player = self.actor_manager.get_player()
+        if player and not player.is_alive():
+            player.respawn()
+            if respawn_at_town:
+                self.goto_level(MAIN_LEVEL_NAME) 
+
     def clear_actors(self):
         self.actor_manager.clear_actors()
         self.game_controller.refresh_player_inventory()
@@ -160,7 +167,7 @@ class GameManager(SingletonInstance):
             self.level_manager.load_level(level_data)
 
             player_data = self.game_data['player_data'] 
-            player_data['actor_pos'] = spawn_pos if spawn_pos else level_data['spawn_pos'] 
+            player_data['actor_pos'] = spawn_pos if spawn_pos else level_data.spawn_pos 
             self.actor_manager.load_actor_save_data(player_data)
             self.actor_manager.post_actor_load_processing()   
             self.level_manager.post_level_load_processing()
@@ -259,8 +266,3 @@ class GameManager(SingletonInstance):
 
             self.update_scenario(dt)
             self.update_managers(dt)
-
-            player = self.actor_manager.get_player()
-            if player and not player.is_alive():
-                player.respawn()
-                self.goto_level(MAIN_LEVEL_NAME) 

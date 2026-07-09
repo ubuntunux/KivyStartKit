@@ -92,6 +92,7 @@ class Character(Scatter):
     
     def respawn(self):
         self.property.respawn_property()
+        self.transform_component.set_attack_force(Vector(0.0, 0.0))
 
     def get_is_player(self):
         return self.is_player

@@ -21,6 +21,7 @@ from .ui.inventory_ui import InventoryUI
 from .ui.trade_ui import TradeUI
 from .ui.player_controller import PlayerController
 from .ui.game_menu import GameMenu
+from .ui.respawn_ui import RespawnUI
 from .character_data import *
 from .constant import *
        
@@ -40,6 +41,7 @@ class GameController(SingletonInstance):
         self.trade_ui = TradeUI(app, self)
         self.trade_actor = None
         self.game_menu = GameMenu(app, self)
+        self.respawn_ui = RespawnUI(app, self)
 
     def initialize(self, parent_widget, game_manager, level_manager, actor_manager):
         self.level_manager = level_manager
@@ -57,6 +59,7 @@ class GameController(SingletonInstance):
         self.trade_ui.initialize(actor_manager, self.controller_layer)
         self.trade_actor = None
         self.game_menu.initialize(actor_manager, self.controller_layer)
+        self.respawn_ui.initialize(actor_manager, self.controller_layer)
 
         menu_layout = BoxLayout(
             orientation='vertical',
@@ -110,6 +113,9 @@ class GameController(SingletonInstance):
 
     def save_game(self):
         self.game_manager.save_game()
+
+    def respawn(self, respawn_at_town):
+        self.game_manager.respawn(respawn_at_town)
 
     def post_controller_load_processing(self):
         self.refresh_player_inventory()
@@ -262,3 +268,4 @@ class GameController(SingletonInstance):
         self.inventory_ui.update(dt) 
         self.trade_ui.update(dt) 
         self.game_menu.update(dt) 
+        self.respawn_ui.update(dt) 
