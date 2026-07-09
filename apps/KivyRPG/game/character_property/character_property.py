@@ -46,6 +46,7 @@ class CharacterProperty(BaseProperty):
             self.extra_property = extra_propert_class(actor, extra_property_data)
 
         self.reset_property()
+
         if actor.get_is_player():
             self.build_ui()
 
@@ -114,6 +115,16 @@ class CharacterProperty(BaseProperty):
         self.criminal_time = 0.0
         self.items = {}
 
+    def respawn_property(self):
+        if self.extra_property:
+            self.extra_property.respawn_property()
+        self.sp = self.property_data.max_sp
+        self.hp = self.property_data.max_hp
+        self.mp = self.property_data.max_mp
+        self.alive = True 
+        self.criminal = 0
+        self.criminal_time = 0.0
+ 
     def is_alive(self):
         return self.alive
 

@@ -108,6 +108,9 @@ class LevelManager(SingletonInstance):
     def get_random_pos(self):
         return self.tile_to_pos(self.get_random_tile_pos())
 
+    def get_level_name(self):
+        return self.level_data.level_name
+
     def get_level_center(self):
         return Vector(self.tile_map_widget.center)
         
@@ -242,7 +245,7 @@ class LevelManager(SingletonInstance):
             actor_sets = []
             for x in range(self.level_data.num_x):
                 # create tile
-                tile_create_info = self.level_data.tile_create_infos[y * self.level_data.num_x + x]
+                tile_create_info = self.level_data.tile_create_infos.get((x,y), ('', ''))
                 tile = self.create_tile(
                     tile_set_name=tile_create_info[0],
                     tile_name=tile_create_info[1],
@@ -278,13 +281,19 @@ class LevelManager(SingletonInstance):
         return self.level_data
        
     def save_level(self):
+        tile_create_infos = {}
+        for (y, tiles) in enumerate(self.tiles):
+            for (x, tile) in enumerate(tiles):
+                if tile.tile_data:
+                    tile_create_infos[(x, y)] = tile.get_tile_create_info() 
+
         level_data_info = {
             'is_main_level': self.level_data.is_main_level,
             'level_name': self.level_data.level_name,
             'level_color': self.level_data.level_color,
             'num_x': self.level_data.num_x,
             'num_y': self.level_data.num_y,
-            'tile_create_infos': [tile.get_tile_create_info() for tiles in self.tiles for tile in tiles],
+            'tile_create_infos': tile_create_infos,
             'actors': self.actor_manager.get_actors_save_data(),
             'spawn_pos': self.level_data.spawn_pos,
         }

@@ -89,6 +89,9 @@ class Character(Scatter):
         if self.weapon:
             self.weapon.post_weapon_load_processing()
         self.behavior.post_behavior_load_processing()
+    
+    def respawn(self):
+        self.property.respawn_property()
 
     def get_is_player(self):
         return self.is_player

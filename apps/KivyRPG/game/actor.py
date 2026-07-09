@@ -173,11 +173,11 @@ class ActorManager(SingletonInstance):
                 self.get_player().move_to(touch_pos)
                 
     def callback_move(self, direction):
-        if self.player:
+        if self.player and self.player.is_alive():
             self.player.set_move_direction(direction)
         
     def callback_attack(self, inst):
-        if self.player:
+        if self.player and self.player.is_alive():
             self.player.set_attack()   
         
     def regist_attack_info(self, actor, target, damage, force):
@@ -197,7 +197,7 @@ class ActorManager(SingletonInstance):
         for actor in actors:
             if actor.is_alive():
                 actor.update(player_pos, dt)
-            else:
+            elif actor.is_player == False:
                 self.dead_characters.append(actor)
         
         # attack infos
@@ -215,7 +215,7 @@ class ActorManager(SingletonInstance):
                         attack_info.actor.add_criminal(
                             0.3 if attack_info.target.is_alive() else 3
                         )
-                # spawn reward
+                # spawn rewards
                 if not attack_info.target.is_alive():
                     if attack_info.actor.is_player:
                         for (reward_index, item_actor) in enumerate(get_rewards(self, self.player, attack_info.target)):
@@ -227,7 +227,8 @@ class ActorManager(SingletonInstance):
                                 radius_max = 100
                                 collide_check = True
                             self.placement_around_actor(item_actor, attack_info.target, radius_min, radius_max, collide_check) 
-                    self.dead_characters.append(attack_info.target)
+                    if not attack_info.target.is_player:
+                        self.dead_characters.append(attack_info.target)
         self.attack_infos = []
         
             

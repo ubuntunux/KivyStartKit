@@ -17,6 +17,9 @@ class BaseProperty:
     def reset_property(self):
         pass
 
+    def respawn_property(self):
+        pass
+
     def update_property(self, dt):
         pass
 
