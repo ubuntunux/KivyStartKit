@@ -65,11 +65,14 @@ class RespawnUI:
         self.game_controller.respawn(True)
 
     def callback_respawn_here(self, widget):
-        self.game_controller.game_manager.effect_manager.create_effect(
-            effect_name=FX_WARN
-        )
-        return
+        player = self.actor_manager.get_player()
+        if not player.get_item_count(ActorKey.RESURRECTION_SCROLL):
+            self.game_controller.game_manager.effect_manager.create_effect(
+                effect_name=FX_WARN
+            )
+            return
 
+        self.game_controller.use_item(ActorKey.RESURRECTION_SCROLL)
         self.close_respawn_menu()
         self.game_controller.respawn(False)
 

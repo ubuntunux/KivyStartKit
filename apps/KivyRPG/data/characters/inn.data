@@ -4,5 +4,16 @@
     "size": (300, 300),
     "property": {
         "max_hp": 1000.0,
+        "extra_property": {
+            "items": [
+                "items/hp_a",
+                "items/hp_b",
+                "items/weapon_axe",
+                "items/resurrection_scroll",
+                "items/grain_a",
+                "items/ore_a",
+                "items/wood_a",
+            ],
+        },
     },
 }

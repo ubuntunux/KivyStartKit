@@ -8,6 +8,8 @@ class ActorCategory(Enum):
     RESOURCE_GENERATOR = 4
     RESOURCE = 5
     ITEM = 6
+    SCROLL = 7
+    WEAPON = 8
 
 class ActorType(Enum):
     PLAYER = 0
@@ -38,7 +40,10 @@ class ActorType(Enum):
     GRAIN = 4003
     # items
     HP = 5000
-    WEAPON = 5001
+    # scrolls
+    SCROLL = 6000
+    # weapons
+    WEAPON = 7000
 
 __category_map__ = {
     # character
@@ -69,7 +74,10 @@ __category_map__ = {
     ActorType.GRAIN: ActorCategory.RESOURCE,
     # item
     ActorType.HP: ActorCategory.ITEM,
-    ActorType.WEAPON: ActorCategory.ITEM,
+    # scroll
+    ActorType.SCROLL: ActorCategory.SCROLL,
+    # weapon
+    ActorType.WEAPON: ActorCategory.WEAPON,
 }
 
 def get_actor_category(actor_type):
@@ -90,9 +98,12 @@ class ActorID(Enum):
     # item
     HP_A = 1
     HP_B = 2
-    # item weapon
+    # weapon
     WEAPON_AXE = 1000
+    # scrolls
+    RESURRECTION_SCROLL = 2000
 
 class ActorKey(Enum):
     GOLD = (ActorType.GOLD, ActorID.NONE)
+    RESURRECTION_SCROLL = (ActorType.SCROLL, ActorID.RESURRECTION_SCROLL)
      

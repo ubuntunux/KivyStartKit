@@ -37,6 +37,9 @@ behavior_map = {
     ActorType.GRAIN: BehaviorItem,
 
     ActorType.HP: BehaviorItem,
+
+    ActorType.SCROLL: BehaviorItem,
+
     ActorType.WEAPON: BehaviorItem,
 }
 

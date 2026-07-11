@@ -4,5 +4,10 @@
     "size": (300, 300),
     "property": {
         "max_hp": 5000.0,
+        "extra_property": {
+            "items": [
+                "guard",
+            ],
+        },
     },
 }

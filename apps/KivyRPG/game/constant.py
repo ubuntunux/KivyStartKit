@@ -35,3 +35,8 @@ CRIMINAL_TIMES = [0.0, 10.0, 30.0, 60.0, 100.0, 150.0]
 
 ITEM_HP_A = 'items/hp_a'
 ITEM_HP_B = 'items/hp_b'
+ITEM_WEAPON_AXE = 'items/weapon_axe'
+ITEM_RESURRECTION_SCROLL = 'items/resurrection_scroll'
+ITEM_GRAIN_A = 'items/grain_a'
+ITEM_ORE_A = 'items/ore_a'
+ITEM_WOOD_A = 'items/wood_a'

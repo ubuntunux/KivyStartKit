@@ -1,4 +1,5 @@
 from kivy.core.window import Window
+from kivy.logger import Logger
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
@@ -108,7 +109,7 @@ class TradeUI:
         )
         self.trade_menu_layout.add_widget(box_layout)
 
-        item_data_list = [ITEM_HP_A, ITEM_HP_A, ITEM_HP_B, ITEM_HP_A, ITEM_HP_A, ITEM_HP_A] 
+        item_data_list = trade_actor.get_extra_property_data().get_items()
         for item_data in item_data_list:
             item_data = GameResourceManager.instance().get_character_data(item_data)  
             item = ItemUI(

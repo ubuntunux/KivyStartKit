@@ -10,7 +10,13 @@
         "walk_speed": 100.0,
         "max_sp": 100.0,
         "max_hp": 1000.0,
-        "max_mp": 100.0
+        "max_mp": 100.0,
+        "extra_property": {
+            "price": {
+                "items/gold_a": 10
+            },
+            "item_count": 1,
+        }
     },
     "weapon":"sword"
 }

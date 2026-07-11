@@ -1,4 +1,5 @@
 import os
+from kivy.logger import Logger
 from utility.kivy_helper import *
 from ..constant import *
 from .actor_data import *
@@ -8,16 +9,23 @@ from .item_property_data import *
 from .inn_property_data import *
 
 __extra_property_data_map__ = {
+    # npc
+    ActorType.GUARD: ItemPropertyData,
     # building
     ActorType.DUNGEON: DungeonPropertyData,
     ActorType.GATE: GatePropertyData,
+    ActorType.CASTLE: InnPropertyData,
     ActorType.INN: InnPropertyData,
-    # item
+    # resource
     ActorType.GOLD: ItemPropertyData,
     ActorType.ORE: ItemPropertyData,
     ActorType.WOOD: ItemPropertyData,
     ActorType.GRAIN: ItemPropertyData,
+    # item
     ActorType.HP: ItemPropertyData,
+    # scroll
+    ActorType.SCROLL: ItemPropertyData,
+    # weapon
     ActorType.WEAPON: ItemPropertyData,
 }
 
@@ -46,6 +54,7 @@ class CharacterPropertyData():
 
         self.extra_property_data = None
         extra_property_data = property_data.get('extra_property', {})
+
         property_data_class = get_actor_extra_property_data(actor_type)
         if property_data_class:
             self.extra_property_data = property_data_class(extra_property_data)

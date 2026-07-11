@@ -164,7 +164,7 @@ class GameController(SingletonInstance):
         if player and player.is_alive():
             if interaction_type == InteractionType.TRADE:
                 if player.is_criminal() == False:
-                    self.set_trade_actor(player)
+                    self.set_trade_actor(target_actor)
                     disable_interaction = False
             elif interaction_type == InteractionType.ENTER:
                 if target_actor.actor_type is ActorType.DUNGEON:
@@ -186,6 +186,10 @@ class GameController(SingletonInstance):
             for (actor_data_name, price) in item_price.items():
                 item_data = GameResourceManager.instance().get_character_data(actor_data_name)
                 if player.get_item_count(item_data.actor_key) < price:
+                    self.game_manager.effect_manager.create_effect(
+                        effect_name=FX_WARN,
+                        attach_to=player
+                    )
                     result = False
                     break
 
@@ -198,7 +202,19 @@ class GameController(SingletonInstance):
                 for (item_data_name, price) in item_price.items():
                     item_data = GameResourceManager.instance().get_character_data(item_data_name)
                     player.use_item(item_data.actor_key, price, interaction=False)
-                player.add_item(buy_item_data)
+
+                if buy_item_data.actor_type == ActorType.GUARD:
+                    castle = self.actor_manager.get_actors_by_type(ActorType.CASTLE)[0]
+                    castle_radius_inner = dp(50)
+                    castle_radius_outter = dp(150)
+                    self.actor_manager.spawn_around_actor(
+                        buy_item_data.name, 
+                        castle, 
+                        castle_radius_inner, 
+                        castle_radius_outter
+                    )
+                else:
+                    player.add_item(buy_item_data)
                 return True
         return False
 
